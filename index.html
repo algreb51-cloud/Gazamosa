@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مركز البيانات الذكي | DATA CENTER AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #F8FAFC; scroll-behavior: smooth; }
+        .glass-header { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .modal-overlay { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+        .edit-mode { border: 2px solid #2563eb !important; background-color: #eff6ff !important; }
+        .checkbox-custom:checked { background-color: #2563eb; border-color: #2563eb; }
+    </style>
+</head>
+<body class="text-right custom-scrollbar">
+
+    <!-- واجهة تسجيل الدخول -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl p-10 text-center border border-slate-100">
+            <div class="bg-blue-600 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl shadow-blue-100">
+                <i data-lucide="shield-check" class="text-white w-10 h-10"></i>
+            </div>
+            <h1 class="text-2xl font-black text-slate-800 mb-2">بوابة البيانات الذكية</h1>
+            <p class="text-slate-400 text-sm mb-10 font-medium">نظام التوثيق والتحليل الشامل</p>
+            
+            <div class="space-y-4">
+                <div id="passwordArea" class="hidden">
+                    <input type="password" id="adminPass" placeholder="كلمة مرور المسؤول" class="w-full p-4 mb-4 bg-slate-50 border rounded-2xl text-center font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                    <button onclick="validatePassword()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all">تأكيد الدخول</button>
+                    <button onclick="togglePassField(false)" class="mt-2 text-slate-400 text-xs font-bold hover:text-slate-600">رجوع</button>
+                </div>
+                <div id="loginButtons">
+                    <button onclick="togglePassField(true)" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2">
+                         <i data-lucide="lock" class="w-4 h-4"></i> دخول كمسؤول
+                    </button>
+                    <button onclick="handleLogin(false)" class="w-full mt-4 py-4 bg-slate-50 text-slate-600 rounded-2xl font-bold border border-slate-200">دخول كزائر</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- النظام الرئيسي -->
+    <div id="mainDashboard" class="hidden min-h-screen pb-20">
+        <header class="glass-header border-b h-16 sticky top-0 z-50 flex items-center px-6 md:px-12 justify-between shadow-sm">
+            <div class="flex items-center gap-2 font-black text-blue-600 text-xl">
+                <i data-lucide="database"></i> <span>DATA CENTER AI</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="roleBadge" class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black rounded-full uppercase">زائر</span>
+                <button onclick="handleLogout()" class="text-slate-400 p-2 hover:bg-rose-50 hover:text-rose-500 rounded-xl transition-all flex items-center gap-2 text-sm font-bold">
+                    <span>خروج</span>
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-6 py-10">
+            <!-- الإحصائيات وأزرار التصدير -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="bg-blue-600 text-white p-7 rounded-[2rem] shadow-xl">
+                    <p class="text-blue-100 text-xs font-bold mb-1">إجمالي الأفراد المسجلين</p>
+                    <h3 id="statTotalMembers" class="text-4xl font-black">0</h3>
+                </div>
+                <div class="bg-white p-7 rounded-[2rem] border-2 border-slate-100">
+                    <p class="text-slate-400 text-xs font-bold mb-1">إجمالي العائلات</p>
+                    <h3 id="statTotalFamilies" class="text-4xl font-black text-slate-800">0</h3>
+                </div>
+                <button onclick="openExportWizard()" class="bg-emerald-600 p-7 rounded-[2rem] text-white flex flex-col justify-center items-center hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">
+                    <i data-lucide="settings-2" class="mb-2"></i>
+                    <span class="text-xs font-black">تصدير مخصص (اختيار الخانات)</span>
+                </button>
+            </div>
+
+            <!-- نموذج الإدخال (للمسؤول فقط) -->
+            <div id="adminSection" class="hidden">
+                <form id="familyForm" onsubmit="handleFormSubmit(event)" class="space-y-8">
+                    <input type="hidden" id="editId" value="">
+                    
+                    <div id="formContainer" class="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm transition-all">
+                        <h2 id="formTitle" class="text-xl font-black mb-6 flex items-center gap-3 text-blue-600">
+                            <i data-lucide="user-plus"></i> إضافة عائلة جديدة
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-2">اسم رب الأسرة</label>
+                                <input type="text" id="headName" class="w-full p-4 bg-slate-50 rounded-2xl border font-bold outline-none focus:ring-2 focus:ring-blue-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-2">هوية رب الأسرة</label>
+                                <input type="text" id="headId" class="w-full p-4 bg-slate-50 rounded-2xl border font-mono outline-none focus:ring-2 focus:ring-blue-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-2">رقم الجوال</label>
+                                <input type="text" id="headPhone" class="w-full p-4 bg-slate-50 rounded-2xl border font-mono outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-2">اسم الزوجة</label>
+                                <input type="text" id="wifeName" class="w-full p-4 bg-slate-50 rounded-2xl border font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-2">هوية الزوجة</label>
+                                <input type="text" id="wifeId" class="w-full p-4 bg-slate-50 rounded-2xl border font-mono outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-2">الحالة الاجتماعية</label>
+                                <select id="socialStatus" class="w-full p-4 bg-slate-50 rounded-2xl border font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="متزوج">متزوج/ة</option>
+                                    <option value="أرملة">أرملة</option>
+                                    <option value="مطلقة">مطلقة</option>
+                                    <option value="أعزب">أعزب/عزباء</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- السكن والنزوح -->
+                    <div class="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm">
+                        <h2 class="text-xl font-black mb-6 flex items-center gap-3 text-blue-600">
+                            <i data-lucide="map-pin"></i> السكن والنزوح
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <input type="text" id="originalArea" placeholder="منطقة السكن الأصلية" class="p-4 bg-slate-50 rounded-2xl border font-bold">
+                            <input type="text" id="displacementArea" placeholder="منطقة النزوح الحالية" class="p-4 bg-slate-50 rounded-2xl border font-bold">
+                            <input type="text" id="delegate" placeholder="اسم المندوب" class="p-4 bg-slate-50 rounded-2xl border font-bold">
+                            <input type="text" id="altPhone" placeholder="رقم جوال بديل" class="p-4 bg-slate-50 rounded-2xl border font-mono">
+                        </div>
+                    </div>
+
+                    <!-- أفراد العائلة -->
+                    <div class="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-xl font-black flex items-center gap-3 text-blue-600">
+                                <i data-lucide="users"></i> أفراد العائلة
+                            </h2>
+                            <button type="button" onclick="addMemberRow()" class="px-4 py-2 bg-blue-100 text-blue-600 rounded-xl font-bold text-xs flex items-center gap-2">
+                                <i data-lucide="plus" class="w-4 h-4"></i> إضافة فرد
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <input type="number" id="totalCount" placeholder="إجمالي عدد الأفراد" class="p-4 bg-slate-50 rounded-2xl border font-bold">
+                            <input type="number" id="maleCount" placeholder="عدد الذكور" class="p-4 bg-slate-50 rounded-2xl border font-bold">
+                            <input type="number" id="femaleCount" placeholder="عدد الإناث" class="p-4 bg-slate-50 rounded-2xl border font-bold">
+                        </div>
+                        <div id="membersContainer" class="space-y-4"></div>
+                    </div>
+
+                    <!-- ذوي الاحتياجات الخاصة -->
+                    <div class="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm">
+                        <h2 class="text-xl font-black mb-6 flex items-center gap-3 text-rose-600">
+                            <i data-lucide="accessibility"></i> الإعاقة والأمراض
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <select id="disabilityType" class="p-4 bg-slate-50 rounded-2xl border font-bold">
+                                <option value="لا يوجد">لا يوجد</option>
+                                <option value="مرض مزمن">مرض مزمن</option>
+                                <option value="إعاقة سمعية">إعاقة سمعية</option>
+                                <option value="إعاقة حركية">إعاقة حركية</option>
+                            </select>
+                            <input type="text" id="disabilityName" placeholder="الاسم" class="p-4 bg-slate-50 rounded-2xl border">
+                            <input type="text" id="disabilityId" placeholder="رقم الهوية" class="p-4 bg-slate-50 rounded-2xl border font-mono">
+                            <input type="text" id="disabilityPhone" placeholder="رقم الجوال" class="p-4 bg-slate-50 rounded-2xl border font-mono">
+                        </div>
+                    </div>
+
+                    <!-- المحفظة الإلكترونية -->
+                    <div class="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm">
+                        <h2 class="text-xl font-black mb-6 flex items-center gap-3 text-emerald-600">
+                            <i data-lucide="wallet"></i> المحفظة الإلكترونية
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <input type="text" id="walletOwner" placeholder="اسم مالك المحفظة" class="p-4 bg-slate-50 rounded-2xl border font-bold">
+                            <input type="text" id="walletId" placeholder="رقم هوية المالك" class="p-4 bg-slate-50 rounded-2xl border font-mono">
+                            <input type="text" id="walletPhone" placeholder="رقم جوال المحفظة" class="p-4 bg-slate-50 rounded-2xl border font-mono">
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button type="submit" id="submitBtn" class="flex-1 py-6 bg-slate-900 text-white rounded-[2rem] font-black text-xl hover:bg-blue-600 shadow-2xl transition-all">
+                            حفظ البيانات
+                        </button>
+                        <button type="button" id="cancelEditBtn" onclick="resetForm()" class="hidden px-8 py-6 bg-slate-200 text-slate-600 rounded-[2rem] font-black">
+                            إلغاء التعديل
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- جدول البيانات -->
+            <div class="mt-12 bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-6 border-b flex items-center gap-4">
+                    <i data-lucide="search" class="text-slate-400"></i>
+                    <input type="text" id="searchInput" oninput="renderTable()" placeholder="ابحث باسم رب الأسرة أو المندوب..." class="flex-1 outline-none font-bold text-sm bg-transparent">
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right">
+                        <thead class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest border-b">
+                            <tr>
+                                <th class="p-6">رب الأسرة</th>
+                                <th class="p-6">الهوية</th>
+                                <th class="p-6 text-center">العدد</th>
+                                <th class="p-6">المندوب</th>
+                                <th class="p-6 text-center">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody" class="divide-y divide-slate-50 font-medium text-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- نافذة التصدير المخصص (Wizard) -->
+    <div id="exportWizard" class="hidden fixed inset-0 z-[300] flex items-center justify-center p-4">
+        <div class="modal-overlay absolute inset-0" onclick="closeExportWizard()"></div>
+        <div class="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl relative z-10 p-8 animate-in zoom-in duration-300">
+            <h3 class="text-2xl font-black mb-6 text-slate-800 flex items-center gap-3">
+                <i data-lucide="file-spreadsheet" class="text-emerald-600"></i> معالج التصدير المخصص
+            </h3>
+            <p class="text-slate-400 text-sm mb-6 font-bold">حدد الخانات التي تريد ظهورها في ملف Excel:</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8" id="exportFieldsContainer">
+                <!-- سيتم توليدها برمجياً -->
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="executeCustomExport()" class="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black hover:bg-emerald-700 shadow-lg shadow-emerald-50">تصدير الملف الآن</button>
+                <button onclick="closeExportWizard()" class="px-8 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة التفاصيل (Modal) -->
+    <div id="detailsModal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4">
+        <div class="modal-overlay absolute inset-0" onclick="closeDetails()"></div>
+        <div class="bg-white w-full max-w-3xl max-h-[90vh] rounded-[2.5rem] shadow-2xl relative z-10 flex flex-col overflow-hidden animate-in zoom-in duration-300">
+            <div class="p-6 border-b flex justify-between items-center bg-slate-50">
+                <h3 class="font-black text-xl text-slate-800 flex items-center gap-2">
+                    <i data-lucide="info" class="text-blue-600"></i> تفاصيل السجل
+                </h3>
+                <button onclick="closeDetails()" class="p-2 hover:bg-slate-200 rounded-full transition-all"><i data-lucide="x"></i></button>
+            </div>
+            <div id="modalContent" class="p-8 overflow-y-auto custom-scrollbar"></div>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_PASS = "admin123";
+        let data = JSON.parse(localStorage.getItem('censusDataV4')) || [];
+        let isAdmin = false;
+
+        // تعريف الخانات القابلة للتصدير
+        const exportableFields = [
+            { id: 'head_name', label: 'اسم رب الأسرة', path: 'head.name' },
+            { id: 'head_id', label: 'هوية رب الأسرة', path: 'head.id' },
+            { id: 'head_phone', label: 'جوال رب الأسرة', path: 'head.phone' },
+            { id: 'wife_name', label: 'اسم الزوجة', path: 'wife.name' },
+            { id: 'wife_id', label: 'هوية الزوجة', path: 'wife.id' },
+            { id: 'social', label: 'الحالة الاجتماعية', path: 'socialStatus' },
+            { id: 'count_total', label: 'العدد الكلي', path: 'counts.total' },
+            { id: 'original', label: 'المنطقة الأصلية', path: 'location.original' },
+            { id: 'displacement', label: 'منطقة النزوح', path: 'location.displacement' },
+            { id: 'delegate', label: 'اسم المندوب', path: 'delegate' },
+            { id: 'alt_phone', label: 'جوال بديل', path: 'altPhone' },
+            { id: 'dis_type', label: 'نوع الإعاقة', path: 'disability.type' },
+            { id: 'wallet_phone', label: 'رقم المحفظة', path: 'wallet.phone' }
+        ];
+
+        function openExportWizard() {
+            const container = document.getElementById('exportFieldsContainer');
+            container.innerHTML = exportableFields.map(field => `
+                <label class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border cursor-pointer hover:border-emerald-300 transition-all">
+                    <input type="checkbox" value="${field.id}" class="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 export-checkbox" checked>
+                    <span class="text-xs font-black text-slate-600">${field.label}</span>
+                </label>
+            `).join('');
+            document.getElementById('exportWizard').classList.remove('hidden');
+        }
+
+        function closeExportWizard() { document.getElementById('exportWizard').classList.add('hidden'); }
+
+        function executeCustomExport() {
+            const selectedIds = Array.from(document.querySelectorAll('.export-checkbox:checked')).map(cb => cb.value);
+            if (selectedIds.length === 0) return alert("يرجى اختيار خانة واحدة على الأقل.");
+
+            const selectedFields = exportableFields.filter(f => selectedIds.includes(f.id));
+            
+            // الهيدر
+            let csv = selectedFields.map(f => f.label).join(',') + '\n';
+            
+            // البيانات
+            data.forEach(item => {
+                const row = selectedFields.map(field => {
+                    const value = field.path.split('.').reduce((obj, key) => (obj && obj[key] !== undefined) ? obj[key] : '', item);
+                    return `"${value}"`;
+                });
+                csv += row.join(',') + '\n';
+            });
+
+            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `Custom_Report_${Date.now()}.csv`;
+            link.click();
+            closeExportWizard();
+        }
+
+        // الوظائف الأساسية للنظام
+        function addMemberRow(memberData = null) {
+            const container = document.getElementById('membersContainer');
+            const rowId = Math.random().toString(36).substr(2, 9);
+            const div = document.createElement('div');
+            div.id = `member-${rowId}`;
+            div.className = "grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100 animate-in fade-in";
+            div.innerHTML = `
+                <select class="member-rel p-3 bg-white rounded-xl border font-bold">
+                    <option value="ابن" ${memberData?.relation === 'ابن' ? 'selected' : ''}>ابن</option>
+                    <option value="ابنه" ${memberData?.relation === 'ابنه' ? 'selected' : ''}>ابنه</option>
+                </select>
+                <input type="text" class="member-name p-3 bg-white rounded-xl border text-sm" placeholder="الاسم الكامل" value="${memberData?.name || ''}">
+                <input type="text" class="member-id p-3 bg-white rounded-xl border text-sm font-mono" placeholder="رقم الهوية" value="${memberData?.id || ''}">
+                <button type="button" onclick="document.getElementById('member-${rowId}').remove()" class="p-3 text-rose-500 hover:bg-rose-100 rounded-xl transition-all">
+                    <i data-lucide="trash-2"></i>
+                </button>
+            `;
+            container.appendChild(div);
+            lucide.createIcons();
+        }
+
+        function handleLogin(admin) {
+            isAdmin = admin;
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainDashboard').classList.remove('hidden');
+            document.getElementById('roleBadge').innerText = isAdmin ? "مسؤول" : "زائر";
+            if(isAdmin) document.getElementById('adminSection').classList.remove('hidden');
+            renderTable(); updateStats(); lucide.createIcons();
+        }
+
+        function validatePassword() {
+            if (document.getElementById('adminPass').value === ADMIN_PASS) handleLogin(true);
+            else alert("خطأ");
+        }
+
+        function togglePassField(show) {
+            document.getElementById('passwordArea').classList.toggle('hidden', !show);
+            document.getElementById('loginButtons').classList.toggle('hidden', show);
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editId').value;
+            const entry = {
+                id: editId ? parseInt(editId) : Date.now(),
+                head: { name: document.getElementById('headName').value, id: document.getElementById('headId').value, phone: document.getElementById('headPhone').value },
+                wife: { name: document.getElementById('wifeName').value, id: document.getElementById('wifeId').value },
+                socialStatus: document.getElementById('socialStatus').value,
+                counts: { total: document.getElementById('totalCount').value },
+                location: { original: document.getElementById('originalArea').value, displacement: document.getElementById('displacementArea').value },
+                delegate: document.getElementById('delegate').value,
+                altPhone: document.getElementById('altPhone').value,
+                disability: { type: document.getElementById('disabilityType').value, name: document.getElementById('disabilityName').value, id: document.getElementById('disabilityId').value, phone: document.getElementById('disabilityPhone').value },
+                wallet: { owner: document.getElementById('walletOwner').value, id: document.getElementById('walletId').value, phone: document.getElementById('walletPhone').value },
+                familyMembers: [] // اختصاراً للنموذج
+            };
+
+            if (editId) data[data.findIndex(d => d.id === parseInt(editId))] = entry;
+            else data.push(entry);
+
+            localStorage.setItem('censusDataV4', JSON.stringify(data));
+            resetForm(); renderTable(); updateStats();
+            alert("تم بنجاح");
+        }
+
+        function renderTable() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = data.filter(d => d.head.name.toLowerCase().includes(query) || d.delegate.toLowerCase().includes(query));
+            document.getElementById('dataTableBody').innerHTML = filtered.map(item => `
+                <tr class="hover:bg-slate-50 transition-colors border-b">
+                    <td class="p-6 font-black">${item.head.name}</td>
+                    <td class="p-6 font-mono text-xs">${item.head.id}</td>
+                    <td class="p-6 text-center font-black text-blue-600">${item.counts.total || 0}</td>
+                    <td class="p-6 font-bold text-slate-500 text-xs">${item.delegate || '--'}</td>
+                    <td class="p-6 text-center flex gap-2 justify-center">
+                        <button onclick="viewDetails(${item.id})" class="p-2 text-blue-600 hover:bg-blue-50 border rounded-lg"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                        ${isAdmin ? `<button onclick="editEntry(${item.id})" class="p-2 text-emerald-600 hover:bg-emerald-50 border rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function viewDetails(id) {
+            const item = data.find(d => d.id === id);
+            const content = document.getElementById('modalContent');
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="p-4 bg-blue-50 rounded-2xl">
+                        <h4 class="font-black text-blue-600 mb-2">رب الأسرة</h4>
+                        <p class="text-sm">الاسم: ${item.head.name} | الهوية: ${item.head.id} | الجوال: ${item.head.phone}</p>
+                    </div>
+                    <div class="p-4 bg-emerald-50 rounded-2xl">
+                        <h4 class="font-black text-emerald-600 mb-2">المحفظة</h4>
+                        <p class="text-sm">الرقم: ${item.wallet.phone} | المالك: ${item.wallet.owner}</p>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-2xl">
+                        <h4 class="font-black text-slate-600 mb-2">السكن</h4>
+                        <p class="text-sm">الأصل: ${item.location.original} | الحالي: ${item.location.displacement}</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailsModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function resetForm() {
+            document.getElementById('familyForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('formContainer').classList.remove('edit-mode');
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+        }
+
+        function editEntry(id) {
+            const item = data.find(d => d.id === id);
+            document.getElementById('editId').value = item.id;
+            document.getElementById('headName').value = item.head.name;
+            document.getElementById('headId').value = item.head.id;
+            document.getElementById('delegate').value = item.delegate;
+            document.getElementById('formContainer').classList.add('edit-mode');
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateStats() {
+            document.getElementById('statTotalFamilies').innerText = data.length;
+            document.getElementById('statTotalMembers').innerText = data.reduce((a, b) => a + (parseInt(b.counts.total) || 0), 0);
+        }
+
+        function closeDetails() { document.getElementById('detailsModal').classList.add('hidden'); }
+        function handleLogout() { location.reload(); }
+
+        window.onload = () => lucide.createIcons();
+    </script>
+</body>
+</html>
