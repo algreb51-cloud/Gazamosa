@@ -3,355 +3,315 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MosaData Cloud Pro v2</title>
+    <title>MosaData Cloud Ultimate Pro</title>
+    <!-- Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body { font-family: 'Tajawal', sans-serif; background-color: #f1f5f9; scroll-behavior: smooth; }
-        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .btn-gradient { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4); }
-        .input-focus { transition: all 0.2s; border: 2px solid transparent; }
-        .input-focus:focus { border-color: #2563eb; background: white; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
-        .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        body { font-family: 'Tajawal', sans-serif; background-color: #f1f5f9; }
+        .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .animate-pop { animation: pop 0.3s cubic-bezier(0.26, 0.53, 0.74, 1.48); }
+        @keyframes pop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .no-spinner::-webkit-inner-spin-button, .no-spinner::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        .undo-toast { animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { transform: translate(-50%, 100%); } to { transform: translate(-50%, 0); } }
+        .detail-card { background: #ffffff; border-radius: 1.5rem; border: 1px solid #e2e8f0; padding: 1.5rem; transition: all 0.2s; }
+        .detail-card:hover { border-color: #3b82f6; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="text-slate-800">
 
-    <!-- Toast Notifications -->
-    <div id="toast-container" class="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2"></div>
-    
-    <!-- Undo Delete Toast -->
-    <div id="undo-toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999] hidden undo-toast">
-        <div class="bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 border border-white/10">
-            <span class="text-sm font-bold">تم حذف السجل بنجاح</span>
-            <button id="undo-btn" class="text-blue-400 font-black text-sm hover:underline italic underline-offset-4">تراجع الآن (5ث)</button>
-        </div>
-    </div>
-
-    <!-- Auth Screen -->
-    <div id="auth-screen" class="fixed inset-0 z-[5000] bg-white flex items-center justify-center p-6">
-        <div class="max-w-md w-full text-center fade-in">
-            <div class="mb-8 inline-block p-6 bg-blue-600 rounded-[2.5rem] shadow-2xl shadow-blue-200">
-                <i data-lucide="cloud-lightning" class="text-white w-14 h-14"></i>
+    <!-- Auth Layer -->
+    <div id="auth-screen" class="fixed inset-0 z-[9999] bg-slate-50 flex items-center justify-center p-6">
+        <div class="max-w-md w-full bg-white p-10 rounded-[3rem] shadow-2xl text-center space-y-8 animate-pop border border-white">
+            <div class="w-20 h-20 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-3xl shadow-xl flex items-center justify-center mx-auto text-white">
+                <i data-lucide="cloud-lightning" class="w-10 h-10"></i>
             </div>
-            <h1 class="text-5xl font-black mb-2 tracking-tighter">Mosa<span class="text-blue-600">Data</span></h1>
-            <p class="text-slate-400 font-bold mb-10">نظام الإدارة السحابي المتكامل</p>
-            <div class="space-y-4" id="login-form-area">
-                <button onclick="showAdminPass()" id="admin-gate-btn" class="w-full py-5 bg-slate-900 text-white rounded-3xl font-black flex items-center justify-center gap-3 transition-all hover:bg-black">
-                    <i data-lucide="shield-check" class="w-6 h-6"></i> بوابة المدير
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight italic">MOSA<span class="text-blue-600">DATA</span> <span class="text-slate-400 font-light">v4.5</span></h1>
+            
+            <div class="space-y-4" id="login-form">
+                <div id="admin-input-area" class="hidden animate-pop">
+                    <input type="password" id="pass-input" placeholder="كلمة المرور (123)" class="w-full p-4 bg-slate-100 rounded-2xl border-2 border-transparent focus:border-blue-600 outline-none text-center font-bold mb-4">
+                    <button onclick="checkAuth()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg shadow-blue-200 hover:bg-blue-700 transition">تأكيد الدخول</button>
+                </div>
+                <button id="admin-trigger" onclick="showAdminArea()" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black flex items-center justify-center gap-2">
+                    <i data-lucide="shield-lock" class="w-5 h-5"></i> لوحة الإدارة
                 </button>
-                <div id="admin-pass-input" class="hidden space-y-3">
-                    <input type="password" id="login-pass" placeholder="كلمة المرور (123)" class="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-3xl text-center font-black outline-none focus:border-blue-600 transition-all">
-                    <button onclick="handleLogin('admin')" class="w-full py-5 btn-gradient text-white rounded-3xl font-black shadow-lg">دخول المدير</button>
-                </div>
-                <button onclick="handleLogin('guest')" class="w-full py-5 bg-slate-100 text-slate-500 rounded-3xl font-bold hover:bg-slate-200 transition">دخول زائر (مشاهدة محدودة)</button>
+                <button onclick="enterAsGuest()" class="w-full py-4 bg-white border-2 border-slate-100 text-slate-500 rounded-2xl font-bold hover:bg-slate-50 transition">مشاهدة البيانات (زائر)</button>
             </div>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div id="app-container" class="hidden min-h-screen pb-20">
+    <!-- Main App -->
+    <div id="main-app" class="hidden min-h-screen pb-20">
         <!-- Header -->
-        <header class="sticky top-0 z-[1000] bg-white/80 backdrop-blur-xl border-b border-slate-100 px-6 py-4">
-            <div class="max-w-[1600px] mx-auto flex justify-between items-center">
+        <header class="glass sticky top-0 z-50 border-b border-slate-200 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-4">
-                    <div class="bg-blue-600 p-3 rounded-2xl text-white shadow-lg shadow-blue-200">
-                        <i data-lucide="database" class="w-7 h-7"></i>
-                    </div>
-                    <div>
-                        <h2 class="font-black text-2xl">MosaData <span id="role-tag" class="text-[10px] bg-blue-100 text-blue-600 px-3 py-1 rounded-full mr-2">Admin</span></h2>
-                        <p class="text-[10px] text-slate-400 font-bold tracking-widest uppercase">Cloud Database Infrastructure</p>
-                    </div>
+                    <div class="p-2.5 bg-blue-600 text-white rounded-xl shadow-lg"><i data-lucide="layout-dashboard" class="w-5 h-5"></i></div>
+                    <h2 class="font-black text-xl tracking-tight">النظام السحابي <span id="user-role-badge" class="mr-2 text-[10px] px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full">مدير</span></h2>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button onclick="location.reload()" class="p-4 text-rose-500 hover:bg-rose-50 rounded-2xl transition"><i data-lucide="log-out"></i></button>
+                <div class="flex items-center gap-2" id="header-tools">
+                    <button onclick="downloadExcelTemplate()" class="p-3 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-100 transition" title="تحميل قالب البيانات لملئه">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="document.getElementById('excel-input').click()" class="p-3 bg-indigo-50 text-indigo-600 rounded-2xl hover:bg-indigo-100 transition" title="استيراد من ملف Excel">
+                        <i data-lucide="file-up" class="w-5 h-5"></i>
+                    </button>
+                    <input type="file" id="excel-input" class="hidden" accept=".xlsx,.xls" onchange="handleExcelImport(event)">
+                    <button onclick="location.reload()" class="p-3 bg-rose-50 text-rose-600 rounded-2xl hover:bg-rose-100 transition">
+                        <i data-lucide="power" class="w-5 h-5"></i>
+                    </button>
                 </div>
             </div>
         </header>
 
-        <main class="max-w-[1600px] mx-auto p-6 space-y-8">
-            <!-- Stats Bar -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="glass-panel p-6 rounded-[2.5rem] shadow-sm border border-white">
-                    <div class="flex items-center gap-4">
-                        <div class="p-4 bg-blue-50 text-blue-600 rounded-2xl"><i data-lucide="users"></i></div>
-                        <div>
-                            <p class="text-xs font-bold text-slate-400">إجمالي العائلات</p>
-                            <h3 id="stat-families" class="text-3xl font-black">0</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="glass-panel p-6 rounded-[2.5rem] shadow-sm border border-white">
-                    <div class="flex items-center gap-4">
-                        <div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl"><i data-lucide="user-check"></i></div>
-                        <div>
-                            <p class="text-xs font-bold text-slate-400">إجمالي الأفراد</p>
-                            <h3 id="stat-individuals" class="text-3xl font-black">0</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="glass-panel p-6 rounded-[2.5rem] shadow-sm border border-white">
-                    <div class="flex items-center gap-4">
-                        <div class="p-4 bg-rose-50 text-rose-600 rounded-2xl"><i data-lucide="alert-circle"></i></div>
-                        <div>
-                            <p class="text-xs font-bold text-slate-400">هويات مكررة</p>
-                            <h3 id="stat-duplicates" class="text-3xl font-black text-rose-600">0</h3>
-                        </div>
-                    </div>
-                </div>
-                <div id="admin-shortcuts" class="hidden flex gap-2">
-                    <button onclick="openForm()" class="flex-1 btn-gradient text-white rounded-[2rem] font-black text-sm shadow-xl flex items-center justify-center gap-2">
-                        <i data-lucide="plus-circle"></i> إضافة سجل جديد
-                    </button>
-                </div>
+        <!-- Stats Section -->
+        <div class="max-w-7xl mx-auto p-6 md:p-10 grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="bg-white p-7 rounded-[2rem] border border-slate-200 shadow-sm flex items-center justify-between">
+                <div><p class="text-xs font-bold text-slate-400 mb-1">إجمالي العائلات</p><h3 id="stat-families" class="text-4xl font-black">0</h3></div>
+                <div class="w-14 h-14 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center"><i data-lucide="home" class="w-7 h-7"></i></div>
             </div>
+            <div class="bg-white p-7 rounded-[2rem] border border-slate-200 shadow-sm flex items-center justify-between">
+                <div><p class="text-xs font-bold text-slate-400 mb-1">إجمالي الأفراد</p><h3 id="stat-individuals" class="text-4xl font-black">0</h3></div>
+                <div class="w-14 h-14 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center"><i data-lucide="users-2" class="w-7 h-7"></i></div>
+            </div>
+            <button onclick="toggleDuplicateFilter()" id="duplicate-stat-card" class="bg-white p-7 rounded-[2rem] border-2 border-transparent shadow-sm flex items-center justify-between transition-all hover:scale-[1.02] active:scale-95 group text-right">
+                <div><p class="text-xs font-bold text-slate-400 mb-1">هويات مكررة</p><h3 id="stat-duplicates" class="text-4xl font-black text-rose-600">0</h3></div>
+                <div class="w-14 h-14 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-colors"><i data-lucide="copy" class="w-7 h-7"></i></div>
+            </button>
+        </div>
 
-            <!-- Controls Panel -->
-            <div class="glass-panel p-6 rounded-[3rem] shadow-lg border border-white space-y-6">
-                <div class="flex flex-wrap gap-4 items-center">
-                    <div class="relative flex-1 min-w-[300px]">
-                        <i data-lucide="search" class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5"></i>
-                        <input type="text" id="main-search" oninput="renderData()" placeholder="بحث سريع في كافة الحقول..." class="w-full pr-14 pl-6 py-5 bg-slate-50 border-none rounded-3xl outline-none focus:ring-4 focus:ring-blue-500/10 font-bold transition-all">
+        <!-- Dashboard -->
+        <main class="max-w-7xl mx-auto px-6 md:px-10">
+            <div class="bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm mb-8">
+                <div class="flex flex-col lg:flex-row gap-4 mb-6">
+                    <div class="relative flex-1">
+                        <i data-lucide="search" class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5"></i>
+                        <input type="text" id="main-search" oninput="renderAppTable()" placeholder="ابحث بالاسم، الهوية، المندوب، أو المنطقة..." class="w-full pr-14 pl-6 py-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 transition outline-none font-bold">
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="toggleAdvancedFilter()" class="p-5 bg-white border border-slate-100 rounded-3xl text-slate-400 hover:text-blue-600 transition shadow-sm"><i data-lucide="sliders-horizontal"></i></button>
-                        <div id="admin-export-tools" class="hidden flex gap-2">
-                            <button onclick="downloadTemplate()" class="px-6 py-4 bg-white border border-slate-200 text-slate-600 rounded-3xl font-black text-xs hover:bg-slate-50 transition shadow-sm flex items-center gap-2">
-                                <i data-lucide="download-cloud" class="w-4 h-4"></i> قالب البيانات
-                            </button>
-                            <button onclick="document.getElementById('excel-upload').click()" class="px-6 py-4 bg-emerald-50 text-emerald-600 rounded-3xl font-black text-xs hover:bg-emerald-100 transition shadow-sm flex items-center gap-2">
-                                <i data-lucide="file-up" class="w-4 h-4"></i> استيراد Excel
-                            </button>
-                            <input type="file" id="excel-upload" class="hidden" accept=".xlsx, .xls" onchange="handleExcelImport(event)">
-                            <button onclick="openExportModal()" class="px-6 py-4 bg-amber-50 text-amber-600 rounded-3xl font-black text-xs hover:bg-amber-100 transition shadow-sm flex items-center gap-2">
-                                <i data-lucide="file-output" class="w-4 h-4"></i> تصدير مخصص
-                            </button>
-                        </div>
+                    <div class="flex gap-2" id="admin-main-btns">
+                        <button onclick="openFormModal()" class="px-8 py-5 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-100 hover:bg-blue-700 transition flex items-center gap-2">
+                            <i data-lucide="plus" class="w-5 h-5"></i> إضافة عائلة
+                        </button>
+                        <button onclick="openCustomExport()" class="px-6 py-5 bg-slate-900 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-800 transition">
+                            <i data-lucide="layout-grid" class="w-5 h-5"></i> تصدير مخصص
+                        </button>
                     </div>
                 </div>
-
-                <!-- Advanced Filters (Collapsible) -->
-                <div id="advanced-filters" class="hidden grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100 fade-in">
-                    <select id="filter-status" onchange="renderData()" class="p-4 bg-white border border-slate-100 rounded-2xl text-xs font-bold outline-none">
-                        <option value="">كل الحالات الاجتماعية</option>
+                
+                <div class="flex flex-wrap gap-4 pt-4 border-t border-slate-50">
+                    <select id="filter-status" onchange="renderAppTable()" class="p-3 bg-slate-50 border-none rounded-xl text-[11px] font-black outline-none focus:ring-2 focus:ring-blue-200">
+                        <option value="">الحالة الاجتماعية (الكل)</option>
                         <option>متزوج</option><option>ارمله</option><option>مطلقة</option><option>مهجورة</option><option>اعزب</option><option>ايتام</option>
                     </select>
-                    <input type="text" id="filter-delegate" oninput="renderData()" placeholder="تصفية حسب المندوب" class="p-4 bg-white border border-slate-100 rounded-2xl text-xs font-bold outline-none">
-                    <input type="text" id="filter-area" oninput="renderData()" placeholder="المنطقة" class="p-4 bg-white border border-slate-100 rounded-2xl text-xs font-bold outline-none">
-                    <button onclick="clearFilters()" class="text-rose-500 font-black text-xs hover:underline">مسح الكل</button>
+                    <select id="filter-delegate" onchange="renderAppTable()" class="p-3 bg-slate-50 border-none rounded-xl text-[11px] font-black outline-none">
+                        <option value="">تصفية بالمندوب (الكل)</option>
+                    </select>
                 </div>
             </div>
 
             <!-- Main Table -->
-            <div class="bg-white rounded-[3.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-                <div class="overflow-x-auto custom-scroll">
+            <div class="bg-white rounded-[3rem] border border-slate-200 shadow-xl overflow-hidden">
+                <div class="overflow-x-auto custom-scrollbar">
                     <table class="w-full text-right">
                         <thead>
-                            <tr class="bg-slate-50/50 text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                                <th class="px-10 py-7">رب الأسرة / الهوية</th>
-                                <th class="px-10 py-7">المندوب</th>
-                                <th class="px-10 py-7">الحالة</th>
-                                <th class="px-10 py-7">منطقة النزوح</th>
-                                <th class="px-10 py-7">عدد الأفراد</th>
-                                <th class="px-10 py-7 text-center">التحكم</th>
+                            <tr class="bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                                <th class="px-8 py-6">رب الأسرة</th>
+                                <th class="px-8 py-6">رقم الهوية</th>
+                                <th class="px-8 py-6">المندوب</th>
+                                <th class="px-8 py-6">الحالة</th>
+                                <th class="px-8 py-6 text-center">الإجراءات</th>
                             </tr>
                         </thead>
-                        <tbody id="main-table-body" class="divide-y divide-slate-50 font-bold text-slate-600">
-                            <!-- JS Inject -->
+                        <tbody id="data-rows" class="divide-y divide-slate-50">
+                            <!-- Injected rows -->
                         </tbody>
                     </table>
                 </div>
-                <div id="empty-state" class="hidden py-40 text-center flex flex-col items-center">
-                    <div class="bg-slate-50 p-8 rounded-full mb-4 text-slate-200"><i data-lucide="database-zap" class="w-16 h-16"></i></div>
-                    <p class="text-slate-400 font-black text-xl italic tracking-tight">قاعدة البيانات السحابية فارغة حالياً</p>
+                <div id="empty-state" class="hidden py-40 text-center flex flex-col items-center justify-center opacity-30 italic">
+                    <i data-lucide="database-zap" class="w-16 h-16 mb-4"></i>
+                    <p class="font-black text-xl">لا توجد سجلات مطابقة</p>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Form Modal (Full Add/Edit) -->
-    <div id="form-modal" class="fixed inset-0 z-[6000] bg-slate-900/60 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-6xl max-h-[92vh] rounded-[4rem] shadow-2xl flex flex-col overflow-hidden fade-in">
-            <div class="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <div class="flex items-center gap-4">
-                    <div id="modal-icon" class="p-3 bg-blue-600 text-white rounded-2xl"><i data-lucide="plus-circle"></i></div>
-                    <h2 id="modal-title" class="text-3xl font-black text-slate-900">إضافة سجل سحابي جديد</h2>
+    <!-- Modals -->
+
+    <!-- 1. Unified Form Modal -->
+    <div id="modal-form" class="fixed inset-0 z-[6000] bg-slate-900/40 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-6xl max-h-[92vh] rounded-[3.5rem] shadow-2xl flex flex-col overflow-hidden animate-pop">
+            <div class="p-8 border-b flex justify-between items-center bg-slate-50/50">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-blue-100 text-blue-600 rounded-lg"><i data-lucide="clipboard-list" class="w-5 h-5"></i></div>
+                    <h2 id="form-title" class="text-xl font-black">إضافة بيانات عائلة</h2>
                 </div>
-                <button onclick="closeModals()" class="p-4 hover:bg-rose-100 text-rose-500 rounded-2xl transition"><i data-lucide="x"></i></button>
+                <button onclick="closeModal('modal-form')" class="p-2 hover:bg-rose-50 text-rose-500 rounded-full transition"><i data-lucide="x"></i></button>
             </div>
             
-            <form id="main-form" class="flex-1 overflow-y-auto p-10 space-y-12 custom-scroll">
-                <!-- Section 1: Basic Info -->
-                <div class="space-y-6">
-                    <div class="flex items-center gap-3 text-blue-600 font-black text-sm uppercase"><i data-lucide="user"></i> بيانات رب الأسرة والزوجة</div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 mr-2">الاسم الكامل لرب الأسرة</label>
-                            <input type="text" name="h_name" required class="w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold input-focus">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 mr-2">هوية رب الأسرة (9 أرقام)</label>
-                            <input type="number" name="h_id" required maxlength="9" oninput="limitLen(this, 9)" class="no-spinner w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold input-focus">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 mr-2">رقم الجوال (9 أرقام بدون 0)</label>
-                            <input type="number" name="h_phone" required maxlength="9" oninput="limitLen(this, 9)" class="no-spinner w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold input-focus">
-                        </div>
+            <form id="main-form" class="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar" onsubmit="return false">
+                <!-- Row 1: Main -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-slate-400 mr-2 uppercase">اسم رب الأسرة</label>
+                        <input type="text" name="h_name" required class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold">
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 mr-2">اسم الزوجة</label>
-                            <input type="text" name="wife_name" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none input-focus">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 mr-2">هوية الزوجة</label>
-                            <input type="number" name="wife_id" maxlength="9" oninput="limitLen(this, 9)" class="no-spinner w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none input-focus">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 mr-2">الحالة الاجتماعية</label>
-                            <select name="status" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none input-focus">
-                                <option>متزوج</option><option>ارمله</option><option>مطلقة</option><option>مهجورة</option><option>اعزب</option><option>ايتام</option>
-                            </select>
-                        </div>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-slate-400 mr-2 uppercase tracking-widest">رقم هوية رب الأسرة</label>
+                        <input type="number" name="h_id" required oninput="limitInput(this, 9)" class="no-spinner w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-slate-400 mr-2 uppercase tracking-widest">رقم الجوال (9 أرقام بدون 0)</label>
+                        <input type="number" name="h_phone" required oninput="limitInput(this, 9)" class="no-spinner w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold">
                     </div>
                 </div>
 
-                <!-- Section 2: Area & Stats -->
-                <div class="space-y-6">
-                    <div class="flex items-center gap-3 text-emerald-600 font-black text-sm uppercase"><i data-lucide="map-pin"></i> السكن والإحصائيات</div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 mr-2">عدد الذكور</label>
-                            <input type="number" name="num_male" class="no-spinner w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none input-focus">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 mr-2">عدد الإناث</label>
-                            <input type="number" name="num_female" class="no-spinner w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none input-focus">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 mr-2">المنطقة الأصلية</label>
-                            <input type="text" name="loc_original" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none input-focus">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 mr-2">منطقة النزوح</label>
-                            <input type="text" name="loc_now" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none input-focus">
-                        </div>
+                <!-- Row 2: Wife & Status -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-slate-50 rounded-[2.5rem]">
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-bold text-slate-500 mr-2">اسم الزوجة</label>
+                        <input type="text" name="wife_name" class="w-full p-4 bg-white rounded-2xl font-bold outline-none border border-slate-100 focus:border-blue-400 transition">
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 mr-2">المندوب المسؤول</label>
-                            <input type="text" name="delegate" class="w-full p-4 bg-blue-50 border border-blue-100 rounded-2xl font-black text-blue-600 outline-none input-focus">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 mr-2">رقم جوال بديل</label>
-                            <input type="number" name="phone_alt" maxlength="9" oninput="limitLen(this, 9)" class="no-spinner w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none input-focus">
-                        </div>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-bold text-slate-500 mr-2">هوية الزوجة</label>
+                        <input type="number" name="wife_id" oninput="limitInput(this, 9)" class="no-spinner w-full p-4 bg-white rounded-2xl font-bold outline-none border border-slate-100 focus:border-blue-400 transition">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-bold text-slate-500 mr-2">الحالة الاجتماعية</label>
+                        <select name="status" class="w-full p-4 bg-white rounded-2xl font-black outline-none border border-slate-100">
+                            <option>متزوج</option><option>ارمله</option><option>مطلقة</option><option>مهجورة</option><option>اعزب</option><option>ايتام</option>
+                        </select>
                     </div>
                 </div>
 
-                <!-- Section 3: Family Members Dynamic -->
+                <!-- Row 3: Location & Counts -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <input type="text" name="loc_orig" placeholder="منطقة السكن الأصلية" class="p-4 bg-slate-50 rounded-2xl font-bold outline-none border-none">
+                    <input type="text" name="loc_now" placeholder="منطقة النزوح الحالية" class="p-4 bg-slate-50 rounded-2xl font-bold outline-none border-none">
+                    <input type="text" name="delegate" placeholder="اسم المندوب" class="p-4 bg-blue-50 text-blue-700 placeholder:text-blue-300 rounded-2xl font-black outline-none border-none">
+                    <input type="number" name="phone_alt" oninput="limitInput(this, 9)" placeholder="جوال بديل" class="no-spinner p-4 bg-slate-50 rounded-2xl font-bold outline-none border-none">
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 p-8 bg-indigo-50/30 rounded-[2.5rem] border border-indigo-100">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-indigo-400 uppercase">إجمالي العائلة</label>
+                        <input type="number" name="count_total" readonly class="w-full bg-transparent font-black text-3xl text-indigo-600 outline-none">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-indigo-400 uppercase">ذكور</label>
+                        <input type="number" name="count_m" value="0" oninput="calculateTotal()" class="w-full p-3 bg-white rounded-xl font-bold border border-indigo-50 outline-none">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-indigo-400 uppercase">إناث</label>
+                        <input type="number" name="count_f" value="0" oninput="calculateTotal()" class="w-full p-3 bg-white rounded-xl font-bold border border-indigo-50 outline-none">
+                    </div>
+                </div>
+
+                <!-- Members List -->
                 <div class="space-y-6">
                     <div class="flex justify-between items-center">
-                        <div class="flex items-center gap-3 text-indigo-600 font-black text-sm uppercase"><i data-lucide="users-2"></i> أفراد العائلة المضافين</div>
-                        <button type="button" onclick="addFamilyRow()" class="px-6 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-black text-[10px] hover:bg-indigo-100 transition">+ إضافة فرد</button>
+                        <h4 class="font-black text-slate-900 border-r-4 border-blue-600 pr-3">أفراد العائلة الآخرين</h4>
+                        <button type="button" onclick="addMemberRow()" class="px-5 py-2 bg-blue-600 text-white rounded-full text-xs font-black shadow-lg shadow-blue-100">+ إضافة فرد</button>
                     </div>
-                    <div id="family-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                    <div id="members-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 </div>
 
-                <!-- Section 4: Health Conditions Dynamic -->
+                <!-- Health Conditions -->
                 <div class="space-y-6">
                     <div class="flex justify-between items-center">
-                        <div class="flex items-center gap-3 text-rose-600 font-black text-sm uppercase"><i data-lucide="heart-pulse"></i> الحالات المرضية والإعاقات</div>
-                        <button type="button" onclick="addHealthRow()" class="px-6 py-2 bg-rose-50 text-rose-600 rounded-xl font-black text-[10px] hover:bg-rose-100 transition">+ إضافة حالة</button>
+                        <h4 class="font-black text-rose-600 border-r-4 border-rose-600 pr-3">الحالات المرضية والإعاقات</h4>
+                        <button type="button" onclick="addHealthRow()" class="px-5 py-2 bg-rose-600 text-white rounded-full text-xs font-black shadow-lg shadow-rose-100">+ إضافة حالة صحية</button>
                     </div>
                     <div id="health-container" class="space-y-4"></div>
                 </div>
 
-                <!-- Section 5: Electronic Wallet -->
-                <div class="space-y-6">
-                    <div class="flex items-center gap-3 text-amber-600 font-black text-sm uppercase"><i data-lucide="wallet"></i> بيانات المحفظة الإلكترونية</div>
+                <!-- Wallet Information -->
+                <div class="p-8 bg-amber-50 rounded-[2.5rem] border border-amber-100">
+                    <h4 class="font-black text-amber-700 mb-6 flex items-center gap-2"><i data-lucide="wallet" class="w-5 h-5"></i> بيانات المحفظة الإلكترونية</h4>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <input type="text" name="wallet_name" placeholder="اسم مالك المحفظة" class="p-4 bg-amber-50 rounded-2xl font-bold outline-none input-focus">
-                        <input type="number" name="wallet_id" placeholder="هوية المالك" oninput="limitLen(this, 9)" class="no-spinner p-4 bg-amber-50 rounded-2xl font-bold outline-none input-focus">
-                        <input type="number" name="wallet_phone" placeholder="جوال المحفظة" oninput="limitLen(this, 9)" class="no-spinner p-4 bg-amber-50 rounded-2xl font-bold outline-none input-focus">
+                        <input type="text" name="w_name" placeholder="اسم صاحب المحفظة" class="p-4 bg-white rounded-2xl font-bold outline-none border border-amber-200">
+                        <input type="number" name="w_id" oninput="limitInput(this, 9)" placeholder="رقم هوية صاحب المحفظة" class="no-spinner p-4 bg-white rounded-2xl font-bold outline-none border border-amber-200">
+                        <input type="number" name="w_phone" oninput="limitInput(this, 9)" placeholder="رقم جوال المحفظة" class="no-spinner p-4 bg-white rounded-2xl font-bold outline-none border border-amber-200">
                     </div>
                 </div>
             </form>
-
-            <div class="p-10 border-t border-slate-100 bg-slate-50 flex gap-6">
-                <button onclick="submitData()" id="save-btn" class="flex-1 py-6 btn-gradient text-white rounded-[2.5rem] font-black text-xl shadow-2xl">حفظ ومزامنة البيانات</button>
+            <div class="p-8 bg-slate-50 border-t flex gap-4">
+                <button onclick="submitFamilyData()" class="flex-1 py-5 bg-blue-600 text-white rounded-[1.5rem] font-black text-xl shadow-xl shadow-blue-100 active:scale-95 transition">حفظ البيانات سحابياً</button>
+                <button onclick="closeModal('modal-form')" class="px-10 py-5 bg-white text-slate-500 rounded-[1.5rem] font-bold border">إلغاء</button>
             </div>
         </div>
     </div>
 
-    <!-- Details View Modal -->
-    <div id="view-modal" class="fixed inset-0 z-[7000] bg-slate-900/80 backdrop-blur-xl hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-4xl max-h-[94vh] rounded-[4.5rem] shadow-2xl flex flex-col overflow-hidden fade-in relative">
+    <!-- 2. Professional Details View -->
+    <div id="modal-view" class="fixed inset-0 z-[7000] bg-slate-900/60 backdrop-blur-xl hidden flex items-center justify-center p-4">
+        <div class="bg-slate-50 w-full max-w-4xl max-h-[94vh] rounded-[3.5rem] shadow-2xl flex flex-col overflow-hidden animate-pop">
             
-            <button onclick="closeModals()" class="absolute top-8 left-8 p-4 bg-white/10 hover:bg-rose-500 text-slate-800 hover:text-white rounded-full transition z-10"><i data-lucide="x"></i></button>
-
-            <!-- Card Header -->
-            <div class="p-12 bg-slate-900 text-white flex justify-between items-end overflow-hidden relative">
-                <div class="relative z-10">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span id="v-status-badge" class="px-4 py-1.5 bg-blue-600 text-[10px] rounded-full font-black tracking-widest uppercase">---</span>
-                        <span id="v-delegate-badge" class="px-4 py-1.5 bg-white/10 text-[10px] rounded-full font-bold">---</span>
+            <div id="view-header" class="p-10 md:p-14 bg-gradient-to-br from-slate-900 to-slate-800 text-white relative">
+                <button onclick="closeModal('modal-view')" class="absolute top-8 left-8 p-3 bg-white/10 hover:bg-rose-500 text-white rounded-full transition"><i data-lucide="x"></i></button>
+                <div class="flex flex-col md:flex-row justify-between items-start gap-8">
+                    <div class="space-y-3">
+                        <span id="v-badge" class="px-4 py-1.5 bg-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest inline-block">عائلة نشطة</span>
+                        <h2 id="v-name" class="text-4xl md:text-5xl font-black">--</h2>
+                        <p id="v-id" class="text-slate-400 font-mono text-xl">--</p>
                     </div>
-                    <h2 id="v-name" class="text-5xl font-black mb-2">---</h2>
-                    <p id="v-id" class="text-slate-400 font-mono text-xl tracking-tighter">---</p>
-                </div>
-                <div class="relative z-10 text-center bg-white/5 p-6 rounded-[2.5rem] backdrop-blur-md border border-white/5">
-                    <p class="text-[10px] font-bold text-slate-400 mb-1">إجمالي الأفراد</p>
-                    <p id="v-total" class="text-5xl font-black text-blue-400">0</p>
-                </div>
-                <div class="absolute -right-20 -bottom-20 opacity-5">
-                    <i data-lucide="database" class="w-80 h-80"></i>
+                    <div class="flex gap-4">
+                        <div class="bg-white/5 border border-white/10 p-5 rounded-3xl text-center min-w-[120px]">
+                            <p class="text-[10px] text-slate-400 font-bold mb-1 uppercase">إجمالي الأفراد</p>
+                            <p id="v-total" class="text-4xl font-black text-blue-400">0</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div id="view-content" class="flex-1 overflow-y-auto p-12 space-y-12 custom-scroll bg-slate-50/50">
-                <!-- Content will be injected by JS -->
+            <div id="view-content" class="flex-1 overflow-y-auto p-8 md:p-14 space-y-12 custom-scrollbar">
+                <!-- Cards will be injected here -->
             </div>
 
-            <div class="p-8 bg-white border-t border-slate-100 flex gap-4">
-                <button id="v-export-btn" class="flex-1 py-5 bg-blue-50 text-blue-600 rounded-3xl font-black flex items-center justify-center gap-2 hover:bg-blue-100 transition">
-                    <i data-lucide="file-down"></i> تصدير تفاصيل السجل
+            <div class="p-8 bg-white border-t flex flex-col md:flex-row gap-4">
+                <button id="v-export-btn" class="flex-1 py-5 bg-blue-600 text-white rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-blue-700 transition">
+                    <i data-lucide="printer"></i> تصدير تقرير العائلة (Excel)
                 </button>
-                <button onclick="closeModals()" class="px-12 py-5 bg-slate-900 text-white rounded-3xl font-black">إغلاق</button>
+                <button onclick="closeModal('modal-view')" class="px-14 py-5 bg-slate-100 text-slate-600 rounded-2xl font-black">إغلاق</button>
             </div>
         </div>
     </div>
 
-    <!-- Custom Export Modal -->
-    <div id="export-modal" class="fixed inset-0 z-[8000] bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-xl rounded-[3rem] p-10 space-y-6 fade-in shadow-2xl">
-            <h3 class="text-2xl font-black">تصدير مخصص لملف Excel</h3>
-            <p class="text-xs text-slate-400 font-bold">اختر الأعمدة التي ترغب في تضمينها في الملف:</p>
-            <div id="export-options" class="grid grid-cols-2 gap-3 max-h-[40vh] overflow-y-auto p-2">
-                <!-- Dynamic Checkboxes -->
+    <!-- 3. Custom Export Modal -->
+    <div id="modal-export" class="fixed inset-0 z-[8000] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-6">
+        <div class="bg-white w-full max-w-xl rounded-[2.5rem] p-10 space-y-8 animate-pop">
+            <h3 class="text-2xl font-black">تصدير مخصص</h3>
+            <div id="export-checklist" class="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto custom-scrollbar p-1">
+                <!-- Checklist injected -->
             </div>
-            <div class="flex gap-4 pt-6">
-                <button onclick="executeCustomExport()" class="flex-1 py-5 btn-gradient text-white rounded-2xl font-black">بدء التصدير</button>
-                <button onclick="closeModals()" class="px-8 py-5 bg-slate-100 rounded-2xl font-bold">إلغاء</button>
+            <div class="flex gap-3">
+                <button onclick="executeCustomExport()" class="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg">بدء التنزيل</button>
+                <button onclick="closeModal('modal-export')" class="px-8 py-4 bg-slate-100 rounded-2xl font-bold">إلغاء</button>
             </div>
         </div>
+    </div>
+
+    <!-- Toast & Undo -->
+    <div id="undo-notification" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[9000] hidden">
+        <div class="bg-slate-900 text-white px-8 py-5 rounded-[2rem] shadow-2xl flex items-center gap-10 animate-pop">
+            <p class="font-bold text-sm">تم الحذف بنجاح.</p>
+            <button onclick="performUndo()" class="text-blue-400 font-black italic hover:underline">تراجع الآن (5 ثوانٍ)</button>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed top-10 left-1/2 -translate-x-1/2 z-[10000] hidden">
+        <div class="bg-white px-8 py-3 rounded-2xl shadow-xl border-b-4 border-blue-600 font-black text-sm animate-pop">---</div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, query, orderBy, deleteDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
-        // Firebase Config
+        // Config
         const firebaseConfig = {
             apiKey: "AIzaSyCxI5hPvlddgn9aZUrewesDbg8YSD7bEnk",
             authDomain: "mosadata-18521.firebaseapp.com",
@@ -365,187 +325,231 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const appId = "mosa_pro_v2_stable";
+        const APP_COLLECTION = "families_v4";
 
-        let dataStore = [];
-        let currentRole = 'guest';
-        let editModeId = null;
-        let lastDeleted = null;
+        let allFamilies = [];
+        let userRole = 'guest';
+        let activeEditId = null;
+        let trashData = null;
+        let undoTimeout = null;
+        let showOnlyDuplicates = false;
 
-        // --- Auth Logic ---
-        window.showAdminPass = () => {
-            document.getElementById('admin-gate-btn').classList.add('hidden');
-            document.getElementById('admin-pass-input').classList.remove('hidden');
+        // --- Auth ---
+        window.showAdminArea = () => {
+            document.getElementById('admin-trigger').classList.add('hidden');
+            document.getElementById('admin-input-area').classList.remove('hidden');
         };
 
-        window.handleLogin = async (role) => {
-            if(role === 'admin') {
-                const pass = document.getElementById('login-pass').value;
-                if(pass !== '123') return showToast("كلمة المرور غير صحيحة", "error");
-                currentRole = 'admin';
+        window.checkAuth = async () => {
+            if(document.getElementById('pass-input').value === '123') {
+                userRole = 'admin';
+                await launchSystem();
+            } else {
+                showToast("كلمة المرور غير صحيحة");
             }
+        };
+
+        window.enterAsGuest = async () => {
+            userRole = 'guest';
+            await launchSystem();
+        };
+
+        async function launchSystem() {
             try {
                 await signInAnonymously(auth);
                 document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('app-container').classList.remove('hidden');
-                bootstrapApp();
-            } catch(e) { showToast("فشل الاتصال السحابي", "error"); }
-        };
+                document.getElementById('main-app').classList.remove('hidden');
+                document.getElementById('user-role-badge').innerText = userRole === 'admin' ? 'مدير' : 'زائر (عرض فقط)';
+                
+                if(userRole === 'guest') {
+                    document.getElementById('admin-main-btns').classList.add('hidden');
+                    document.getElementById('header-tools').innerHTML = '';
+                }
 
-        function bootstrapApp() {
-            lucide.createIcons();
-            document.getElementById('role-tag').innerText = currentRole === 'admin' ? 'مدير' : 'زائر';
-            if(currentRole === 'admin') {
-                document.getElementById('admin-shortcuts').classList.remove('hidden');
-                document.getElementById('admin-export-tools').classList.remove('hidden');
+                initDataSync();
+                lucide.createIcons();
+            } catch (err) {
+                showToast("عذراً، فشل الاتصال بالسحابة");
             }
-
-            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'records'), orderBy('createdAt', 'desc'));
-            onSnapshot(q, (snap) => {
-                dataStore = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderData();
-                updateStats();
-            });
         }
 
-        // --- Data Logic ---
-        window.renderData = () => {
-            const search = document.getElementById('main-search').value.toLowerCase();
-            const statusF = document.getElementById('filter-status').value;
-            const delegateF = document.getElementById('filter-delegate').value.toLowerCase();
-            const areaF = document.getElementById('filter-area').value.toLowerCase();
-            
-            const tbody = document.getElementById('main-table-body');
-            tbody.innerHTML = '';
+        // --- Data Sync ---
+        function initDataSync() {
+            const q = query(collection(db, 'artifacts', 'mosa_pro_v4', 'public', 'data', APP_COLLECTION), orderBy('createdAt', 'desc'));
+            onSnapshot(q, (snap) => {
+                allFamilies = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                updateDashboardStats();
+                populateDelegateFilter();
+                renderAppTable();
+            }, (err) => showToast("خطأ في جلب البيانات"));
+        }
 
-            const filtered = dataStore.filter(r => {
-                const searchStr = `${r.h_name} ${r.h_id} ${r.delegate} ${r.loc_now} ${r.h_phone}`.toLowerCase();
-                return searchStr.includes(search) &&
-                       (!statusF || r.status === statusF) &&
-                       (!delegateF || r.delegate?.toLowerCase().includes(delegateF)) &&
-                       (!areaF || r.loc_now?.toLowerCase().includes(areaF));
+        window.renderAppTable = () => {
+            const queryTxt = document.getElementById('main-search').value.toLowerCase();
+            const statusF = document.getElementById('filter-status').value;
+            const delegateF = document.getElementById('filter-delegate').value;
+
+            let filtered = allFamilies.filter(f => {
+                const searchMatch = `${f.h_name} ${f.h_id} ${f.delegate} ${f.loc_now}`.toLowerCase().includes(queryTxt);
+                const statusMatch = !statusF || f.status === statusF;
+                const delegateMatch = !delegateF || f.delegate === delegateF;
+                return searchMatch && statusMatch && delegateMatch;
             });
+
+            if(showOnlyDuplicates) {
+                const ids = allFamilies.map(f => f.h_id);
+                const dupIds = ids.filter((id, index) => ids.indexOf(id) !== index);
+                filtered = filtered.filter(f => dupIds.includes(f.h_id));
+            }
+
+            const container = document.getElementById('data-rows');
+            const empty = document.getElementById('empty-state');
+            container.innerHTML = '';
 
             if(filtered.length === 0) {
-                document.getElementById('empty-state').classList.remove('hidden');
-            } else {
-                document.getElementById('empty-state').classList.add('hidden');
-                filtered.forEach(r => {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-blue-50/50 transition-colors group";
-                    tr.innerHTML = `
-                        <td class="px-10 py-7">
-                            <div class="text-slate-900 font-black">${r.h_name}</div>
-                            <div class="text-[10px] text-slate-400 mt-1">${currentRole === 'admin' ? r.h_id : '*********'}</div>
-                        </td>
-                        <td class="px-10 py-7"><span class="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-black">${r.delegate || '-'}</span></td>
-                        <td class="px-10 py-7 text-xs">${r.status || '-'}</td>
-                        <td class="px-10 py-7 text-[11px] text-slate-400 italic">${r.loc_now || '-'}</td>
-                        <td class="px-10 py-7"><div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center font-black">${r.total_ppl || 0}</div></td>
-                        <td class="px-10 py-7">
-                            <div class="flex items-center justify-center gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onclick="viewRecord('${r.id}')" class="p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-100"><i data-lucide="eye" class="w-4 h-4"></i></button>
-                                ${currentRole === 'admin' ? `
-                                    <button onclick="editRecord('${r.id}')" class="p-3 bg-amber-500 text-white rounded-xl"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                                    <button onclick="deleteRecord('${r.id}')" class="p-3 bg-rose-500 text-white rounded-xl"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                ` : ''}
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                empty.classList.remove('hidden');
+                return;
             }
+
+            empty.classList.add('hidden');
+            filtered.forEach(f => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-blue-50/30 transition group animate-pop";
+                tr.innerHTML = `
+                    <td class="px-8 py-6 font-black text-slate-900">${f.h_name}</td>
+                    <td class="px-8 py-6 font-mono text-xs text-slate-400">${userRole==='admin' ? f.h_id : '*********'}</td>
+                    <td class="px-8 py-6">
+                        <span class="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-black text-slate-500 uppercase tracking-tighter">${f.delegate || 'بدون'}</span>
+                    </td>
+                    <td class="px-8 py-6 text-[11px] font-black text-slate-500">${f.status}</td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="viewFamilyDetails('${f.id}')" class="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition shadow-sm"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                            ${userRole === 'admin' ? `
+                                <button onclick="editFamilyRecord('${f.id}')" class="p-3 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-500 hover:text-white transition"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                                <button onclick="deleteFamilyRecord('${f.id}')" class="p-3 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-500 hover:text-white transition"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+                container.appendChild(tr);
+            });
             lucide.createIcons();
         };
 
-        function updateStats() {
-            document.getElementById('stat-families').innerText = dataStore.length;
-            const totalInd = dataStore.reduce((acc, r) => acc + (parseInt(r.total_ppl) || 0), 0);
-            document.getElementById('stat-individuals').innerText = totalInd;
+        // --- Logic & Form ---
+        function updateDashboardStats() {
+            document.getElementById('stat-families').innerText = allFamilies.length;
+            const individuals = allFamilies.reduce((total, f) => total + (parseInt(f.count_total) || 0), 0);
+            document.getElementById('stat-individuals').innerText = individuals;
             
-            const ids = dataStore.map(r => r.h_id).filter(id => id);
-            const dups = ids.filter((id, index) => ids.indexOf(id) !== index);
-            document.getElementById('stat-duplicates').innerText = dups.length;
+            const ids = allFamilies.map(f => f.h_id).filter(id => id);
+            const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
+            document.getElementById('stat-duplicates').innerText = [...new Set(duplicates)].length;
         }
 
-        // --- Form Management ---
-        window.openForm = () => {
-            editModeId = null;
-            document.getElementById('main-form').reset();
-            document.getElementById('family-container').innerHTML = '';
-            document.getElementById('health-container').innerHTML = '';
-            document.getElementById('modal-title').innerText = "إضافة سجل سحابي جديد";
-            document.getElementById('form-modal').classList.remove('hidden');
-            lucide.createIcons();
+        window.toggleDuplicateFilter = () => {
+            showOnlyDuplicates = !showOnlyDuplicates;
+            const card = document.getElementById('duplicate-stat-card');
+            if(showOnlyDuplicates) {
+                card.classList.add('border-rose-500', 'bg-rose-50');
+                showToast("عرض الهويات المكررة فقط");
+            } else {
+                card.classList.remove('border-rose-500', 'bg-rose-50');
+            }
+            renderAppTable();
         };
 
-        window.addFamilyRow = (data = {}) => {
-            const id = Math.random().toString(36).substr(2, 9);
+        function populateDelegateFilter() {
+            const delegates = [...new Set(allFamilies.map(f => f.delegate).filter(d => d))];
+            const select = document.getElementById('filter-delegate');
+            const current = select.value;
+            select.innerHTML = '<option value="">تصفية بالمندوب (الكل)</option>' + 
+                               delegates.map(d => `<option ${d===current?'selected':''}>${d}</option>`).join('');
+        }
+
+        window.openFormModal = () => {
+            activeEditId = null;
+            document.getElementById('main-form').reset();
+            document.getElementById('members-container').innerHTML = '';
+            document.getElementById('health-container').innerHTML = '';
+            document.getElementById('form-title').innerText = "إضافة بيانات عائلة جديدة";
+            document.getElementById('modal-form').classList.remove('hidden');
+            calculateTotal();
+        };
+
+        window.addMemberRow = (v = {}) => {
             const div = document.createElement('div');
-            div.className = "p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 relative fade-in space-y-3";
+            div.className = "p-5 bg-slate-50 border border-slate-100 rounded-3xl space-y-3 relative group animate-pop shadow-sm";
             div.innerHTML = `
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-[10px] font-black text-indigo-400">بيانات الفرد</span>
-                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-rose-500 p-2 hover:bg-rose-50 rounded-full transition"><i data-lucide="minus-circle" class="w-4 h-4"></i></button>
-                </div>
-                <input type="text" placeholder="الاسم الكامل" class="f-name w-full p-3 bg-white border border-slate-100 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-indigo-200" value="${data.name||''}">
-                <div class="grid grid-cols-2 gap-3">
-                    <select class="f-rel p-3 bg-white border border-slate-100 rounded-xl font-black text-[10px] outline-none">
-                        <option ${data.rel==='ابن'?'selected':''}>ابن</option><option ${data.rel==='ابنه'?'selected':''}>ابنه</option>
-                        <option ${data.rel==='زوجة'?'selected':''}>زوجة</option><option ${data.rel==='أب'?'selected':''}>أب</option>
-                        <option ${data.rel==='أم'?'selected':''}>أم</option><option ${data.rel==='أخ'?'selected':''}>أخ</option>
-                        <option ${data.rel==='أخت'?'selected':''}>أخت</option>
+                <button type="button" onclick="this.parentElement.remove(); calculateTotal();" class="absolute -top-2 -left-2 bg-white text-rose-500 p-2 rounded-full border shadow-sm opacity-0 group-hover:opacity-100 transition"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                <input type="text" placeholder="الاسم الرباعي" class="m-name w-full p-3 bg-white rounded-xl text-xs font-bold outline-none border-none shadow-inner" value="${v.name||''}">
+                <div class="grid grid-cols-2 gap-2">
+                    <select class="m-rel p-3 bg-white rounded-xl text-[10px] font-black border-none outline-none shadow-sm">
+                        <option ${v.rel==='ابن'?'selected':''}>ابن</option><option ${v.rel==='ابنه'?'selected':''}>ابنه</option>
+                        <option ${v.rel==='زوجة'?'selected':''}>زوجة</option><option ${v.rel==='أم'?'selected':''}>أم</option>
+                        <option ${v.rel==='أب'?'selected':''}>أب</option><option ${v.rel==='أخ'?'selected':''}>أخ</option>
+                        <option ${v.rel==='أخت'?'selected':''}>أخت</option><option ${v.rel==='خالة'?'selected':''}>خالة</option>
+                        <option ${v.rel==='عمة'?'selected':''}>عمة</option><option ${v.rel==='جد'?'selected':''}>جد</option><option ${v.rel==='جده'?'selected':''}>جده</option>
                     </select>
-                    <input type="number" placeholder="رقم الهوية" oninput="limitLen(this, 9)" class="f-id w-full p-3 bg-white border border-slate-100 rounded-xl font-bold text-xs outline-none no-spinner" value="${data.id||''}">
+                    <input type="number" placeholder="رقم الهوية" oninput="limitInput(this, 9)" class="m-id w-full p-3 bg-white rounded-xl text-xs font-mono outline-none border-none shadow-sm no-spinner" value="${v.id||''}">
                 </div>
-                <div class="flex items-center gap-3">
-                    <label class="text-[9px] font-bold text-slate-400">تاريخ الميلاد:</label>
-                    <input type="date" class="f-dob flex-1 p-2 bg-white border border-slate-100 rounded-xl text-[10px]" value="${data.dob||''}">
+                <div class="flex items-center gap-2">
+                    <span class="text-[9px] font-black text-slate-400">تاريخ الميلاد:</span>
+                    <input type="date" class="m-dob flex-1 p-2 bg-white rounded-xl text-[10px] font-bold border-none outline-none" value="${v.dob||''}">
                 </div>
             `;
-            document.getElementById('family-container').appendChild(div);
+            document.getElementById('members-container').appendChild(div);
             lucide.createIcons();
+            calculateTotal();
         };
 
-        window.addHealthRow = (data = {}) => {
+        window.addHealthRow = (v = {}) => {
             const div = document.createElement('div');
-            div.className = "p-5 bg-rose-50/50 rounded-3xl border border-rose-100 grid grid-cols-1 md:grid-cols-5 gap-3 relative fade-in items-center";
+            div.className = "grid grid-cols-1 md:grid-cols-5 gap-3 p-5 bg-rose-50/40 border border-rose-100 rounded-3xl relative group animate-pop shadow-sm";
             div.innerHTML = `
-                <select class="h-type p-3 bg-white rounded-xl text-[10px] font-black border border-rose-100 outline-none">
-                    <option ${data.type==='مرض مزمن'?'selected':''}>مرض مزمن</option>
-                    <option ${data.type==='اعاقة حركية'?'selected':''}>اعاقة حركية</option>
-                    <option ${data.type==='اعاقة سمعية'?'selected':''}>اعاقة سمعية</option>
-                    <option ${data.type==='اعاقة بصرية'?'selected':''}>اعاقة بصرية</option>
-                    <option ${data.type==='اخرى'?'selected':''}>اخرى</option>
+                <button type="button" onclick="this.parentElement.remove()" class="absolute -top-2 -left-2 bg-white text-rose-500 p-2 rounded-full border shadow-sm opacity-0 group-hover:opacity-100 transition"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                <select class="h-type p-3 bg-white rounded-xl text-[10px] font-black outline-none shadow-sm">
+                    <option ${v.type==='مرض مزمن'?'selected':''}>مرض مزمن</option>
+                    <option ${v.type==='اعاقة حركية'?'selected':''}>اعاقة حركية</option>
+                    <option ${v.type==='اعاقة سمعية'?'selected':''}>اعاقة سمعية</option>
+                    <option ${v.type==='اعاقة بصرية'?'selected':''}>اعاقة بصرية</option>
+                    <option ${v.type==='اخرى'?'selected':''}>اخرى</option>
                 </select>
-                <input type="text" placeholder="الاسم" class="h-name p-3 bg-white rounded-xl text-[10px] border border-rose-100" value="${data.name||''}">
-                <input type="number" placeholder="الهوية" oninput="limitLen(this, 9)" class="h-id p-3 bg-white rounded-xl text-[10px] border border-rose-100" value="${data.id||''}">
-                <input type="number" placeholder="جوال" oninput="limitLen(this, 9)" class="h-phone p-3 bg-white rounded-xl text-[10px] border border-rose-100" value="${data.phone||''}">
-                <input type="text" placeholder="نوع المرض بالتفصيل" class="h-desc p-3 bg-white rounded-xl text-[10px] border border-rose-100" value="${data.desc||''}">
-                <button type="button" onclick="this.parentElement.remove()" class="absolute -top-2 -left-2 bg-white text-rose-500 p-1 rounded-full border border-rose-100 shadow-sm"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                <input type="text" placeholder="اسم الحالة" class="h-name p-3 bg-white rounded-xl text-xs font-bold outline-none shadow-sm" value="${v.name||''}">
+                <input type="number" placeholder="الهوية" oninput="limitInput(this, 9)" class="h-id p-3 bg-white rounded-xl text-xs font-mono outline-none shadow-sm no-spinner" value="${v.id||''}">
+                <input type="number" placeholder="رقم الجوال" oninput="limitInput(this, 9)" class="h-phone p-3 bg-white rounded-xl text-xs font-mono outline-none shadow-sm no-spinner" value="${v.phone||''}">
+                <input type="text" placeholder="نوع المرض/التفصيل" class="h-diag p-3 bg-white rounded-xl text-xs font-bold outline-none shadow-sm col-span-1 md:col-span-1" value="${v.diag||''}">
             `;
             document.getElementById('health-container').appendChild(div);
             lucide.createIcons();
         };
 
-        window.submitData = async () => {
+        window.calculateTotal = () => {
             const form = document.getElementById('main-form');
-            const fd = new FormData(form);
-            const basic = Object.fromEntries(fd);
+            const m = parseInt(form.elements['count_m'].value) || 0;
+            const f = parseInt(form.elements['count_f'].value) || 0;
+            const membersCount = document.getElementById('members-container').children.length;
+            const hasWife = form.elements['wife_name'].value.trim() !== "" ? 1 : 0;
+            form.elements['count_total'].value = 1 + hasWife + membersCount + m + f;
+        };
 
-            // Validation
-            if(!basic.h_name || basic.h_id.length !== 9 || basic.h_phone.length !== 9) {
-                return showToast("تأكد من إكمال البيانات (الهوية والجوال 9 أرقام)", "error");
+        window.submitFamilyData = async () => {
+            const form = document.getElementById('main-form');
+            const rawData = Object.fromEntries(new FormData(form));
+
+            if(!rawData.h_name || rawData.h_id.length !== 9 || rawData.h_phone.length !== 9) {
+                return showToast("يجب إدخال الاسم و 9 أرقام للهوية والجوال");
             }
 
-            const family = Array.from(document.querySelectorAll('#family-container > div')).map(row => {
-                const dob = row.querySelector('.f-dob').value;
+            const members = Array.from(document.querySelectorAll('#members-container > div')).map(row => {
+                const dob = row.querySelector('.m-dob').value;
                 return {
-                    name: row.querySelector('.f-name').value,
-                    rel: row.querySelector('.f-rel').value,
-                    id: row.querySelector('.f-id').value,
+                    name: row.querySelector('.m-name').value,
+                    rel: row.querySelector('.m-rel').value,
+                    id: row.querySelector('.m-id').value,
                     dob: dob,
-                    age: calculateAge(dob)
+                    ageStr: calculateAgeDetailed(dob)
                 };
             });
 
@@ -554,269 +558,238 @@
                 name: row.querySelector('.h-name').value,
                 id: row.querySelector('.h-id').value,
                 phone: row.querySelector('.h-phone').value,
-                desc: row.querySelector('.h-desc').value
+                diag: row.querySelector('.h-diag').value
             }));
 
-            const payload = {
-                ...basic,
-                family,
+            const finalPayload = {
+                ...rawData,
+                members,
                 health,
-                total_ppl: (1 + (basic.wife_name ? 1 : 0) + family.length),
                 updatedAt: serverTimestamp()
             };
 
             try {
-                if(editModeId) {
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'records', editModeId), payload);
-                    showToast("تم تحديث السجل بنجاح", "success");
+                const docRef = collection(db, 'artifacts', 'mosa_pro_v4', 'public', 'data', APP_COLLECTION);
+                if(activeEditId) {
+                    await updateDoc(doc(db, 'artifacts', 'mosa_pro_v4', 'public', 'data', APP_COLLECTION, activeEditId), finalPayload);
+                    showToast("تم تحديث البيانات");
                 } else {
-                    payload.createdAt = serverTimestamp();
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'records'), payload);
-                    showToast("تمت الإضافة بنجاح", "success");
+                    finalPayload.createdAt = serverTimestamp();
+                    await addDoc(docRef, finalPayload);
+                    showToast("تم الحفظ في السحابة");
                 }
-                closeModals();
-            } catch(e) { showToast("فشل الحفظ في السحابة", "error"); }
+                closeModal('modal-form');
+            } catch (err) {
+                showToast("خطأ في الاتصال بالخادم");
+            }
         };
 
-        window.editRecord = (id) => {
-            editModeId = id;
-            const r = dataStore.find(x => x.id === id);
+        window.editFamilyRecord = (id) => {
+            activeEditId = id;
+            const item = allFamilies.find(x => x.id === id);
             const form = document.getElementById('main-form');
             
-            document.getElementById('family-container').innerHTML = '';
+            document.getElementById('members-container').innerHTML = '';
             document.getElementById('health-container').innerHTML = '';
 
-            for(const key in r) {
-                if(form.elements[key]) form.elements[key].value = r[key];
-            }
+            for(let key in item) { if(form.elements[key]) form.elements[key].value = item[key]; }
+            if(item.members) item.members.forEach(m => addMemberRow(m));
+            if(item.health) item.health.forEach(h => addHealthRow(h));
 
-            if(r.family) r.family.forEach(f => addFamilyRow(f));
-            if(r.health) r.health.forEach(h => addHealthRow(h));
-
-            document.getElementById('modal-title').innerText = "تعديل بيانات السجل";
-            document.getElementById('form-modal').classList.remove('hidden');
-            lucide.createIcons();
+            document.getElementById('form-title').innerText = "تعديل بيانات: " + item.h_name;
+            document.getElementById('modal-form').classList.remove('hidden');
+            calculateTotal();
         };
 
-        window.deleteRecord = async (id) => {
-            const record = dataStore.find(x => x.id === id);
-            lastDeleted = { ...record };
+        window.deleteFamilyRecord = async (id) => {
+            trashData = { ...allFamilies.find(x => x.id === id) };
+            await deleteDoc(doc(db, 'artifacts', 'mosa_pro_v4', 'public', 'data', APP_COLLECTION, id));
             
-            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'records', id));
-            
-            const toast = document.getElementById('undo-toast');
-            toast.classList.remove('hidden');
-            
-            const undoBtn = document.getElementById('undo-btn');
-            let timeout = setTimeout(() => { toast.classList.add('hidden'); }, 5000);
-
-            undoBtn.onclick = async () => {
-                clearTimeout(timeout);
-                delete lastDeleted.id;
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'records'), lastDeleted);
-                toast.classList.add('hidden');
-                showToast("تمت استعادة البيانات بنجاح", "success");
-            };
+            const undoNotif = document.getElementById('undo-notification');
+            undoNotif.classList.remove('hidden');
+            clearTimeout(undoTimeout);
+            undoTimeout = setTimeout(() => undoNotif.classList.add('hidden'), 5000);
         };
 
-        // --- Details View ---
-        window.viewRecord = (id) => {
-            const r = dataStore.find(x => x.id === id);
-            if(!r) return;
+        window.performUndo = async () => {
+            if(!trashData) return;
+            const { id, ...cleanData } = trashData;
+            await addDoc(collection(db, 'artifacts', 'mosa_pro_v4', 'public', 'data', APP_COLLECTION), cleanData);
+            document.getElementById('undo-notification').classList.add('hidden');
+            showToast("تم التراجع عن الحذف");
+        };
 
-            document.getElementById('v-name').innerText = r.h_name;
-            document.getElementById('v-id').innerText = currentRole === 'admin' ? r.h_id : 'رقم الهوية محجوب';
-            document.getElementById('v-status-badge').innerText = r.status;
-            document.getElementById('v-delegate-badge').innerText = `بإشراف: ${r.delegate || 'بدون مندوب'}`;
-            document.getElementById('v-total').innerText = r.total_ppl || 0;
+        // --- Details & Export ---
+        window.viewFamilyDetails = (id) => {
+            const f = allFamilies.find(x => x.id === id);
+            if(!f) return;
+
+            document.getElementById('v-name').innerText = f.h_name;
+            document.getElementById('v-id').innerText = userRole === 'admin' ? f.h_id : 'رقم الهوية محجوب';
+            document.getElementById('v-total').innerText = f.count_total || 0;
+            document.getElementById('v-badge').innerText = f.status;
 
             const content = document.getElementById('view-content');
             content.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Basic Info -->
-                    <div class="space-y-4">
-                        <h4 class="text-xs font-black text-blue-600 uppercase tracking-widest flex items-center gap-2"><i data-lucide="info"></i> البيانات الأساسية</h4>
-                        <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-3">
-                            <div class="flex justify-between border-b border-slate-50 py-2"><span class="text-xs text-slate-400 font-bold">رقم الجوال:</span> <span class="text-sm font-black">${r.h_phone}</span></div>
-                            <div class="flex justify-between border-b border-slate-50 py-2"><span class="text-xs text-slate-400 font-bold">جوال بديل:</span> <span class="text-sm font-black">${r.phone_alt || '-'}</span></div>
-                            <div class="flex justify-between border-b border-slate-50 py-2"><span class="text-xs text-slate-400 font-bold">اسم الزوجة:</span> <span class="text-sm font-black">${r.wife_name || '-'}</span></div>
-                            <div class="flex justify-between py-2"><span class="text-xs text-slate-400 font-bold">هوية الزوجة:</span> <span class="text-sm font-black">${currentRole === 'admin' ? (r.wife_id || '-') : 'محجوب'}</span></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="detail-card">
+                        <div class="flex items-center gap-2 mb-4 text-blue-600"><i data-lucide="info" class="w-4 h-4"></i> <h6 class="text-[10px] font-black uppercase">البيانات الأساسية</h6></div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-xs text-slate-400 font-bold">اسم الزوجة:</span> <span class="text-xs font-black">${f.wife_name || '-'}</span></div>
+                            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-xs text-slate-400 font-bold">هوية الزوجة:</span> <span class="text-xs font-black font-mono">${userRole==='admin'?(f.wife_id||'-'):'****'}</span></div>
+                            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-xs text-slate-400 font-bold">رقم الجوال:</span> <span class="text-xs font-black text-blue-600 font-mono">${f.h_phone}</span></div>
+                            <div class="flex justify-between"><span class="text-xs text-slate-400 font-bold">جوال بديل:</span> <span class="text-xs font-black font-mono">${f.phone_alt || '-'}</span></div>
                         </div>
                     </div>
-                    <!-- Geography -->
-                    <div class="space-y-4">
-                        <h4 class="text-xs font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2"><i data-lucide="map"></i> السكن والنزوح</h4>
-                        <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-3">
-                            <div class="flex justify-between border-b border-slate-50 py-2"><span class="text-xs text-slate-400 font-bold">المنطقة الأصلية:</span> <span class="text-sm font-black">${r.loc_original || '-'}</span></div>
-                            <div class="flex justify-between border-b border-slate-50 py-2"><span class="text-xs text-slate-400 font-bold">منطقة النزوح الحالية:</span> <span class="text-sm font-black text-emerald-600">${r.loc_now || '-'}</span></div>
-                            <div class="flex justify-between py-2"><span class="text-xs text-slate-400 font-bold">توزيع الأفراد:</span> <span class="text-sm font-black">ذكور: ${r.num_male || 0} | إناث: ${r.num_female || 0}</span></div>
+                    <div class="detail-card">
+                        <div class="flex items-center gap-2 mb-4 text-emerald-600"><i data-lucide="map-pin" class="w-4 h-4"></i> <h6 class="text-[10px] font-black uppercase">العناوين والمندوب</h6></div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-xs text-slate-400 font-bold">المندوب:</span> <span class="text-xs font-black text-emerald-700">${f.delegate || 'بدون'}</span></div>
+                            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-xs text-slate-400 font-bold">السكن الأصلي:</span> <span class="text-xs font-black text-slate-500">${f.loc_orig || '-'}</span></div>
+                            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-xs text-slate-400 font-bold">النزوح الحالي:</span> <span class="text-xs font-black text-slate-500">${f.loc_now || '-'}</span></div>
+                            <div class="flex justify-between"><span class="text-xs text-slate-400 font-bold">ذكور / إناث:</span> <span class="text-xs font-black">${f.count_m} ذكر / ${f.count_f} أنثى</span></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Family List -->
-                ${r.family?.length > 0 ? `
+                ${f.members?.length > 0 ? `
                 <div class="space-y-4">
-                    <h4 class="text-xs font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2"><i data-lucide="users"></i> أفراد العائلة (${r.family.length})</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        ${r.family.map(f => `
-                            <div class="p-5 bg-white rounded-3xl border border-slate-100">
-                                <p class="text-xs font-black mb-1">${f.name}</p>
-                                <p class="text-[9px] text-slate-400 font-bold">${f.rel} | ${currentRole === 'admin' ? f.id : '*********'}</p>
-                                <p class="text-[9px] text-indigo-500 font-black mt-2 italic underline underline-offset-4">${f.age}</p>
+                    <h5 class="text-[10px] font-black text-indigo-600 uppercase border-r-4 border-indigo-600 pr-2">أفراد العائلة المضافين</h5>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        ${f.members.map(m => `
+                            <div class="p-5 bg-white rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+                                <div class="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center font-black text-xs">${m.rel[0]}</div>
+                                <div><p class="text-xs font-black">${m.name}</p><p class="text-[9px] text-slate-400 font-bold">${m.rel} | ${userRole==='admin'?m.id:'****'}</p><p class="text-[9px] text-indigo-600 font-black mt-1 italic">${m.ageStr}</p></div>
                             </div>
                         `).join('')}
                     </div>
                 </div>` : ''}
 
-                <!-- Health Section -->
-                ${r.health?.length > 0 ? `
+                ${f.health?.length > 0 ? `
                 <div class="space-y-4">
-                    <h4 class="text-xs font-black text-rose-600 uppercase tracking-widest flex items-center gap-2"><i data-lucide="activity"></i> الحالات الطبية</h4>
-                    <div class="space-y-3">
-                        ${r.health.map(h => `
-                            <div class="flex items-center gap-4 p-5 bg-rose-50/50 rounded-3xl border border-rose-100">
-                                <div class="w-10 h-10 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center"><i data-lucide="shield-alert"></i></div>
-                                <div>
-                                    <p class="text-xs font-black">${h.name} - <span class="text-rose-600">${h.type}</span></p>
-                                    <p class="text-[10px] text-slate-500">${h.desc} | هوية: ${currentRole === 'admin' ? h.id : '****'} | جوال: ${h.phone}</p>
-                                </div>
+                    <h5 class="text-[10px] font-black text-rose-600 uppercase border-r-4 border-rose-600 pr-2">الحالات الصحية</h5>
+                    <div class="grid grid-cols-1 gap-3">
+                        ${f.health.map(h => `
+                            <div class="p-5 bg-rose-50/30 rounded-3xl border border-rose-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <div><p class="text-xs font-black text-rose-700">${h.type}: ${h.name}</p><p class="text-[10px] text-slate-400 mt-1">التشخيص: ${h.diag || '-'}</p></div>
+                                <div class="text-[10px] font-bold text-slate-500 text-left bg-white px-3 py-1 rounded-xl">ID: ${userRole==='admin'?h.id:'***'} | TEL: ${h.phone}</div>
                             </div>
                         `).join('')}
                     </div>
                 </div>` : ''}
 
-                <!-- Wallet Section -->
-                <div class="space-y-4">
-                    <h4 class="text-xs font-black text-amber-600 uppercase tracking-widest flex items-center gap-2"><i data-lucide="credit-card"></i> المحفظة الإلكترونية</h4>
-                    <div class="bg-amber-50/50 p-6 rounded-[2.5rem] border border-amber-100 grid grid-cols-3 gap-4">
-                        <div><p class="text-[9px] font-bold text-slate-400">المالك</p><p class="text-xs font-black">${r.wallet_name || '-'}</p></div>
-                        <div><p class="text-[9px] font-bold text-slate-400">الهوية</p><p class="text-xs font-black">${currentRole === 'admin' ? (r.wallet_id || '-') : 'محجوب'}</p></div>
-                        <div><p class="text-[9px] font-bold text-slate-400">رقم الجوال</p><p class="text-xs font-black text-amber-600">${r.wallet_phone || '-'}</p></div>
+                <div class="p-8 bg-amber-50 rounded-[2.5rem] border border-amber-100 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center"><i data-lucide="wallet"></i></div>
+                        <div><p class="text-[10px] font-bold text-amber-600 uppercase">صاحب المحفظة</p><p class="text-sm font-black">${f.w_name || '-'}</p></div>
+                    </div>
+                    <div class="text-center md:text-right">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">رقم الهوية والجوال</p>
+                        <p class="text-sm font-black">${userRole==='admin'?(f.w_id||'-'):'محجوب'} | <span class="text-amber-700">${f.w_phone || '-'}</span></p>
                     </div>
                 </div>
             `;
 
-            document.getElementById('v-export-btn').onclick = () => exportRecordToExcel(r);
-            document.getElementById('view-modal').classList.remove('hidden');
+            document.getElementById('v-export-btn').onclick = () => exportToXLSX([f], `${f.h_name}_تفاصيل`);
+            document.getElementById('modal-view').classList.remove('hidden');
             lucide.createIcons();
         };
 
-        // --- Excel Tools ---
-        window.downloadTemplate = () => {
-            const schema = ["اسم رب الاسرة", "هوية رب الاسرة", "رقم الجوال", "الزوجة", "هوية الزوجة", "الحالة الاجتماعية", "عدد الذكور", "عدد الاناث", "المنطقة الاصلية", "منطقة النزوح", "المندوب", "جوال بديل", "اسم مالك المحفظة", "هوية المالك", "جوال المحفظة"];
-            const ws = XLSX.utils.aoa_to_sheet([schema]);
+        window.openCustomExport = () => {
+            const fields = [
+                {k: 'h_name', v: 'رب الأسرة'}, {k: 'h_id', v: 'الهوية'}, {k: 'h_phone', v: 'الجوال'},
+                {k: 'wife_name', v: 'الزوجة'}, {k: 'wife_id', v: 'هوية الزوجة'}, {k: 'status', v: 'الحالة الاجتماعية'},
+                {k: 'delegate', v: 'المندوب'}, {k: 'loc_now', v: 'النزوح'}, {k: 'count_total', v: 'الإجمالي'}
+            ];
+            document.getElementById('export-checklist').innerHTML = fields.map(f => `
+                <label class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl cursor-pointer hover:bg-slate-100 transition border-2 border-transparent hover:border-blue-100">
+                    <input type="checkbox" value="${f.k}" checked class="w-5 h-5 text-blue-600 rounded-lg">
+                    <span class="text-xs font-black text-slate-600">${f.v}</span>
+                </label>
+            `).join('');
+            document.getElementById('modal-export').classList.remove('hidden');
+        };
+
+        window.executeCustomExport = () => {
+            const selectedKeys = Array.from(document.querySelectorAll('#export-checklist input:checked')).map(i => i.value);
+            const dataToExport = allFamilies.map(f => {
+                let obj = {};
+                selectedKeys.forEach(k => obj[k] = f[k] || "");
+                return obj;
+            });
+            exportToXLSX(dataToExport, "تصدير_مخصص_موسى_داتا");
+            closeModal('modal-export');
+        };
+
+        window.downloadExcelTemplate = () => {
+            const headers = ["اسم رب الاسرة", "هوية رب الاسرة", "رقم الجوال", "الزوجة", "هوية الزوجة", "الحالة الاجتماعية", "عدد الذكور", "عدد الاناث", "المندوب", "منطقة السكن الاصلية", "منطقة النزوح", "جوال بديل", "اسم صاحب المحفظة", "هوية المحفظة", "جوال المحفظة"];
+            const ws = XLSX.utils.aoa_to_sheet([headers]);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Template");
-            XLSX.writeFile(wb, "MosaData_Template.xlsx");
+            XLSX.utils.book_append_sheet(wb, ws, "قالب البيانات");
+            XLSX.writeFile(wb, "MosaData_Template_v4.xlsx");
         };
 
         window.handleExcelImport = (e) => {
             const file = e.target.files[0];
             const reader = new FileReader();
-            reader.onload = async (event) => {
-                const data = new Uint8Array(event.target.result);
-                const wb = XLSX.read(data, { type: 'array' });
-                const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            reader.onload = async (evt) => {
+                const data = new Uint8Array(evt.target.result);
+                const wb = XLSX.read(data, {type: 'array'});
+                const sheet = wb.Sheets[wb.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(sheet);
                 
-                const batch = writeBatch(db);
-                json.forEach(row => {
-                    const docRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'records'));
-                    batch.set(docRef, {
-                        h_name: row["اسم رب الاسرة"] || "",
-                        h_id: String(row["هوية رب الاسرة"] || "").slice(0, 9),
-                        h_phone: String(row["رقم الجوال"] || "").slice(0, 9),
-                        wife_name: row["الزوجة"] || "",
-                        wife_id: String(row["هوية الزوجة"] || "").slice(0, 9),
-                        status: row["الحالة الاجتماعية"] || "متزوج",
-                        num_male: row["عدد الذكور"] || 0,
-                        num_female: row["عدد الاناث"] || 0,
-                        loc_original: row["المنطقة الاصلية"] || "",
-                        loc_now: row["منطقة النزوح"] || "",
-                        delegate: row["المندوب"] || "",
-                        phone_alt: String(row["جوال بديل"] || "").slice(0, 9),
-                        wallet_name: row["اسم مالك المحفظة"] || "",
-                        wallet_id: String(row["هوية المالك"] || "").slice(0, 9),
-                        wallet_phone: String(row["جوال المحفظة"] || "").slice(0, 9),
-                        total_ppl: (1 + (row["الزوجة"]?1:0) + (parseInt(row["عدد الذكور"])||0) + (parseInt(row["عدد الاناث"])||0)),
+                showToast(`جاري رفع ${json.length} عائلة...`);
+                for(let r of json) {
+                    await addDoc(collection(db, 'artifacts', 'mosa_pro_v4', 'public', 'data', APP_COLLECTION), {
+                        h_name: String(r["اسم رب الاسرة"] || ""),
+                        h_id: String(r["هوية رب الاسرة"] || "").slice(0, 9),
+                        h_phone: String(r["رقم الجوال"] || "").slice(0, 9),
+                        wife_name: r["الزوجة"] || "",
+                        wife_id: String(r["هوية الزوجة"] || "").slice(0, 9),
+                        status: r["الحالة الاجتماعية"] || "متزوج",
+                        count_m: parseInt(r["عدد الذكور"]) || 0,
+                        count_f: parseInt(r["عدد الاناث"]) || 0,
+                        delegate: r["المندوب"] || "",
+                        loc_orig: r["منطقة السكن الاصلية"] || "",
+                        loc_now: r["منطقة النزوح"] || "",
+                        phone_alt: String(r["جوال بديل"] || "").slice(0, 9),
+                        w_name: r["اسم صاحب المحفظة"] || "",
+                        w_id: String(r["هوية المحفظة"] || "").slice(0, 9),
+                        w_phone: String(r["جوال المحفظة"] || "").slice(0, 9),
+                        count_total: (1 + (r["الزوجة"]?1:0) + (parseInt(r["عدد الذكور"])||0) + (parseInt(r["عدد الاناث"])||0)),
                         createdAt: serverTimestamp(),
                         updatedAt: serverTimestamp()
                     });
-                });
-                await batch.commit();
-                showToast(`تم استيراد ${json.length} سجل بنجاح`, "success");
+                }
+                showToast("اكتملت عملية الاستيراد بنجاح");
             };
             reader.readAsArrayBuffer(file);
         };
 
-        window.openExportModal = () => {
-            const opts = document.getElementById('export-options');
-            const fields = [
-                {k: 'h_name', n: 'اسم رب الأسرة'}, {k: 'h_id', n: 'الهوية'}, {k: 'h_phone', n: 'الجوال'},
-                {k: 'wife_name', n: 'الزوجة'}, {k: 'status', n: 'الحالة'}, {k: 'delegate', n: 'المندوب'},
-                {k: 'loc_now', n: 'النزوح'}, {k: 'total_ppl', n: 'إجمالي الأفراد'}, {k: 'wallet_phone', n: 'جوال المحفظة'}
-            ];
-            opts.innerHTML = fields.map(f => `
-                <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition">
-                    <input type="checkbox" value="${f.k}" checked class="w-4 h-4 rounded">
-                    <span class="text-[10px] font-black">${f.n}</span>
-                </label>
-            `).join('');
-            document.getElementById('export-modal').classList.remove('hidden');
-        };
-
-        window.executeCustomExport = () => {
-            const selected = Array.from(document.querySelectorAll('#export-options input:checked')).map(i => i.value);
-            const reportData = dataStore.map(r => {
-                let obj = {};
-                selected.forEach(s => obj[s] = r[s] || "");
-                return obj;
-            });
-            const ws = XLSX.utils.json_to_sheet(reportData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Records");
-            XLSX.writeFile(wb, "Custom_Export.xlsx");
-            closeModals();
-        };
-
-        function exportRecordToExcel(r) {
-            const data = [{
-                "الاسم": r.h_name, "الهوية": r.h_id, "الجوال": r.h_phone, "المندوب": r.delegate, "الحالة": r.status,
-                "الزوجة": r.wife_name, "هوية الزوجة": r.wife_id, "إجمالي الأفراد": r.total_ppl, "منطقة النزوح": r.loc_now,
-                "المحفظة": r.wallet_name, "جوال المحفظة": r.wallet_phone
-            }];
+        // --- Helpers ---
+        function exportToXLSX(data, filename) {
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Detail");
-            XLSX.writeFile(wb, `${r.h_name}_details.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, "بيانات");
+            XLSX.writeFile(wb, `${filename}.xlsx`);
         }
 
-        // --- Utilities ---
-        window.limitLen = (el, max) => { if(el.value.length > max) el.value = el.value.slice(0, max); };
-        window.closeModals = () => {
-            document.querySelectorAll('[id$="-modal"]').forEach(m => m.classList.add('hidden'));
+        window.limitInput = (el, max) => { if(el.value.length > max) el.value = el.value.slice(0, max); };
+        window.closeModal = (id) => { document.getElementById(id).classList.add('hidden'); };
+        window.showToast = (msg) => {
+            const t = document.getElementById('toast');
+            t.firstElementChild.innerText = msg;
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 3000);
         };
-        window.showToast = (msg, type) => {
-            const container = document.getElementById('toast-container');
-            const div = document.createElement('div');
-            div.className = `fade-in px-8 py-4 rounded-2xl shadow-xl flex items-center gap-4 text-white border border-white/10 ${type==='error'?'bg-rose-600':'bg-slate-900'}`;
-            div.innerHTML = `<span class="text-xs font-black">${msg}</span>`;
-            container.appendChild(div);
-            setTimeout(() => div.remove(), 4000);
-        };
-        window.toggleAdvancedFilter = () => { document.getElementById('advanced-filters').classList.toggle('hidden'); };
-        window.calculateAge = (dob) => {
-            if(!dob) return "-";
+        window.calculateAgeDetailed = (dob) => {
+            if(!dob) return "غير محدد";
             const birth = new Date(dob);
             const now = new Date();
-            let years = now.getFullYear() - birth.getFullYear();
-            let months = now.getMonth() - birth.getMonth();
-            if (months < 0) { years--; months += 12; }
-            return `${years} سنة و ${months} شهر`;
-        };
-        window.clearFilters = () => {
-            ['filter-status', 'filter-delegate', 'filter-area'].forEach(id => document.getElementById(id).value = '');
-            renderData();
+            let y = now.getFullYear() - birth.getFullYear();
+            let m = now.getMonth() - birth.getMonth();
+            if(m < 0) { y--; m += 12; }
+            return `${y} سنة و ${m} شهر`;
         };
     </script>
 </body>
