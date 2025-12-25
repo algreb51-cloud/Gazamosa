@@ -233,17 +233,28 @@
 
                 <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm mb-8">
                     <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
-                        <div class="lg:col-span-2 relative">
-                            <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">بحث ذكي (اسم، هوية، مندوب، عدد الأفراد)</label>
-                            <input type="text" id="searchInput" oninput="runFilters()" class="w-full bg-slate-50 border-none rounded-2xl p-4 pr-12 text-sm input-focus" placeholder="ابحث بالاسم، الهوية، المندوب، أو عدد أفراد العائلة...">
+                        <div class="lg:col-span-1 relative">
+                            <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">بحث ذكي (اسم، هوية، مندوب)</label>
+                            <input type="text" id="searchInput" oninput="runFilters()" class="w-full bg-slate-50 border-none rounded-2xl p-4 pr-12 text-sm input-focus" placeholder="بحث...">
                             <svg class="w-6 h-6 text-slate-300 absolute right-4 top-11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </div>
                         
                         <div class="contents" id="sensitiveFilters">
                             <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">حسب العدد (استخراج أسر)</label>
+                                <select id="filterCount" onchange="runFilters()" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-600 appearance-none cursor-pointer hover:bg-slate-100 transition-all">
+                                    <option value="all">كل الأعداد</option>
+                                    <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+                                    <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+                                    <option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+                                    <option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option>
+                                    <option value="17">17</option><option value="18">18</option><option value="19">19</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">حسب العمر (استخراج أفراد)</label>
                                 <select id="filterAge" onchange="runFilters()" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-600 appearance-none cursor-pointer hover:bg-slate-100 transition-all">
-                                    <option value="all">كل الأعمار (عائلات)</option>
+                                    <option value="all">كل الأعمار</option>
                                     <option value="0-1">0 - 1 سنة</option>
                                     <option value="1-2">1 - 2 سنة</option>
                                     <option value="2-5">2 - 5 سنوات</option>
@@ -257,7 +268,7 @@
                             <div>
                                 <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">حسب المرض (استخراج أفراد)</label>
                                 <select id="filterDisease" onchange="runFilters()" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-600 appearance-none cursor-pointer hover:bg-slate-100 transition-all">
-                                    <option value="all">كل الحالات (عائلات)</option>
+                                    <option value="all">كل الحالات</option>
                                     <option value="مرض مزمن">مرض مزمن</option>
                                     <option value="اعاقة سمعية">إعاقة سمعية</option>
                                     <option value="اعاقة حركية">إعاقة حركية</option>
@@ -525,6 +536,7 @@
             const diseaseF = document.getElementById('filterDisease').value;
             const delegateF = document.getElementById('filterDelegate').value;
             const socialF = document.getElementById('filterSocial').value;
+            const countF = document.getElementById('filterCount').value; // الفلتر الجديد
 
             let resultData = [];
             currentViewMode = 'family';
@@ -638,12 +650,14 @@
                         });
                     });
                 } else {
+                    // هنا يشمل الوضع الافتراضي + وضع الفرز حسب العدد
                     currentViewMode = 'family';
                     let filtered = window.families.filter(f => {
                         const mSearch = matchesSearch(f);
                         const mDelegate = delegateF === 'all' || f.pDelegate === delegateF;
                         const mSocial = socialF === 'all' || f.pSocial === socialF;
-                        return mSearch && mDelegate && mSocial;
+                        const mCount = countF === 'all' || f.totalCount == countF; // شرط العدد الجديد
+                        return mSearch && mDelegate && mSocial && mCount;
                     });
                     if (showDupsOnly) {
                         const idCounts = {};
