@@ -16,16 +16,11 @@
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        .status-badge { transition: all 0.2s ease; }
-        .status-badge:hover { filter: brightness(0.95); }
         th, td { white-space: nowrap; }
 
-        /* ========================================= */
-        /* تنسيقات الطباعة المحسنة          */
-        /* ========================================= */
         @media print {
             body * { visibility: hidden; }
-            #authOverlay, #mainUI, #formModal, #detailsModal, #exportModal, #passwordModal, nav { display: none !important; }
+            #authOverlay, #mainUI, #formModal, #detailsModal, #exportModal, #userParamsModal, #editCredsModal, nav { display: none !important; }
             #printArea, #printArea * { visibility: visible; display: block; }
             #printArea { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; background: white; color: black; font-size: 12pt; }
             @page { size: A4; margin: 1cm; }
@@ -43,8 +38,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCxI5hPvlddgn9aZUrewesDbg8YSD7bEnk",
@@ -61,78 +56,164 @@
         const auth = getAuth(app);
         const appId = "mosadata-18521";
 
-        // تصدير المتغيرات للنطاق العام
         window.db = db;
-        window.fs = { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, getDocs };
+        window.fs = { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, where, getDocs, setDoc };
         window.appId = appId;
         window.auth = auth;
 
+        window.currentUserData = null;
+
         // ===========================================
-        //       إصلاح نظام المصادقة (Fixed Logic)
+        //       نظام المصادقة
         // ===========================================
 
-        // مراقب حالة تسجيل الدخول الصحيح
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // المستخدم مسجل دخول
-                document.getElementById('authOverlay').classList.add('hidden');
-                document.getElementById('mainUI').classList.remove('hidden');
-
-                if (user.isAnonymous) {
-                    // زائر
-                    window.currentRole = 'visitor';
-                    setupVisitorUI();
-                } else {
-                    // مسؤول
-                    window.currentRole = 'admin';
-                    setupAdminUI(user.email);
-                }
-                initDataListener();
-            } else {
-                // غير مسجل
-                document.getElementById('authOverlay').classList.remove('hidden');
-                document.getElementById('mainUI').classList.add('hidden');
+                window.currentUserData = {
+                    name: "المدير الرئيسي",
+                    username: user.email,
+                    role: "super_admin",
+                    permissions: ["add", "edit", "remove", "view", "manage_users", "export"],
+                    type: "google_auth"
+                };
+                handleLoginSuccess();
             }
         });
 
-        // دالة دخول المسؤول
-        window.verifyAdmin = async function() {
-            const email = document.getElementById('adminEmail').value;
-            const pass = document.getElementById('adminPass').value;
+        window.unifiedLogin = async function() {
+            const userOrEmail = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value;
             const errorDiv = document.getElementById('loginError');
+            errorDiv.classList.add('hidden');
+
+            if(!userOrEmail || !pass) {
+                errorDiv.innerText = "يرجى تعبئة جميع الحقول";
+                errorDiv.classList.remove('hidden');
+                return;
+            }
 
             try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                closeModal('passwordModal');
-                errorDiv.classList.add('hidden');
+                if(userOrEmail.includes('@')) {
+                    await signInWithEmailAndPassword(auth, userOrEmail, pass);
+                    return;
+                }
+
+                const q = query(collection(db, "app_users"), where("username", "==", userOrEmail));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    throw new Error("User not found");
+                }
+
+                let userData = null;
+                let docId = null;
+                
+                querySnapshot.forEach((doc) => {
+                    if (doc.data().password === pass) {
+                        userData = doc.data();
+                        docId = doc.id;
+                    }
+                });
+
+                if (!userData) {
+                    throw new Error("Wrong password");
+                }
+
+                if (userData.isDisabled) {
+                    errorDiv.innerText = "هذا الحساب معطل، يرجى مراجعة المسؤول";
+                    errorDiv.classList.remove('hidden');
+                    return;
+                }
+
+                await updateDoc(doc(db, "app_users", docId), {
+                    lastLogin: new Date().toISOString(),
+                    isOnline: true
+                });
+
+                window.currentUserData = {
+                    id: docId,
+                    name: userData.name,
+                    username: userData.username,
+                    role: userData.role,
+                    permissions: userData.permissions || [],
+                    type: "db_user"
+                };
+
+                handleLoginSuccess();
+
             } catch (error) {
                 console.error("Login Error:", error);
-                errorDiv.innerText = "البريد الإلكتروني أو كلمة المرور غير صحيحة";
+                errorDiv.innerText = "اسم المستخدم أو كلمة المرور غير صحيحة";
                 errorDiv.classList.remove('hidden');
             }
         };
 
-        // دالة دخول الزائر
-        window.loginVisitor = function() {
-            signInAnonymously(auth).catch((error) => {
-                console.error("Visitor Login Error", error);
-                alert("حدث خطأ أثناء الدخول كزائر: " + error.message);
-            });
-        };
+        function handleLoginSuccess() {
+            document.getElementById('authOverlay').classList.add('hidden');
+            document.getElementById('mainUI').classList.remove('hidden');
+            setupUIBasedOnRole();
+            initDataListener();
+        }
 
-        // دالة الخروج
+        function setupUIBasedOnRole() {
+            const u = window.currentUserData;
+            document.getElementById('roleTitle').innerText = `أهلاً بك، ${u.name}`;
+
+            const settingsBtn = document.getElementById('navSettingsBtn');
+            const homeBtn = document.getElementById('navHomeBtn');
+            
+            // زر تغيير كلمة المرور الشخصية (يظهر للجميع)
+            document.getElementById('navProfileBtn').classList.remove('hidden');
+
+            if (u.role === 'super_admin') {
+                settingsBtn.classList.remove('hidden');
+                homeBtn.classList.add('hidden');
+            } else {
+                settingsBtn.classList.add('hidden');
+                homeBtn.classList.remove('hidden');
+            }
+
+            const canAdd = u.permissions.includes('add');
+            // التعديل هنا: تمكين التصدير إذا كان المدير الرئيسي أو لديه صلاحية export
+            const canExport = u.role === 'super_admin' || u.role === 'admin' || u.permissions.includes('export');
+            
+            if(canAdd) document.getElementById('adminAddBtn').classList.remove('hidden');
+            else document.getElementById('adminAddBtn').classList.add('hidden');
+
+            // التحكم في ظهور زر التصدير في القائمة الجانبية
+            if(canExport) document.getElementById('navExportBtn').classList.remove('hidden');
+            else document.getElementById('navExportBtn').classList.add('hidden');
+
+            // التحكم في ظهور أزرار الإجراءات الإدارية (قالب، استيراد، تصدير الفرز)
+            if(canExport) {
+                document.getElementById('adminActions').classList.remove('hidden');
+                document.getElementById('adminActions').classList.add('flex'); // التأكد من تفعيل ال flex
+            } else {
+                document.getElementById('adminActions').classList.add('hidden');
+                document.getElementById('adminActions').classList.remove('flex');
+            }
+            
+            // الفلاتر تظهر للجميع
+            document.getElementById('sensitiveFilters').classList.remove('hidden');
+            document.getElementById('socialFilterDiv').classList.remove('hidden');
+        }
+
         window.logout = async function() {
             try {
+                if (window.currentUserData && window.currentUserData.type === 'db_user') {
+                    await updateDoc(doc(db, "app_users", window.currentUserData.id), {
+                        isOnline: false
+                    });
+                }
                 await signOut(auth);
+                window.currentUserData = null;
                 location.reload();
             } catch (error) {
                 console.error("Logout Error", error);
+                location.reload();
             }
         };
 
-        // ===========================================
-        //       جلب البيانات
-        // ===========================================
         function initDataListener() {
             const q = query(
                 collection(db, "artifacts", appId, "public", "data", "families"),
@@ -155,38 +236,27 @@
         <div class="bg-white rounded-[2.5rem] shadow-2xl p-10 w-full max-w-md text-center modal-anim">
             <div class="mb-8">
                 <div class="bg-indigo-600 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-indigo-200">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 </div>
-                <h1 class="text-3xl font-black text-slate-800">بوابة الأرشفة</h1>
-                <p class="text-slate-400 mt-2">نظام إدارة البيانات السحابي المتطور</p>
+                <h1 class="text-3xl font-black text-slate-800">بوابة الدخول</h1>
+                <p class="text-slate-400 mt-2">نظام إدارة البيانات المركزي</p>
             </div>
-            <div class="space-y-4">
-                <button onclick="requestAdmin()" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold hover:bg-black transition-all flex items-center justify-center gap-3">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                    دخول المسؤولين
-                </button>
-                <button onclick="loginVisitor()" class="w-full bg-indigo-50 text-indigo-600 py-5 rounded-2xl font-bold hover:bg-indigo-100 transition-all">مشاهدة كزائر</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="passwordModal" class="fixed inset-0 bg-black/60 hidden z-[1100] flex items-center justify-center backdrop-blur-md p-4">
-        <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl modal-anim">
-            <h3 class="text-xl font-bold mb-6 text-slate-800">تسجيل دخول المسؤول</h3>
-            <div class="space-y-4">
+            
+            <div class="space-y-4 text-right">
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-2 mr-1">البريد الإلكتروني</label>
-                    <input type="email" id="adminEmail" class="w-full p-4 bg-slate-50 border-none rounded-2xl text-left text-sm font-bold focus:ring-2 focus:ring-indigo-500" placeholder="admin@example.com">
+                    <label class="block text-xs font-bold text-slate-400 mb-2 mr-1">اسم المستخدم / البريد الإلكتروني</label>
+                    <input type="text" id="loginUser" class="w-full p-4 bg-slate-50 border-none rounded-2xl text-left text-sm font-bold focus:ring-2 focus:ring-indigo-500" placeholder="Username">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-400 mb-2 mr-1">كلمة المرور</label>
-                    <input type="password" id="adminPass" class="w-full p-4 bg-slate-50 border-none rounded-2xl text-center text-xl tracking-widest focus:ring-2 focus:ring-indigo-500" placeholder="••••••••">
+                    <input type="password" id="loginPass" class="w-full p-4 bg-slate-50 border-none rounded-2xl text-center text-xl tracking-widest focus:ring-2 focus:ring-indigo-500" placeholder="••••••••">
                 </div>
-            </div>
-            <div id="loginError" class="text-red-500 text-xs font-bold mt-4 hidden text-center">بيانات الدخول غير صحيحة</div>
-            <div class="flex gap-3 mt-6">
-                <button onclick="verifyAdmin()" class="flex-1 bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition-all">دخول</button>
-                <button onclick="closeModal('passwordModal')" class="flex-1 bg-slate-100 py-4 rounded-xl font-bold hover:bg-slate-200 transition-all">إلغاء</button>
+                <div id="loginError" class="text-red-500 text-xs font-bold hidden text-center"></div>
+                
+                <button onclick="unifiedLogin()" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold hover:bg-black transition-all flex items-center justify-center gap-3 shadow-lg mt-4">
+                    تسجيل الدخول
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                </button>
             </div>
         </div>
     </div>
@@ -196,11 +266,19 @@
             <div class="hidden md:block mb-auto">
                 <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">DB</div>
             </div>
-            <button onclick="window.scrollTo({top:0, behavior:'smooth'})" class="p-4 rounded-2xl text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg></button>
+            
+            <button id="navHomeBtn" onclick="window.scrollTo({top:0, behavior:'smooth'})" class="hidden p-4 rounded-2xl text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg></button>
+            
+            <button id="navSettingsBtn" onclick="openUserManagement()" class="hidden p-4 rounded-2xl bg-slate-800 text-white shadow-lg shadow-slate-200 hover:bg-black transition-all" title="إدارة المستخدمين">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </button>
+
+            <button id="navProfileBtn" onclick="openMyProfile()" class="hidden p-4 rounded-2xl text-slate-400 hover:bg-amber-50 hover:text-amber-500 transition-all" title="تغيير كلمة المرور">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+            </button>
+
             <button onclick="openForm()" id="adminAddBtn" class="hidden p-4 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-100 transition-all hover:scale-110"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>
-            
-            <button id="navExportBtn" onclick="openExportModal()" class="p-4 rounded-2xl text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg></button>
-            
+            <button id="navExportBtn" onclick="openExportModal()" class="hidden p-4 rounded-2xl text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg></button>
             <button onclick="logout()" class="p-4 md:mt-auto rounded-2xl text-red-400 hover:bg-red-50 transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
         </nav>
 
@@ -209,7 +287,7 @@
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                     <div>
                         <h1 class="text-3xl font-black text-slate-800">لوحة التحكم</h1>
-                        <p id="roleTitle" class="text-slate-500 font-medium">مرحباً بك، وضع المشاهدة</p>
+                        <p id="roleTitle" class="text-slate-500 font-medium">مرحباً بك</p>
                     </div>
                     <div id="syncStatus" class="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-xs font-bold animate-pulse">
                         <span class="w-2 h-2 bg-emerald-500 rounded-full"></span> متصل بالسحابة
@@ -294,18 +372,15 @@
                             </select>
                         </div>
                         
-                        <div class="lg:col-span-2 flex gap-3" id="adminActions">
+                        <div class="lg:col-span-2 flex gap-3 hidden" id="adminActions">
                             <button onclick="downloadTemplate()" class="flex-1 bg-white border border-slate-200 text-slate-600 p-4 rounded-2xl text-xs font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/></svg>
                                 تحميل النموذج
                             </button>
                             <label class="flex-1 bg-indigo-50 text-indigo-600 p-4 rounded-2xl text-xs font-bold hover:bg-indigo-100 transition-all flex items-center justify-center gap-2 cursor-pointer">
                                 <input type="file" id="importExcel" hidden onchange="importData(event)">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4 4m0 0l-4-4m4 4v12"/></svg>
                                 استيراد إكسل
                             </label>
                             <button onclick="exportCurrentView()" class="flex-1 bg-emerald-600 text-white p-4 rounded-2xl text-xs font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 تصدير الفرز
                             </button>
                         </div>
@@ -315,15 +390,175 @@
                 <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-right border-collapse">
-                            <thead id="tableHeader" class="bg-slate-50/50 text-slate-400 text-xs font-bold uppercase tracking-widest border-b">
-                                </thead>
-                            <tbody id="tableBody" class="divide-y divide-slate-50 text-sm">
-                                </tbody>
+                            <thead id="tableHeader" class="bg-slate-50/50 text-slate-400 text-xs font-bold uppercase tracking-widest border-b"></thead>
+                            <tbody id="tableBody" class="divide-y divide-slate-50 text-sm"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </main>
+    </div>
+
+    <div id="userParamsModal" class="fixed inset-0 bg-slate-900/80 hidden z-[1500] flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl modal-anim overflow-hidden h-[85vh] flex flex-col">
+            <div class="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h2 class="text-2xl font-black text-slate-800 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-slate-800 text-white rounded-xl flex items-center justify-center"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                    إعدادات الحسابات والمستخدمين
+                </h2>
+                <button onclick="closeModal('userParamsModal')" class="p-3 bg-white border rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-all">✕</button>
+            </div>
+            
+            <div class="flex-1 overflow-hidden flex flex-col md:flex-row">
+                <div class="w-full md:w-64 bg-slate-50 border-l p-6 space-y-2">
+                    <button onclick="switchUserTab('create')" id="tabBtn-create" class="w-full text-right p-4 rounded-xl font-bold text-slate-500 hover:bg-white hover:shadow-sm transition-all user-tab-active">إنشاء مستخدم جديد</button>
+                    <button onclick="switchUserTab('list')" id="tabBtn-list" class="w-full text-right p-4 rounded-xl font-bold text-slate-500 hover:bg-white hover:shadow-sm transition-all">قائمة المستخدمين</button>
+                    <button onclick="switchUserTab('trash')" id="tabBtn-trash" class="w-full text-right p-4 rounded-xl font-bold text-slate-500 hover:bg-white hover:shadow-sm transition-all">الحسابات المعطلة</button>
+                </div>
+
+                <div class="flex-1 p-8 overflow-y-auto custom-scroll bg-white relative">
+                    <div id="tab-create" class="user-tab-content">
+                        <form id="createUserForm" onsubmit="handleCreateUser(event)" class="space-y-6 max-w-lg mx-auto">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-2">الاسم الكامل</label>
+                                <input type="text" id="newUserName" required class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 mb-2">اسم المستخدم (User)</label>
+                                    <input type="text" id="newUserUser" required class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold font-mono">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 mb-2">كلمة المرور</label>
+                                    <input type="text" id="newUserPass" required class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold font-mono">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-2">نوع الحساب</label>
+                                <select id="newUserRole" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-600">
+                                    <option value="admin">مدير (Admin)</option>
+                                    <option value="employee">موظف (Employee)</option>
+                                    <option value="viewer">مشاهد (Viewer)</option>
+                                </select>
+                            </div>
+
+                            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                <label class="block text-xs font-bold text-slate-400 mb-4">الصلاحيات الممنوحة</label>
+                                <div class="space-y-3">
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input type="checkbox" name="perms" value="view" checked disabled class="w-5 h-5 rounded text-indigo-600">
+                                        <span class="text-sm font-bold">مشاهدة البيانات (افتراضي)</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input type="checkbox" name="perms" value="add" class="w-5 h-5 rounded text-indigo-600">
+                                        <span class="text-sm font-bold">إضافة بيانات جديدة</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input type="checkbox" name="perms" value="edit" class="w-5 h-5 rounded text-indigo-600">
+                                        <span class="text-sm font-bold">تعديل البيانات الموجودة</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input type="checkbox" name="perms" value="remove" class="w-5 h-5 rounded text-indigo-600">
+                                        <span class="text-sm font-bold">إزالة البيانات (نقل للمحذوفات)</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input type="checkbox" name="perms" value="export" class="w-5 h-5 rounded text-indigo-600">
+                                        <span class="text-sm font-bold text-emerald-600">تصدير واستيراد البيانات (Excel/Template)</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold hover:bg-black transition-all">حفظ المستخدم الجديد</button>
+                        </form>
+                    </div>
+
+                    <div id="tab-list" class="user-tab-content hidden">
+                        <table class="w-full text-right">
+                            <thead class="text-xs text-slate-400 font-bold uppercase border-b bg-slate-50">
+                                <tr>
+                                    <th class="p-4 rounded-tr-xl">الاسم</th>
+                                    <th class="p-4">User</th>
+                                    <th class="p-4">النوع</th>
+                                    <th class="p-4">آخر دخول</th>
+                                    <th class="p-4">الحالة</th>
+                                    <th class="p-4 text-center">تعطيل</th>
+                                    <th class="p-4 rounded-tl-xl text-center">تعديل</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersListBody" class="text-sm font-bold text-slate-700"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="tab-trash" class="user-tab-content hidden">
+                        <div class="bg-red-50 p-4 rounded-xl mb-4 text-red-600 text-sm font-bold">
+                            ⚠️ تنبيه: الحذف هنا نهائي ولا يمكن التراجع عنه.
+                        </div>
+                        <table class="w-full text-right">
+                            <thead class="text-xs text-red-400 font-bold uppercase border-b bg-red-50/50">
+                                <tr>
+                                    <th class="p-4">الاسم</th>
+                                    <th class="p-4">User</th>
+                                    <th class="p-4">النوع</th>
+                                    <th class="p-4 text-center">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trashUsersBody" class="text-sm font-bold text-slate-700"></tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editCredsModal" class="fixed inset-0 bg-black/60 hidden z-[1600] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl modal-anim max-h-[90vh] overflow-y-auto custom-scroll">
+            <h3 class="text-xl font-bold mb-6 text-slate-800 border-b pb-4">تحديث بيانات وصلاحيات المستخدم</h3>
+            <form onsubmit="handleSaveCreds(event)" class="space-y-4">
+                <input type="hidden" id="editCredsId">
+                <div id="usernameEditField">
+                    <label class="block text-xs font-bold text-slate-400 mb-2">اسم المستخدم (User)</label>
+                    <input type="text" id="editCredsUser" class="w-full bg-slate-50 border-none rounded-xl p-3 font-mono font-bold text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-2">كلمة المرور الجديدة</label>
+                    <input type="text" id="editCredsPass" placeholder="أدخل كلمة مرور جديدة" class="w-full bg-slate-50 border-none rounded-xl p-3 font-mono font-bold text-sm">
+                    <p class="text-[10px] text-slate-400 mt-1">اتركها فارغة إذا لم ترد التغيير</p>
+                </div>
+                
+                <div id="editPermsContainer" class="bg-slate-50 p-4 rounded-xl border border-slate-100 mt-4">
+                    <label class="block text-xs font-bold text-slate-400 mb-3">تعديل الصلاحيات</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" name="editPerms" value="view" checked disabled class="w-4 h-4 rounded text-indigo-600">
+                            <span class="text-xs font-bold">مشاهدة البيانات</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" name="editPerms" value="add" class="w-4 h-4 rounded text-indigo-600">
+                            <span class="text-xs font-bold">إضافة بيانات جديدة</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" name="editPerms" value="edit" class="w-4 h-4 rounded text-indigo-600">
+                            <span class="text-xs font-bold">تعديل البيانات</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" name="editPerms" value="remove" class="w-4 h-4 rounded text-indigo-600">
+                            <span class="text-xs font-bold">إزالة البيانات</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" name="editPerms" value="export" class="w-4 h-4 rounded text-indigo-600">
+                            <span class="text-xs font-bold text-emerald-600">تصدير واستيراد البيانات</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-6">
+                    <button type="submit" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700">حفظ التغييرات</button>
+                    <button type="button" onclick="closeModal('editCredsModal')" class="flex-1 bg-slate-100 text-slate-500 py-3 rounded-xl font-bold">إلغاء</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <div id="formModal" class="fixed inset-0 bg-slate-900/60 hidden z-[1200] overflow-y-auto p-4 md:p-12 backdrop-blur-sm">
@@ -338,7 +573,6 @@
 
             <form id="mainForm" onsubmit="handleSave(event)" class="p-8 md:p-12 space-y-12">
                 <input type="hidden" id="editId">
-                
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="md:col-span-2">
                         <label class="block text-xs font-bold text-slate-400 mb-2">الاسم الرباعي لرب الأسرة</label>
@@ -459,7 +693,6 @@
 
     <script>
         window.families = [];
-        window.currentRole = 'visitor';
         let deleteTimer = null;
         let pendingDeleteId = null;
         let showDupsOnly = false;
@@ -501,42 +734,225 @@
         }
 
         // ===========================================
-        //       (تم نقل منطق المصادقة للأعلى)
+        //       User Management Logic
+        // ===========================================
+
+        function openUserManagement() {
+            if(window.currentUserData.role !== 'super_admin') {
+                alert("غير مصرح لك");
+                return;
+            }
+            document.getElementById('userParamsModal').classList.remove('hidden');
+            switchUserTab('create');
+        }
+
+        function switchUserTab(tabName) {
+            document.querySelectorAll('.user-tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[id^="tabBtn-"]').forEach(el => el.className = "w-full text-right p-4 rounded-xl font-bold text-slate-500 hover:bg-white hover:shadow-sm transition-all");
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tabBtn-${tabName}`).className = "w-full text-right p-4 rounded-xl font-bold text-slate-800 bg-white shadow-md transition-all";
+
+            if(tabName === 'list' || tabName === 'trash') {
+                fetchUsersList(tabName === 'trash');
+            }
+        }
+
+        async function handleCreateUser(e) {
+            e.preventDefault();
+            const name = document.getElementById('newUserName').value;
+            const user = document.getElementById('newUserUser').value;
+            const pass = document.getElementById('newUserPass').value;
+            const role = document.getElementById('newUserRole').value;
+            
+            const perms = Array.from(document.querySelectorAll('input[name="perms"]:checked')).map(cb => cb.value);
+            if(!perms.includes('view')) perms.push('view');
+
+            try {
+                const q = window.fs.query(window.fs.collection(window.db, "app_users"), window.fs.where("username", "==", user));
+                const snap = await window.fs.getDocs(q);
+                if(!snap.empty) {
+                    alert("اسم المستخدم هذا موجود مسبقاً");
+                    return;
+                }
+
+                await window.fs.addDoc(window.fs.collection(window.db, "app_users"), {
+                    name, username: user, password: pass, role, permissions: perms,
+                    createdAt: new Date().toISOString(),
+                    isDisabled: false,
+                    isOnline: false,
+                    lastLogin: null
+                });
+                alert("تم إنشاء المستخدم بنجاح");
+                document.getElementById('createUserForm').reset();
+            } catch(err) {
+                console.error(err);
+                alert("خطأ أثناء الإنشاء");
+            }
+        }
+
+        async function fetchUsersList(showDisabled) {
+            const tbody = showDisabled ? document.getElementById('trashUsersBody') : document.getElementById('usersListBody');
+            tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center">جاري التحميل...</td></tr>';
+
+            try {
+                const q = window.fs.query(window.fs.collection(window.db, "app_users"), window.fs.orderBy("createdAt", "desc"));
+                const snap = await window.fs.getDocs(q);
+                
+                tbody.innerHTML = '';
+                
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.isDisabled !== showDisabled) return; 
+
+                    const tr = document.createElement('tr');
+                    tr.className = "border-b border-slate-50 hover:bg-slate-50 transition-all";
+                    
+                    if(!showDisabled) {
+                        const isOnline = data.isOnline ? '<span class="text-emerald-500">نشط الآن</span>' : '<span class="text-slate-400">غير متاح</span>';
+                        const lastLogin = data.lastLogin ? new Date(data.lastLogin).toLocaleString('ar-EG') : 'لم يدخل بعد';
+                        const permsString = (data.permissions || []).join(',');
+                        
+                        tr.innerHTML = `
+                            <td class="p-4">${data.name}</td>
+                            <td class="p-4 font-mono">${data.username}</td>
+                            <td class="p-4"><span class="bg-indigo-50 text-indigo-600 px-2 py-1 rounded text-xs">${data.role}</span></td>
+                            <td class="p-4 text-xs font-mono">${lastLogin}</td>
+                            <td class="p-4 text-xs font-bold">${isOnline}</td>
+                            <td class="p-4 flex justify-center">
+                                <button onclick="toggleUserStatus('${doc.id}', true)" class="text-red-400 hover:text-red-600 font-bold text-xs border border-red-200 px-3 py-1 rounded-lg">تعطيل</button>
+                            </td>
+                            <td class="p-4 flex justify-center">
+                                <button onclick="openEditCreds('${doc.id}', '${data.username}', '${data.password}', '${permsString}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 px-3 py-1 rounded-lg text-xs font-bold">تعديل</button>
+                            </td>
+                        `;
+                    } else {
+                        tr.innerHTML = `
+                            <td class="p-4 opacity-50">${data.name}</td>
+                            <td class="p-4 font-mono opacity-50">${data.username}</td>
+                            <td class="p-4 opacity-50">${data.role}</td>
+                            <td class="p-4 flex justify-center gap-2">
+                                <button onclick="toggleUserStatus('${doc.id}', false)" class="bg-emerald-50 text-emerald-600 font-bold text-xs px-3 py-1 rounded-lg">استعادة</button>
+                                <button onclick="deleteUserPermanently('${doc.id}')" class="bg-red-600 text-white font-bold text-xs px-3 py-1 rounded-lg">حذف نهائي</button>
+                            </td>
+                        `;
+                    }
+                    tbody.appendChild(tr);
+                });
+                
+                if(tbody.innerHTML === '') tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400">لا يوجد بيانات</td></tr>';
+
+            } catch(err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-red-400">خطأ في التحميل</td></tr>';
+            }
+        }
+
+        window.toggleUserStatus = async function(id, disable) {
+            if(!confirm(disable ? "هل أنت متأكد من تعطيل الحساب؟" : "استعادة الحساب؟")) return;
+            try {
+                await window.fs.updateDoc(window.fs.doc(window.db, "app_users", id), { isDisabled: disable });
+                fetchUsersList(disable ? false : true); 
+            } catch(err) { alert(err.message); }
+        };
+
+        window.deleteUserPermanently = async function(id) {
+            if(!confirm("حذف نهائي؟ لا يمكن التراجع!")) return;
+            try {
+                await window.fs.deleteDoc(window.fs.doc(window.db, "app_users", id));
+                fetchUsersList(true);
+            } catch(err) { alert(err.message); }
+        };
+
+        // ===========================================
+        //       Credentials Editing Logic
+        // ===========================================
+
+        window.openEditCreds = function(id, user, pass, permsString) {
+            document.getElementById('editCredsId').value = id;
+            document.getElementById('editCredsUser').value = user;
+            document.getElementById('editCredsPass').value = ""; // Don't show old pass for security in UI usually, but user asked for it in prev versions. Let's keep it blank for "Change" logic or leave it as placeholder. Code above had `value = pass`.
+            document.getElementById('editCredsPass').placeholder = "أدخل كلمة جديدة للتغيير";
+            
+            // If editing own profile as non-admin, disable username and permissions
+            if(window.currentUserData.role !== 'super_admin') {
+                document.getElementById('editCredsUser').disabled = true;
+                document.getElementById('usernameEditField').classList.add('opacity-50');
+                document.getElementById('editPermsContainer').classList.add('hidden');
+            } else {
+                document.getElementById('editCredsUser').disabled = false;
+                document.getElementById('usernameEditField').classList.remove('opacity-50');
+                document.getElementById('editPermsContainer').classList.remove('hidden');
+                
+                // Populate permissions
+                const perms = permsString ? permsString.split(',') : [];
+                document.querySelectorAll('input[name="editPerms"]').forEach(cb => {
+                    cb.checked = perms.includes(cb.value);
+                });
+            }
+            
+            document.getElementById('editCredsModal').classList.remove('hidden');
+        };
+
+        window.openMyProfile = function() {
+            if(!window.currentUserData || window.currentUserData.type === 'google_auth') {
+                alert("لا يمكن تغيير كلمة المرور للحساب الرئيسي من هنا");
+                return;
+            }
+            const id = window.currentUserData.id;
+            const user = window.currentUserData.username;
+            openEditCreds(id, user, '', '');
+        };
+
+        window.handleSaveCreds = async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editCredsId').value;
+            const newUser = document.getElementById('editCredsUser').value;
+            const newPass = document.getElementById('editCredsPass').value;
+            
+            let updatePayload = { username: newUser };
+            if(newPass && newPass.trim() !== "") {
+                updatePayload.password = newPass;
+            }
+
+            // Only update permissions if super_admin
+            if(window.currentUserData.role === 'super_admin') {
+                const newPerms = Array.from(document.querySelectorAll('input[name="editPerms"]:checked')).map(cb => cb.value);
+                if(!newPerms.includes('view')) newPerms.push('view');
+                updatePayload.permissions = newPerms;
+            }
+
+            try {
+                await window.fs.updateDoc(window.fs.doc(window.db, "app_users", id), updatePayload);
+                alert("تم تحديث البيانات بنجاح");
+                closeModal('editCredsModal');
+                
+                // Refresh list if open
+                if(!document.getElementById('userParamsModal').classList.contains('hidden')) {
+                    fetchUsersList(false);
+                }
+
+            } catch(err) {
+                console.error(err);
+                alert("خطأ أثناء التحديث");
+            }
+        };
+
+
+        // ===========================================
+        //       Existing Data Logic 
         // ===========================================
         
-        function requestAdmin() { 
-            document.getElementById('passwordModal').classList.remove('hidden'); 
-            document.getElementById('loginError').classList.add('hidden');
-            document.getElementById('adminEmail').value = '';
-            document.getElementById('adminPass').value = '';
+        function hasPerm(p) {
+            return window.currentUserData && (window.currentUserData.permissions.includes(p) || window.currentUserData.permissions.includes('all'));
         }
 
-        function setupAdminUI(email) {
-            document.getElementById('roleTitle').innerText = 'أهلاً بك أيها المسؤول (' + email + ')';
-            document.getElementById('adminAddBtn').classList.remove('hidden');
-            document.getElementById('navExportBtn').classList.remove('hidden');
-            document.getElementById('adminActions').classList.remove('hidden');
-            document.getElementById('sensitiveFilters').classList.remove('hidden');
-            document.getElementById('socialFilterDiv').classList.remove('hidden');
-        }
-
-        function setupVisitorUI() {
-            document.getElementById('roleTitle').innerText = 'مرحباً بك، وضع المشاهدة';
-            document.getElementById('adminAddBtn').classList.add('hidden');
-            document.getElementById('navExportBtn').classList.add('hidden');
-            document.getElementById('adminActions').classList.add('hidden');
-            document.getElementById('sensitiveFilters').classList.add('hidden');
-            document.getElementById('socialFilterDiv').classList.add('hidden');
-        }
-
-        // دالة تصفية البيانات (تم تعديلها للعمل مع window.families و window.currentRole)
         function runFilters() {
             const search = document.getElementById('searchInput').value.toLowerCase();
             const ageF = document.getElementById('filterAge').value;
             const diseaseF = document.getElementById('filterDisease').value;
             const delegateF = document.getElementById('filterDelegate').value;
             const socialF = document.getElementById('filterSocial').value;
-            const countF = document.getElementById('filterCount').value; // الفلتر الجديد
+            const countF = document.getElementById('filterCount').value;
 
             let resultData = [];
             currentViewMode = 'family';
@@ -545,29 +961,16 @@
                                          (f.pId || "").includes(search) || 
                                          (f.pDelegate || "").toLowerCase().includes(search) ||
                                          (f.totalCount || "").toString().includes(search);
+            
+            const isRestricted = !hasPerm('view_sensitive') && window.currentUserData?.role === 'viewer';
 
-            if (window.currentRole === 'visitor') {
-                 resultData = window.families.filter(f => {
-                    const mSearch = matchesSearch(f);
-                    const mDelegate = delegateF === 'all' || f.pDelegate === delegateF;
-                    return mSearch && mDelegate;
-                 }).map(f => ({
-                    type: 'family',
-                    familyId: f.id,
-                    pName: f.pName,
-                    pDelegate: f.pDelegate,
-                    raw: f
-                 }));
-            } else {
-                if (ageF !== 'all') {
+            if (ageF !== 'all') {
                     currentViewMode = 'individual';
                     window.families.forEach(f => {
                         if (!matchesSearch(f)) return;
                         (f.members || []).forEach(m => {
                             const age = getAge(m.dob);
                             let match = false;
-                            
-                            // منطق الفرز العمري الجديد
                             if (ageF === '0-1' && age.y === 0) match = true;
                             if (ageF === '1-2' && age.y === 1) match = true;
                             if (ageF === '2-5' && age.y >= 2 && age.y <= 5) match = true;
@@ -593,13 +996,10 @@
                                 });
                             }
                         });
-                        
-                        // فحص الأب والزوجة أيضاً
                         [ {name: f.pName, dob: f.pDob, id: f.pId, role: 'أب'}, 
                           {name: f.wifeName, dob: f.wifeDob, id: f.wifeId, role: 'زوجة'} ].forEach(p => {
                             const age = getAge(p.dob);
                             let match = false;
-
                             if (ageF === '0-1' && age.y === 0) match = true;
                             if (ageF === '1-2' && age.y === 1) match = true;
                             if (ageF === '2-5' && age.y >= 2 && age.y <= 5) match = true;
@@ -626,58 +1026,56 @@
                             }
                         });
                     });
-                } else if (diseaseF !== 'all') {
-                    currentViewMode = 'health';
-                    window.families.forEach(f => {
-                        if (!matchesSearch(f)) return;
-                        (f.health || []).forEach(h => {
-                            if (h.type === diseaseF) {
-                                resultData.push({
-                                    type: 'health',
-                                    familyId: f.id,
-                                    patientName: h.name,
-                                    patientId: h.idNum,
-                                    patientDob: h.dob, // إضافة تاريخ ميلاد المريض
-                                    diseaseType: h.type,
-                                    diseaseDesc: h.desc,
-                                    pName: f.pName,
-                                    pId: f.pId,
-                                    wifeName: f.wifeName,
-                                    wifeId: f.wifeId,
-                                    pPhone: f.pPhone
-                                });
-                            }
-                        });
+            } else if (diseaseF !== 'all') {
+                currentViewMode = 'health';
+                window.families.forEach(f => {
+                    if (!matchesSearch(f)) return;
+                    (f.health || []).forEach(h => {
+                        if (h.type === diseaseF) {
+                            resultData.push({
+                                type: 'health',
+                                familyId: f.id,
+                                patientName: h.name,
+                                patientId: h.idNum,
+                                patientDob: h.dob,
+                                diseaseType: h.type,
+                                diseaseDesc: h.desc,
+                                pName: f.pName,
+                                pId: f.pId,
+                                wifeName: f.wifeName,
+                                wifeId: f.wifeId,
+                                pPhone: f.pPhone
+                            });
+                        }
                     });
-                } else {
-                    // هنا يشمل الوضع الافتراضي + وضع الفرز حسب العدد
-                    currentViewMode = 'family';
-                    let filtered = window.families.filter(f => {
-                        const mSearch = matchesSearch(f);
-                        const mDelegate = delegateF === 'all' || f.pDelegate === delegateF;
-                        const mSocial = socialF === 'all' || f.pSocial === socialF;
-                        const mCount = countF === 'all' || f.totalCount == countF; // شرط العدد الجديد
-                        return mSearch && mDelegate && mSocial && mCount;
-                    });
-                    if (showDupsOnly) {
-                        const idCounts = {};
-                        window.families.forEach(f => idCounts[f.pId] = (idCounts[f.pId] || 0) + 1);
-                        filtered = filtered.filter(f => idCounts[f.pId] > 1);
-                    }
-                    resultData = filtered.map(f => ({
-                        type: 'family',
-                        familyId: f.id,
-                        pName: f.pName,
-                        pId: f.pId,
-                        wifeName: f.wifeName,
-                        wifeId: f.wifeId,
-                        pPhone: f.pPhone,
-                        pDelegate: f.pDelegate,
-                        pSocial: f.pSocial,
-                        totalCount: f.totalCount,
-                        raw: f 
-                    }));
+                });
+            } else {
+                currentViewMode = 'family';
+                let filtered = window.families.filter(f => {
+                    const mSearch = matchesSearch(f);
+                    const mDelegate = delegateF === 'all' || f.pDelegate === delegateF;
+                    const mSocial = socialF === 'all' || f.pSocial === socialF;
+                    const mCount = countF === 'all' || f.totalCount == countF;
+                    return mSearch && mDelegate && mSocial && mCount;
+                });
+                if (showDupsOnly) {
+                    const idCounts = {};
+                    window.families.forEach(f => idCounts[f.pId] = (idCounts[f.pId] || 0) + 1);
+                    filtered = filtered.filter(f => idCounts[f.pId] > 1);
                 }
+                resultData = filtered.map(f => ({
+                    type: 'family',
+                    familyId: f.id,
+                    pName: f.pName,
+                    pId: f.pId,
+                    wifeName: f.wifeName,
+                    wifeId: f.wifeId,
+                    pPhone: f.pPhone,
+                    pDelegate: f.pDelegate,
+                    pSocial: f.pSocial,
+                    totalCount: f.totalCount,
+                    raw: f 
+                }));
             }
 
             currentViewData = resultData;
@@ -706,25 +1104,6 @@
             tbody.innerHTML = '';
             thead.innerHTML = '';
 
-            if (window.currentRole === 'visitor') {
-                 thead.innerHTML = `
-                    <tr class="bg-slate-50/50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b">
-                        <th class="px-4 py-4 w-1/2">اسم رب الأسرة</th>
-                        <th class="px-4 py-4 w-1/2">المندوب</th>
-                    </tr>
-                `;
-                data.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50 transition-all border-b border-slate-50";
-                    tr.innerHTML = `
-                        <td class="px-4 py-4 font-bold text-slate-700">${row.pName}</td>
-                        <td class="px-4 py-4"><span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold">${row.pDelegate || '-'}</span></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-                return;
-            }
-
             let headersHTML = '';
             if (currentViewMode === 'individual') {
                 headersHTML = `
@@ -739,7 +1118,6 @@
                     <th class="px-4 py-4 text-center">إجراءات</th>
                 `;
             } else if (currentViewMode === 'health') {
-                // تعديل ترويسة الجدول للحالات المرضية حسب الطلب
                 headersHTML = `
                     <th class="px-4 py-4">اسم المريض</th>
                     <th class="px-4 py-4">هوية المريض</th>
@@ -772,18 +1150,22 @@
                 tr.className = "hover:bg-slate-50 transition-all border-b border-slate-50";
                 
                 let rowHTML = '';
-                const actions = `
-                    <div class="flex items-center justify-center gap-2">
-                        <button onclick="viewDetails('${row.familyId}')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="تفاصيل"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
-                        ${window.currentRole === 'admin' ? `
-                            <button onclick="editFamily('${row.familyId}')" class="p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-all" title="تعديل"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
-                            <button onclick="triggerDelete('${row.familyId}')" class="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all" title="حذف"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
-                        ` : ''}
-                    </div>
+                
+                let actionButtons = `
+                    <button onclick="viewDetails('${row.familyId}')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="تفاصيل"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
                 `;
 
+                if(hasPerm('edit')) {
+                    actionButtons += `<button onclick="editFamily('${row.familyId}')" class="p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-all" title="تعديل"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>`;
+                }
+                if(hasPerm('remove')) {
+                    actionButtons += `<button onclick="triggerDelete('${row.familyId}')" class="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all" title="حذف"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>`;
+                }
+
+                const actions = `<div class="flex items-center justify-center gap-2">${actionButtons}</div>`;
+
                 if (currentViewMode === 'individual') {
-                    rowHTML = `
+                     rowHTML = `
                         <td class="px-4 py-4 font-bold text-indigo-700">${row.targetName || '-'}</td>
                         <td class="px-4 py-4 font-mono">${row.targetId || '-'}</td>
                         <td class="px-4 py-4 text-xs font-bold text-slate-500">${row.targetAge} (${row.relation})</td>
@@ -795,8 +1177,7 @@
                         <td class="px-4 py-4">${actions}</td>
                     `;
                 } else if (currentViewMode === 'health') {
-                    // تعديل صفوف الجدول للحالات المرضية حسب الطلب
-                    rowHTML = `
+                     rowHTML = `
                         <td class="px-4 py-4 font-bold text-red-600">${row.patientName || '-'}</td>
                         <td class="px-4 py-4 font-mono">${row.patientId || '-'}</td>
                         <td class="px-4 py-4 font-mono">${row.patientDob || '-'}</td>
@@ -809,12 +1190,12 @@
                         <td class="px-4 py-4">${actions}</td>
                     `;
                 } else {
-                    rowHTML = `
+                     rowHTML = `
                         <td class="px-4 py-4 font-bold text-slate-700">${row.pName}</td>
-                        <td class="px-4 py-4 font-mono text-slate-500">${window.currentRole === 'visitor' ? 'ID:••••' : row.pId}</td>
+                        <td class="px-4 py-4 font-mono text-slate-500">${row.pId}</td>
                         <td class="px-4 py-4">${row.wifeName || '-'}</td>
-                        <td class="px-4 py-4 font-mono text-slate-500">${window.currentRole === 'visitor' ? 'ID:••••' : (row.wifeId || '-')}</td>
-                        <td class="px-4 py-4 font-mono text-slate-500">0${window.currentRole === 'visitor' ? '••••' : row.pPhone}</td>
+                        <td class="px-4 py-4 font-mono text-slate-500">${row.wifeId || '-'}</td>
+                        <td class="px-4 py-4 font-mono text-slate-500">0${row.pPhone}</td>
                         <td class="px-4 py-4"><span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold">${row.pDelegate || '-'}</span></td>
                         <td class="px-4 py-4 text-xs font-bold">${row.pSocial || '-'}</td>
                         <td class="px-4 py-4 font-bold">${row.totalCount || 0}</td>
@@ -828,6 +1209,7 @@
         }
 
         function openForm() {
+            if(!hasPerm('add')) return alert("ليس لديك صلاحية إضافة بيانات");
             document.getElementById('mainForm').reset();
             document.getElementById('editId').value = '';
             document.getElementById('membersList').innerHTML = '';
@@ -875,7 +1257,9 @@
         async function handleSave(e) {
             e.preventDefault();
             const editId = document.getElementById('editId').value;
-            
+            if(editId && !hasPerm('edit')) return alert("ليس لديك صلاحية تعديل");
+            if(!editId && !hasPerm('add')) return alert("ليس لديك صلاحية إضافة");
+
             const payload = {
                 pName: document.getElementById('pName').value,
                 pId: document.getElementById('pId').value,
@@ -923,6 +1307,7 @@
         }
 
         async function editFamily(id) {
+            if(!hasPerm('edit')) return alert("ليس لديك صلاحية تعديل");
             const f = window.families.find(x => x.id === id);
             if(!f) return;
             openForm();
@@ -941,6 +1326,7 @@
         }
 
         function triggerDelete(id) {
+            if(!hasPerm('remove')) return alert("ليس لديك صلاحية حذف");
             pendingDeleteId = id;
             document.getElementById('undoToast').classList.remove('hidden');
             deleteTimer = setTimeout(async () => {
@@ -964,8 +1350,7 @@
             
             const pAge = getAge(f.pDob);
             const wAge = getAge(f.wifeDob);
-            const isV = window.currentRole === 'visitor';
-
+            
             const html = `
                 <div class="flex items-center gap-8 mb-12">
                     <div class="w-24 h-24 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center text-4xl text-white font-black shadow-xl shadow-indigo-100">${(f.pName || "?")[0]}</div>
@@ -974,7 +1359,6 @@
                         <p class="text-indigo-500 font-bold tracking-widest uppercase text-sm mt-2">مندوب التوزيع: ${f.pDelegate || "غير محدد"}</p>
                     </div>
                 </div>
-                ${isV ? '<p class="text-center text-slate-400 font-bold py-10">عذراً، التفاصيل الكاملة متاحة للمسؤولين فقط</p>' : `
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
                     <div class="space-y-8">
                         <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] border-b pb-4">المعلومات الشخصية</h3>
@@ -1043,22 +1427,19 @@
                         </div>
                     </div>
                 </div>
-                `}
             `;
             document.getElementById('detailsContent').innerHTML = html;
             
             const actionContainer = document.getElementById('detailActions');
-            actionContainer.innerHTML = ''; // مسح الأزرار القديمة
+            actionContainer.innerHTML = ''; 
 
-            if(!isV) {
-                // زر تصدير الإكسل
+            if(hasPerm('view_sensitive') || window.currentUserData.role !== 'viewer') {
                 const exportBtn = document.createElement('button');
                 exportBtn.className = "px-6 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-xl shadow-indigo-100 flex items-center gap-2";
                 exportBtn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> تصدير إكسل`;
                 exportBtn.onclick = () => exportSingleToExcel(f);
                 actionContainer.appendChild(exportBtn);
 
-                // زر الطباعة
                 const printBtn = document.createElement('button');
                 printBtn.className = "px-6 py-4 bg-slate-800 text-white rounded-2xl font-bold hover:bg-slate-900 shadow-xl flex items-center gap-2";
                 printBtn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg> طباعة PDF`;
@@ -1069,21 +1450,12 @@
             document.getElementById('detailsModal').classList.remove('hidden');
         }
 
-        function downloadTemplate() {
-            const headers = [
-                "اسم رب الأسرة", "تاريخ ميلاد رب الأسرة", "هوية رب الأسرة", "رقم الجوال",
-                "اسم الزوجة", "هوية الزوجة", "تاريخ ميلاد الزوجة", "الحالة الاجتماعية",
-                "عدد الأفراد الكلي", "عدد الذكور", "عدد الإناث"
-            ];
-            for(let i=1; i<=10; i++) {
-                headers.push(`اسم الفرد ${i}`, `صلة القرابة ${i}`, `تاريخ الميلاد الفرد ${i}`, `رقم الهوية الفرد ${i}`);
-            }
+        function downloadTemplate() { 
+            const headers = ["اسم رب الأسرة", "تاريخ ميلاد رب الأسرة", "هوية رب الأسرة", "رقم الجوال", "اسم الزوجة", "هوية الزوجة", "تاريخ ميلاد الزوجة", "الحالة الاجتماعية", "عدد الأفراد الكلي", "عدد الذكور", "عدد الإناث"];
+            for(let i=1; i<=10; i++) headers.push(`اسم الفرد ${i}`, `صلة القرابة ${i}`, `تاريخ الميلاد الفرد ${i}`, `رقم الهوية الفرد ${i}`);
             headers.push("منطقة السكن الأصلية", "منطقة النزوح", "المندوب", "جوال بديل");
-            for(let i=1; i<=5; i++) {
-                headers.push(`الاسم الحالة ${i}`, `رقم الهوية الحالة ${i}`, `رقم الجوال الحالة ${i}`, `نوع المرض ${i}`);
-            }
+            for(let i=1; i<=5; i++) headers.push(`الاسم الحالة ${i}`, `رقم الهوية الحالة ${i}`, `رقم الجوال الحالة ${i}`, `نوع المرض ${i}`);
             headers.push("اسم المالك المحفظة", "رقم الهوية المحفظة", "رقم الجوال المحفظة");
-
             const ws = XLSX.utils.aoa_to_sheet([headers]);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Template");
@@ -1091,16 +1463,14 @@
         }
 
         async function importData(e) {
+            if(!hasPerm('add')) return alert("ليس لديك صلاحية استيراد");
             const file = e.target.files[0];
             const reader = new FileReader();
-            
             reader.onload = async (evt) => {
                 const data = evt.target.result;
                 const workbook = XLSX.read(data, { type: 'binary' });
                 const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                
                 let successCount = 0;
-
                 for (let row of rawData) {
                     let obj = {
                         updatedAt: new Date().toISOString(),
@@ -1123,7 +1493,6 @@
                         walletId: String(row["رقم الهوية المحفظة"] || ""),
                         walletPhone: String(row["رقم الجوال المحفظة"] || "")
                     };
-
                     let members = [];
                     for(let i=1; i<=10; i++) {
                         if(row[`اسم الفرد ${i}`]) {
@@ -1136,26 +1505,15 @@
                         }
                     }
                     obj.members = members;
-
                     let health = [];
                     for(let i=1; i<=5; i++) {
                         if(row[`الاسم الحالة ${i}`]) {
-                            health.push({
-                                name: row[`الاسم الحالة ${i}`],
-                                idNum: String(row[`رقم الهوية الحالة ${i}`] || ""),
-                                phone: String(row[`رقم الجوال الحالة ${i}`] || ""),
-                                type: row[`نوع المرض ${i}`] || "",
-                                desc: "" 
-                            });
+                            health.push({ name: row[`الاسم الحالة ${i}`], idNum: String(row[`رقم الهوية الحالة ${i}`] || ""), phone: String(row[`رقم الجوال الحالة ${i}`] || ""), type: row[`نوع المرض ${i}`] || "", desc: "" });
                         }
                     }
                     obj.health = health;
-
                     if(obj.pName && obj.pId) {
-                        try {
-                            await window.fs.addDoc(window.fs.collection(window.db, "artifacts", window.appId, "public", "data", "families"), obj);
-                            successCount++;
-                        } catch(err) { console.error("Import Error", err); }
+                        try { await window.fs.addDoc(window.fs.collection(window.db, "artifacts", window.appId, "public", "data", "families"), obj); successCount++; } catch(err) { console.error("Import Error", err); }
                     }
                 }
                 alert(`تم استيراد ${successCount} عائلة بنجاح`);
@@ -1165,11 +1523,8 @@
         }
 
         function exportSingleToExcel(f) {
-            // تجهيز مصفوفة البيانات لملف الإكسل بشكل مرتب
             const wb = XLSX.utils.book_new();
             const data = [];
-
-            // 1. البيانات الأساسية (عنوان)
             data.push(["البيانات الأساسية للعائلة"]);
             data.push(["اسم رب الأسرة", f.pName || "", "رقم الهوية", f.pId || ""]);
             data.push(["تاريخ الميلاد", f.pDob || "", "رقم الجوال", f.pPhone || ""]);
@@ -1178,262 +1533,59 @@
             data.push(["تاريخ ميلاد الزوجة", f.wifeDob || "", "جوال بديل", f.pAltPhone || ""]);
             data.push(["السكن الأصلي", f.originArea || "", "منطقة النزوح", f.displaceArea || ""]);
             data.push(["إجمالي الأفراد", f.totalCount || 0, "عدد الذكور", f.maleCount || 0, "عدد الإناث", f.femaleCount || 0]);
-            
-            // فاصل
             data.push([]); 
-
-            // 2. أفراد العائلة
             data.push(["أفراد العائلة المضافين"]);
             data.push(["الاسم", "الصلة", "تاريخ الميلاد", "العمر", "رقم الهوية"]);
             if(f.members && f.members.length > 0) {
-                f.members.forEach(m => {
-                    const age = getAge(m.dob);
-                    data.push([
-                        m.name || "",
-                        m.relation || "",
-                        m.dob || "",
-                        `${age.y} سنة`,
-                        m.idNum || ""
-                    ]);
-                });
-            } else {
-                data.push(["لا يوجد أفراد مضافين"]);
-            }
-
-            // فاصل
+                f.members.forEach(m => { const age = getAge(m.dob); data.push([m.name || "", m.relation || "", m.dob || "", `${age.y} سنة`, m.idNum || ""]); });
+            } else { data.push(["لا يوجد أفراد مضافين"]); }
             data.push([]); 
-
-            // 3. الحالات الصحية
             data.push(["الحالات الصحية الخاصة"]);
             data.push(["الاسم", "نوع الحالة", "رقم الهوية", "رقم الجوال", "تاريخ الميلاد", "التفاصيل"]);
             if(f.health && f.health.length > 0) {
-                f.health.forEach(h => {
-                    data.push([
-                        h.name || "",
-                        h.type || "",
-                        h.idNum || "",
-                        h.phone || "",
-                        h.dob || "",
-                        h.desc || ""
-                    ]);
-                });
-            } else {
-                data.push(["لا يوجد سجلات صحية"]);
-            }
-
-            // فاصل
+                f.health.forEach(h => { data.push([h.name || "", h.type || "", h.idNum || "", h.phone || "", h.dob || "", h.desc || ""]); });
+            } else { data.push(["لا يوجد سجلات صحية"]); }
             data.push([]); 
-
-            // 4. المحفظة
             data.push(["بيانات المحفظة الإلكترونية"]);
             data.push(["اسم المالك", f.walletOwner || "", "رقم الهوية", f.walletId || "", "رقم الجوال", f.walletPhone || ""]);
-
-            // إنشاء الشيت
             const ws = XLSX.utils.aoa_to_sheet(data);
-            
-            // تنسيق بسيط للأعمدة (عرض)
-            ws['!cols'] = [
-                {wch: 25}, {wch: 20}, {wch: 20}, {wch: 20}, {wch: 20}, {wch: 40}
-            ];
-
+            ws['!cols'] = [{wch: 25}, {wch: 20}, {wch: 20}, {wch: 20}, {wch: 20}, {wch: 40}];
             XLSX.utils.book_append_sheet(wb, ws, "تقرير العائلة");
             XLSX.writeFile(wb, `بيانات_عائلة_${f.pName}.xlsx`);
         }
 
         function printFamilyDetails(f) {
             const pAge = getAge(f.pDob);
-            
-            // بناء محتوى الطباعة بتنسيق HTML نظيف جداً
             let printHTML = `
                 <div class="print-container">
-                    <div class="print-header">
-                        <h1 class="print-title">استمارة بيانات عائلة</h1>
-                        <p class="print-meta">تاريخ الطباعة: ${new Date().toLocaleDateString('ar-EG')}</p>
-                    </div>
-
+                    <div class="print-header"><h1 class="print-title">استمارة بيانات عائلة</h1><p class="print-meta">تاريخ الطباعة: ${new Date().toLocaleDateString('ar-EG')}</p></div>
                     <div class="section-title">1. البيانات الأساسية</div>
                     <div class="info-grid">
-                        <table class="print-table">
-                            <tr>
-                                <th>رب الأسرة</th>
-                                <td>${f.pName || '-'}</td>
-                            </tr>
-                            <tr>
-                                <th>رقم الهوية</th>
-                                <td>${f.pId || '-'}</td>
-                            </tr>
-                            <tr>
-                                <th>رقم الجوال</th>
-                                <td>${f.pPhone || '-'}</td>
-                            </tr>
-                             <tr>
-                                <th>تاريخ الميلاد</th>
-                                <td>${f.pDob || '-'} (${pAge.y} سنة)</td>
-                            </tr>
-                        </table>
-                        
-                        <table class="print-table">
-                             <tr>
-                                <th>الزوجة</th>
-                                <td>${f.wifeName || '-'}</td>
-                            </tr>
-                            <tr>
-                                <th>هوية الزوجة</th>
-                                <td>${f.wifeId || '-'}</td>
-                            </tr>
-                            <tr>
-                                <th>السكن الأصلي</th>
-                                <td>${f.originArea || '-'}</td>
-                            </tr>
-                            <tr>
-                                <th>منطقة النزوح</th>
-                                <td>${f.displaceArea || '-'}</td>
-                            </tr>
-                        </table>
+                        <table class="print-table"><tr><th>رب الأسرة</th><td>${f.pName || '-'}</td></tr><tr><th>رقم الهوية</th><td>${f.pId || '-'}</td></tr><tr><th>رقم الجوال</th><td>${f.pPhone || '-'}</td></tr><tr><th>تاريخ الميلاد</th><td>${f.pDob || '-'} (${pAge.y} سنة)</td></tr></table>
+                        <table class="print-table"><tr><th>الزوجة</th><td>${f.wifeName || '-'}</td></tr><tr><th>هوية الزوجة</th><td>${f.wifeId || '-'}</td></tr><tr><th>السكن الأصلي</th><td>${f.originArea || '-'}</td></tr><tr><th>منطقة النزوح</th><td>${f.displaceArea || '-'}</td></tr></table>
                     </div>
-                    
-                    <table class="print-table" style="margin-top: 10px;">
-                        <tr>
-                            <th>المندوب</th>
-                            <td>${f.pDelegate || '-'}</td>
-                            <th>الحالة الاجتماعية</th>
-                            <td>${f.pSocial || '-'}</td>
-                            <th>عدد الأفراد</th>
-                            <td>${f.totalCount || '0'}</td>
-                        </tr>
-                    </table>
-
+                    <table class="print-table" style="margin-top: 10px;"><tr><th>المندوب</th><td>${f.pDelegate || '-'}</td><th>الحالة الاجتماعية</th><td>${f.pSocial || '-'}</td><th>عدد الأفراد</th><td>${f.totalCount || '0'}</td></tr></table>
                     <div class="section-title">2. أفراد العائلة (${f.members ? f.members.length : 0})</div>
-                    <table class="print-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 30%">الاسم</th>
-                                <th style="width: 15%">الصلة</th>
-                                <th style="width: 15%">تاريخ الميلاد</th>
-                                <th style="width: 15%">العمر</th>
-                                <th style="width: 25%">رقم الهوية</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                    <table class="print-table"><thead><tr><th style="width: 30%">الاسم</th><th style="width: 15%">الصلة</th><th style="width: 15%">تاريخ الميلاد</th><th style="width: 15%">العمر</th><th style="width: 25%">رقم الهوية</th></tr></thead><tbody>
             `;
-
-            if(f.members && f.members.length > 0) {
-                f.members.forEach(m => {
-                    const age = getAge(m.dob);
-                    printHTML += `
-                        <tr>
-                            <td>${m.name || '-'}</td>
-                            <td>${m.relation || '-'}</td>
-                            <td>${m.dob || '-'}</td>
-                            <td>${age.y} سنة</td>
-                            <td>${m.idNum || '-'}</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                printHTML += `<tr><td colspan="5" style="text-align: center; padding: 15px;">لا يوجد أفراد مضافين</td></tr>`;
-            }
-
-            printHTML += `
-                        </tbody>
-                    </table>
-
-                    <div class="section-title">3. الحالات الصحية</div>
-                    <table class="print-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 25%">الاسم</th>
-                                <th style="width: 20%">نوع المرض</th>
-                                <th style="width: 20%">رقم الهوية</th>
-                                <th style="width: 35%">التفاصيل</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-
-             if(f.health && f.health.length > 0) {
-                f.health.forEach(h => {
-                    printHTML += `
-                        <tr>
-                            <td>${h.name || '-'}</td>
-                            <td>${h.type || '-'}</td>
-                            <td>${h.idNum || '-'}</td>
-                            <td>${h.desc || '-'}</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                printHTML += `<tr><td colspan="4" style="text-align: center; padding: 15px;">لا يوجد حالات صحية مسجلة</td></tr>`;
-            }
-
-            printHTML += `
-                        </tbody>
-                    </table>
-
-                     <div class="section-title">4. المحفظة الإلكترونية</div>
-                    <table class="print-table">
-                        <tr>
-                            <th width="15%">اسم المالك</th>
-                            <td width="35%">${f.walletOwner || '-'}</td>
-                            <th width="15%">رقم الهوية</th>
-                            <td width="35%">${f.walletId || '-'}</td>
-                        </tr>
-                        <tr>
-                             <th>رقم الجوال</th>
-                             <td colspan="3">${f.walletPhone || '-'}</td>
-                        </tr>
-                    </table>
-                </div>
-            `;
-
-            // حقن المحتوى في منطقة الطباعة
+            if(f.members && f.members.length > 0) { f.members.forEach(m => { const age = getAge(m.dob); printHTML += `<tr><td>${m.name || '-'}</td><td>${m.relation || '-'}</td><td>${m.dob || '-'}</td><td>${age.y} سنة</td><td>${m.idNum || '-'}</td></tr>`; }); } else { printHTML += `<tr><td colspan="5" style="text-align: center; padding: 15px;">لا يوجد أفراد مضافين</td></tr>`; }
+            printHTML += `</tbody></table><div class="section-title">3. الحالات الصحية</div><table class="print-table"><thead><tr><th style="width: 25%">الاسم</th><th style="width: 20%">نوع المرض</th><th style="width: 20%">رقم الهوية</th><th style="width: 35%">التفاصيل</th></tr></thead><tbody>`;
+             if(f.health && f.health.length > 0) { f.health.forEach(h => { printHTML += `<tr><td>${h.name || '-'}</td><td>${h.type || '-'}</td><td>${h.idNum || '-'}</td><td>${h.desc || '-'}</td></tr>`; }); } else { printHTML += `<tr><td colspan="4" style="text-align: center; padding: 15px;">لا يوجد حالات صحية مسجلة</td></tr>`; }
+            printHTML += `</tbody></table><div class="section-title">4. المحفظة الإلكترونية</div><table class="print-table"><tr><th width="15%">اسم المالك</th><td width="35%">${f.walletOwner || '-'}</td><th width="15%">رقم الهوية</th><td width="35%">${f.walletId || '-'}</td></tr><tr><th>رقم الجوال</th><td colspan="3">${f.walletPhone || '-'}</td></tr></table></div>`;
             const printArea = document.getElementById('printArea');
             printArea.innerHTML = printHTML;
-            
-            // تنفيذ الطباعة
             window.print();
         }
 
         function exportCurrentView() {
             let dataForExcel = [];
-
             if (currentViewMode === 'individual') {
-                dataForExcel = currentViewData.map(d => ({
-                    "اسم الفرد": d.targetName,
-                    "هوية الفرد": d.targetId,
-                    "العمر/الصلة": `${d.targetAge} (${d.relation})`,
-                    "اسم الأب": d.pName,
-                    "هوية الأب": d.pId,
-                    "اسم الزوجة": d.wifeName,
-                    "هوية الزوجة": d.wifeId,
-                    "رقم الجوال": d.pPhone
-                }));
+                dataForExcel = currentViewData.map(d => ({ "اسم الفرد": d.targetName, "هوية الفرد": d.targetId, "العمر/الصلة": `${d.targetAge} (${d.relation})`, "اسم الأب": d.pName, "هوية الأب": d.pId, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone }));
             } else if (currentViewMode === 'health') {
-                dataForExcel = currentViewData.map(d => ({
-                    "اسم المريض": d.patientName,
-                    "هوية المريض": d.patientId, // تم إضافة الهوية هنا
-                    "تاريخ الميلاد": d.patientDob, // تم إضافة تاريخ الميلاد هنا
-                    "نوع المرض": d.diseaseType,
-                    "تفاصيل المرض": d.diseaseDesc,
-                    "اسم الأب": d.pName,
-                    "هوية الأب": d.pId,
-                    "اسم الزوجة": d.wifeName,
-                    "هوية الزوجة": d.wifeId,
-                    "رقم الجوال": d.pPhone
-                }));
+                dataForExcel = currentViewData.map(d => ({ "اسم المريض": d.patientName, "هوية المريض": d.patientId, "تاريخ الميلاد": d.patientDob, "نوع المرض": d.diseaseType, "تفاصيل المرض": d.diseaseDesc, "اسم الأب": d.pName, "هوية الأب": d.pId, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone }));
             } else {
-                dataForExcel = currentViewData.map(d => ({
-                    "اسم الأب": d.pName,
-                    "هوية الأب": d.pId,
-                    "اسم الزوجة": d.wifeName,
-                    "هوية الزوجة": d.wifeId,
-                    "رقم الجوال": d.pPhone,
-                    "المندوب": d.pDelegate,
-                    "الحالة الاجتماعية": d.pSocial,
-                    "إجمالي الأفراد": d.totalCount
-                }));
+                dataForExcel = currentViewData.map(d => ({ "اسم الأب": d.pName, "هوية الأب": d.pId, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone, "المندوب": d.pDelegate, "الحالة الاجتماعية": d.pSocial, "إجمالي الأجمالي": d.totalCount }));
             }
-
             const ws = XLSX.utils.json_to_sheet(dataForExcel);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Export");
@@ -1443,24 +1595,13 @@
         function openExportModal() {
             const container = document.getElementById('exportFieldCheckboxes');
             container.innerHTML = '';
-            Object.keys(FIELD_MAP).forEach(k => {
-                container.innerHTML += `
-                    <label class="flex items-center gap-3 p-4 bg-white rounded-2xl border border-slate-100 hover:border-indigo-200 cursor-pointer transition-all">
-                        <input type="checkbox" value="${k}" checked class="w-5 h-5 rounded-lg text-indigo-600 focus:ring-indigo-500">
-                        <span class="text-xs font-bold text-slate-600">${FIELD_MAP[k]}</span>
-                    </label>
-                `;
-            });
+            Object.keys(FIELD_MAP).forEach(k => { container.innerHTML += `<label class="flex items-center gap-3 p-4 bg-white rounded-2xl border border-slate-100 hover:border-indigo-200 cursor-pointer transition-all"><input type="checkbox" value="${k}" checked class="w-5 h-5 rounded-lg text-indigo-600 focus:ring-indigo-500"><span class="text-xs font-bold text-slate-600">${FIELD_MAP[k]}</span></label>`; });
             document.getElementById('exportModal').classList.remove('hidden');
         }
 
         function runCustomExport() {
             const selected = Array.from(document.querySelectorAll('#exportFieldCheckboxes input:checked')).map(i => i.value);
-            const data = window.families.map(f => {
-                let obj = {};
-                selected.forEach(k => obj[FIELD_MAP[k]] = f[k] || "");
-                return obj;
-            });
+            const data = window.families.map(f => { let obj = {}; selected.forEach(k => obj[FIELD_MAP[k]] = f[k] || ""); return obj; });
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "CustomExport");
@@ -1470,13 +1611,10 @@
 
         function toggleDuplicateFilter() {
             showDupsOnly = !showDupsOnly;
-            document.getElementById('dupIconBox').className = showDupsOnly 
-                ? "w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center text-white" 
-                : "w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center text-red-600";
+            document.getElementById('dupIconBox').className = showDupsOnly ? "w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center text-white" : "w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center text-red-600";
             runFilters();
         }
 
-        window.requestAdmin = requestAdmin;
         window.closeModal = closeModal;
         window.openForm = openForm;
         window.addMemberRow = addMemberRow;
@@ -1494,6 +1632,14 @@
         window.openExportModal = openExportModal;
         window.runCustomExport = runCustomExport;
         window.printFamilyDetails = printFamilyDetails;
+        window.openUserManagement = openUserManagement;
+        window.switchUserTab = switchUserTab;
+        window.handleCreateUser = handleCreateUser;
+        window.toggleUserStatus = toggleUserStatus;
+        window.deleteUserPermanently = deleteUserPermanently;
+        window.openEditCreds = openEditCreds;
+        window.handleSaveCreds = handleSaveCreds;
+        window.openMyProfile = openMyProfile;
     </script>
 </body>
 </html>
