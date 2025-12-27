@@ -73,7 +73,7 @@
                     name: "المدير الرئيسي",
                     username: user.email,
                     role: "super_admin",
-                    permissions: ["add", "edit", "remove", "view", "manage_users", "export"],
+                    permissions: ["add", "edit", "remove", "view", "manage_users", "export", "view_all"],
                     type: "google_auth"
                 };
                 handleLoginSuccess();
@@ -466,6 +466,10 @@
                                         <input type="checkbox" name="perms" value="export" class="w-5 h-5 rounded text-indigo-600">
                                         <span class="text-sm font-bold text-emerald-600">تصدير واستيراد البيانات (Excel/Template)</span>
                                     </label>
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input type="checkbox" name="perms" value="view_all" class="w-5 h-5 rounded text-indigo-600">
+                                        <span class="text-sm font-bold text-blue-600">مشاهدة كافة البيانات (تخطي الفلاتر)</span>
+                                    </label>
                                 </div>
                             </div>
 
@@ -549,6 +553,10 @@
                         <label class="flex items-center gap-3 cursor-pointer">
                             <input type="checkbox" name="editPerms" value="export" class="w-4 h-4 rounded text-indigo-600">
                             <span class="text-xs font-bold text-emerald-600">تصدير واستيراد البيانات</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" name="editPerms" value="view_all" class="w-4 h-4 rounded text-indigo-600">
+                            <span class="text-xs font-bold text-blue-600">مشاهدة كافة البيانات</span>
                         </label>
                     </div>
                 </div>
