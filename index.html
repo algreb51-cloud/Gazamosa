@@ -20,7 +20,7 @@
 
         /* Multi-select Styles */
         .multiselect-container { position: relative; width: 100%; }
-        .multiselect-btn { text-align: right; display: flex; justify-content: space-between; items-align: center; }
+        .multiselect-btn { text-align: right; display: flex; justify-content: space-between; align-items: center; }
         .multiselect-options { display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); z-index: 50; max-height: 250px; overflow-y: auto; padding: 0.5rem; margin-top: 5px; }
         .multiselect-options.show { display: block; }
         .multiselect-option { display: flex; items-center; gap: 8px; padding: 8px; cursor: pointer; border-radius: 0.5rem; transition: background 0.2s; }
@@ -76,7 +76,55 @@
         //       نظام المصادقة
         // ===========================================
 
-        onAuthStateChanged(auth, async (user) => {
+        async function checkPersistentLogin() {
+            const sessionString = localStorage.getItem('dbUserSession');
+            if (!sessionString) {
+                return false;
+            }
+
+            const { userId, expiry } = JSON.parse(sessionString);
+
+            if (Date.now() > expiry) {
+                localStorage.removeItem('dbUserSession');
+                return false;
+            }
+
+            try {
+                const userDocRef = window.fs.doc(window.db, "app_users", userId);
+                const userDoc = await window.fs.getDoc(userDocRef);
+
+                if (!userDoc.exists() || userDoc.data().isDisabled) {
+                    localStorage.removeItem('dbUserSession');
+                    return false;
+                }
+                
+                const newExpiry = Date.now() + (60 * 60 * 1000); // 1 hour sliding expiry
+                localStorage.setItem('dbUserSession', JSON.stringify({ userId, expiry: newExpiry }));
+                
+                await window.fs.updateDoc(userDocRef, {
+                    lastLogin: new Date().toISOString(),
+                    isOnline: true
+                });
+
+                const userData = userDoc.data();
+                window.currentUserData = {
+                    id: userId,
+                    name: userData.name,
+                    username: userData.username,
+                    role: userData.role,
+                    permissions: userData.permissions || [],
+                    type: "db_user"
+                };
+                handleLoginSuccess();
+                return true;
+            } catch (e) {
+                console.error("Persistent login check failed", e);
+                localStorage.removeItem('dbUserSession');
+                return false;
+            }
+        }
+
+        onAuthStateChanged(auth, async (user) => { // This handles Google Auth persistence
             if (user) {
                 window.currentUserData = {
                     name: "المدير الرئيسي",
@@ -86,6 +134,12 @@
                     type: "google_auth"
                 };
                 handleLoginSuccess();
+            } else {
+                // If no Google user, check for our custom persistent session
+                const customSessionActive = await checkPersistentLogin();
+                if (!customSessionActive) {
+                    document.getElementById('authOverlay').classList.remove('hidden');
+                }
             }
         });
 
@@ -148,12 +202,49 @@
                     type: "db_user"
                 };
 
+                // حفظ الجلسة في localStorage لمدة ساعة
+                const session = {
+                    userId: docId,
+                    expiry: Date.now() + (60 * 60 * 1000) // 1 hour
+                };
+                localStorage.setItem('dbUserSession', JSON.stringify(session));
+
                 handleLoginSuccess();
 
             } catch (error) {
-                console.error("Login Error:", error);
-                errorDiv.innerText = "اسم المستخدم أو كلمة المرور غير صحيحة";
-                errorDiv.classList.remove('hidden');
+                // محاولة تسجيل الدخول كمستفيد (فرد)
+                try {
+                    const benQ = query(collection(db, "artifacts", appId, "public", "data", "families"), where("pId", "==", userOrEmail));
+                    const benSnap = await getDocs(benQ);
+                    
+                    let benData = null;
+                    let benId = null;
+
+                    benSnap.forEach((doc) => {
+                        // التحقق من رقم الجوال ككلمة مرور
+                        if (doc.data().pPhone === pass) {
+                            benData = doc.data();
+                            benId = doc.id;
+                        }
+                    });
+
+                    if (!benData) throw new Error("Beneficiary not found or wrong phone");
+
+                    window.currentUserData = {
+                        id: benId,
+                        name: benData.pName,
+                        username: benData.pId,
+                        role: "beneficiary", // دور جديد
+                        permissions: ["edit_self"],
+                        type: "beneficiary_auth"
+                    };
+                    handleLoginSuccess();
+
+                } catch (benError) {
+                    console.error("Login Error:", error, benError);
+                    errorDiv.innerText = "بيانات الدخول غير صحيحة (تأكد من الهوية والجوال)";
+                    errorDiv.classList.remove('hidden');
+                }
             }
         };
 
@@ -170,9 +261,21 @@
 
             const settingsBtn = document.getElementById('navSettingsBtn');
             const homeBtn = document.getElementById('navHomeBtn');
+            const benBtn = document.getElementById('navBeneficiariesBtn');
             
-            // زر تغيير كلمة المرور الشخصية (يظهر للجميع)
-            document.getElementById('navProfileBtn').classList.remove('hidden');
+            // إخفاء/إظهار واجهة المستفيد الخاصة
+            if (u.role === 'beneficiary') {
+                document.querySelector('nav').classList.add('hidden'); // إخفاء القائمة الجانبية
+                document.getElementById('adminDashboard').classList.add('hidden'); // إخفاء لوحة التحكم الرئيسية
+                document.getElementById('beneficiaryDashboard').classList.remove('hidden'); // إظهار لوحة المستفيد
+                renderBeneficiaryView();
+                return; // توقف هنا للمستفيد
+            }
+
+            // الوضع الطبيعي للموظفين والمدراء
+            document.querySelector('nav').classList.remove('hidden');
+            document.getElementById('adminDashboard').classList.remove('hidden');
+            document.getElementById('beneficiaryDashboard').classList.add('hidden');
 
             if (u.role === 'super_admin') {
                 settingsBtn.classList.remove('hidden');
@@ -182,9 +285,16 @@
                 homeBtn.classList.remove('hidden');
             }
 
+            if (u.role === 'super_admin' || u.role === 'admin' || u.role === 'employee') {
+                benBtn.classList.remove('hidden');
+            } else {
+                benBtn.classList.add('hidden');
+            }
+
             const canAdd = u.permissions.includes('add');
             // التعديل هنا: تمكين التصدير إذا كان المدير الرئيسي أو لديه صلاحية export
             const canExport = u.role === 'super_admin' || u.role === 'admin' || u.permissions.includes('export');
+            const actionsGroup = document.getElementById('navActionsGroup');
             
             if(canAdd) document.getElementById('adminAddBtn').classList.remove('hidden');
             else document.getElementById('adminAddBtn').classList.add('hidden');
@@ -192,6 +302,9 @@
             // التحكم في ظهور زر التصدير في القائمة الجانبية
             if(canExport) document.getElementById('navExportBtn').classList.remove('hidden');
             else document.getElementById('navExportBtn').classList.add('hidden');
+
+            if(canAdd || canExport) actionsGroup.classList.remove('hidden');
+            else actionsGroup.classList.add('hidden');
 
             // التحكم في ظهور أزرار الإجراءات الإدارية (قالب، استيراد، تصدير الفرز)
             if(canExport) {
@@ -214,6 +327,7 @@
                         isOnline: false
                     });
                 }
+                localStorage.removeItem('dbUserSession');
                 await signOut(auth);
                 window.currentUserData = null;
                 location.reload();
@@ -224,15 +338,28 @@
         };
 
         function initDataListener() {
-            const q = query(
-                collection(db, "artifacts", appId, "public", "data", "families"),
-                orderBy("updatedAt", "desc")
-            );
-
-            onSnapshot(q, (snapshot) => {
-                window.families = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                runFilters();
-            }, (err) => console.error("Firebase Snapshot Error", err));
+            if (window.currentUserData && window.currentUserData.role === 'beneficiary') {
+                // للمستفيد: استمع فقط لملفه الشخصي
+                onSnapshot(doc(db, "artifacts", appId, "public", "data", "families", window.currentUserData.id), (doc) => {
+                    if (doc.exists()) {
+                        window.families = [{ id: doc.id, ...doc.data() }];
+                        renderBeneficiaryView(); // تحديث العرض عند تغير البيانات
+                    } else {
+                        alert("لم يعد الملف موجوداً");
+                        logout();
+                    }
+                });
+            } else {
+                // للمدراء: استمع للكل
+                const q = query(
+                    collection(db, "artifacts", appId, "public", "data", "families"),
+                    orderBy("updatedAt", "desc")
+                );
+                onSnapshot(q, (snapshot) => {
+                    window.families = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    runFilters();
+                }, (err) => console.error("Firebase Snapshot Error", err));
+            }
         }
 
     </script>
@@ -253,12 +380,12 @@
             
             <div class="space-y-4 text-right">
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-2 mr-1">اسم المستخدم / البريد الإلكتروني</label>
-                    <input type="text" id="loginUser" class="w-full p-4 bg-slate-50 border-none rounded-2xl text-left text-sm font-bold focus:ring-2 focus:ring-indigo-500" placeholder="Username">
+                    <label class="block text-xs font-bold text-slate-400 mb-2 mr-1">اسم المستخدم / رقم الهوية (هوية الاب)</label>
+                    <input type="text" id="loginUser" class="w-full p-4 bg-slate-50 border-none rounded-2xl text-left text-sm font-bold focus:ring-2 focus:ring-indigo-500" placeholder="Username / ID">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-2 mr-1">كلمة المرور</label>
-                    <input type="password" id="loginPass" class="w-full p-4 bg-slate-50 border-none rounded-2xl text-center text-xl tracking-widest focus:ring-2 focus:ring-indigo-500" placeholder="••••••••">
+                    <label class="block text-xs font-bold text-slate-400 mb-2 mr-1">كلمة المرور / رقم الجوال</label>
+                    <input type="password" id="loginPass" class="w-full p-4 bg-slate-50 border-none rounded-2xl text-center text-xl tracking-widest focus:ring-2 focus:ring-indigo-500" placeholder="•••••••• / Phone">
                 </div>
                 <div id="loginError" class="text-red-500 text-xs font-bold hidden text-center"></div>
                 
@@ -271,28 +398,58 @@
     </div>
 
     <div id="mainUI" class="hidden min-h-screen">
-        <nav class="fixed bottom-0 left-0 right-0 md:top-0 md:right-0 md:h-screen md:w-24 bg-white border-t md:border-t-0 md:border-l border-slate-200 z-[500] flex md:flex-col items-center justify-center gap-6 p-4 md:p-8">
-            <div class="hidden md:block mb-auto">
-                <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">DB</div>
+        <nav class="fixed bottom-0 left-0 right-0 md:top-0 md:right-0 md:h-screen md:w-24 bg-white border-t md:border-t-0 md:border-l border-slate-200 z-[500] flex md:flex-col items-center justify-between p-2 md:py-6">
+            
+            <div class="hidden md:flex mb-6">
+                <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-100 font-black text-xl">DB</div>
             </div>
             
-            <button id="navHomeBtn" onclick="window.scrollTo({top:0, behavior:'smooth'})" class="hidden p-4 rounded-2xl text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg></button>
+            <div class="flex md:flex-col items-center gap-6 w-full md:w-auto justify-center md:justify-start flex-1">
+                
+                <div class="flex md:flex-col gap-2 bg-slate-50/80 p-2 rounded-[1.5rem] border border-slate-100">
+                    <button id="navHomeBtn" onclick="window.scrollTo({top:0, behavior:'smooth'})" class="hidden p-3 rounded-xl text-slate-400 hover:bg-white hover:text-indigo-600 hover:shadow-sm transition-all" title="الرئيسية">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    </button>
+                    
+                    <button id="navBeneficiariesBtn" onclick="openBeneficiaries()" class="hidden p-3 rounded-xl text-slate-400 hover:bg-white hover:text-emerald-600 hover:shadow-sm transition-all" title="المستفيدين والأرشفة">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    </button>
+                </div>
+
+                <div id="navActionsGroup" class="flex md:flex-col gap-2 bg-indigo-50/50 p-2 rounded-[1.5rem] border border-indigo-100 hidden">
+                    <button onclick="openForm()" id="adminAddBtn" class="hidden p-3 rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-200 hover:scale-105 transition-all" title="إضافة جديد">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    </button>
+                    <button id="navExportBtn" onclick="openExportModal()" class="hidden p-3 rounded-xl text-indigo-400 hover:bg-white hover:text-indigo-700 hover:shadow-sm transition-all" title="تصدير">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    </button>
+                </div>
+
+                <button id="navSettingsBtn" onclick="openUserManagement()" class="hidden p-4 rounded-2xl bg-slate-800 text-white shadow-lg shadow-slate-200 hover:bg-black transition-all" title="إدارة المستخدمين">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </button>
+            </div>
             
-            <button id="navSettingsBtn" onclick="openUserManagement()" class="hidden p-4 rounded-2xl bg-slate-800 text-white shadow-lg shadow-slate-200 hover:bg-black transition-all" title="إدارة المستخدمين">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            </button>
-
-            <button id="navProfileBtn" onclick="openMyProfile()" class="hidden p-4 rounded-2xl text-slate-400 hover:bg-amber-50 hover:text-amber-500 transition-all" title="تغيير كلمة المرور">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-            </button>
-
-            <button onclick="openForm()" id="adminAddBtn" class="hidden p-4 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-100 transition-all hover:scale-110"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>
-            <button id="navExportBtn" onclick="openExportModal()" class="hidden p-4 rounded-2xl text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg></button>
-            <button onclick="logout()" class="p-4 md:mt-auto rounded-2xl text-red-400 hover:bg-red-50 transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+            <div class="flex md:flex-col items-center gap-3 mt-auto relative">
+                <div id="personalSettingsMenu" class="hidden absolute bottom-full left-0 mb-3 md:bottom-0 md:right-full md:mr-4 md:left-auto md:mb-0 bg-white border border-slate-100 shadow-2xl rounded-2xl p-2 w-56 z-[600] modal-anim origin-bottom-left">
+                    <button onclick="openMyProfile()" class="w-full text-right p-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-amber-50 hover:text-amber-600 transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                        تغيير كلمة المرور
+                    </button>
+                    <button onclick="logout()" class="w-full text-right p-3 rounded-xl text-sm font-bold text-red-400 hover:bg-red-50 hover:text-red-600 transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                        تسجيل خروج
+                    </button>
+                </div>
+                <button onclick="togglePersonalSettings()" class="p-3 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all" title="الإعدادات الشخصية">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </button>
+            </div>
         </nav>
 
         <main class="pb-24 md:pb-8 md:pr-24 min-h-screen">
-            <div class="max-w-[95%] mx-auto p-4 md:p-8">
+            <!-- واجهة المدراء والموظفين -->
+            <div id="adminDashboard" class="max-w-[95%] mx-auto p-4 md:p-8">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                     <div>
                         <h1 class="text-3xl font-black text-slate-800">لوحة التحكم</h1>
@@ -432,11 +589,10 @@
                             <button onclick="downloadTemplate()" class="flex-1 bg-white border border-slate-200 text-slate-600 p-4 rounded-2xl text-xs font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
                                 تحميل النموذج
                             </button>
-                            <label class="flex-1 bg-indigo-50 text-indigo-600 p-4 rounded-2xl text-xs font-bold hover:bg-indigo-100 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                                <input type="file" id="importExcel" hidden onchange="importData(event)">
+                            <button onclick="openImportModal()" class="flex-1 bg-indigo-50 text-indigo-600 p-4 rounded-2xl text-xs font-bold hover:bg-indigo-100 transition-all flex items-center justify-center gap-2">
                                 استيراد إكسل
-                            </label>
-                            <button onclick="exportCurrentView()" class="flex-1 bg-emerald-600 text-white p-4 rounded-2xl text-xs font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2">
+                            </button>
+                            <button onclick="openMainExportModal()" class="flex-1 bg-emerald-600 text-white p-4 rounded-2xl text-xs font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2">
                                 تصدير الفرز
                             </button>
                         </div>
@@ -444,12 +600,37 @@
                 </div>
 
                 <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl overflow-hidden">
+                    <div id="bulkActionsBar" class="hidden bg-red-50 p-4 flex justify-between items-center border-b border-red-100">
+                        <span class="text-red-600 font-bold text-sm">تم تحديد <span id="selectedMainCount">0</span> عنصر</span>
+                        <button onclick="deleteSelectedRows()" class="bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-700 transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            إزالة الأسماء المحددة
+                        </button>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-right border-collapse">
                             <thead id="tableHeader" class="bg-slate-50/50 text-slate-400 text-xs font-bold uppercase tracking-widest border-b"></thead>
                             <tbody id="tableBody" class="divide-y divide-slate-50 text-sm"></tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+
+            <!-- واجهة المستفيد (الأفراد) -->
+            <div id="beneficiaryDashboard" class="hidden max-w-4xl mx-auto p-6 md:p-12 min-h-screen flex flex-col justify-center">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 class="text-3xl font-black text-slate-800">ملفي الشخصي</h1>
+                        <p class="text-slate-500 mt-1">بوابة المستفيدين</p>
+                    </div>
+                    <button onclick="logout()" class="bg-red-50 text-red-500 px-6 py-3 rounded-2xl font-bold hover:bg-red-100 transition-all flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                        خروج
+                    </button>
+                </div>
+                
+                <div id="benProfileContent" class="bg-white rounded-[3rem] shadow-xl border border-slate-100 overflow-hidden">
+                    <!-- سيتم تعبئة البيانات هنا -->
                 </div>
             </div>
         </main>
@@ -643,7 +824,7 @@
                         <input type="text" id="pName" required class="w-full bg-slate-50 border-none rounded-2xl p-5 input-focus text-sm font-bold">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 mb-2">رقم الهوية (9 أرقام)</label>
+                        <label class="block text-xs font-bold text-slate-400 mb-2">رقم الهوية (هوية الاب)</label>
                         <input type="text" id="pId" maxlength="9" required oninput="only9Numbers(this)" class="w-full bg-slate-50 border-none rounded-2xl p-5 input-focus text-sm font-mono tracking-widest font-bold">
                     </div>
                     <div>
@@ -736,8 +917,233 @@
             <div id="exportFieldCheckboxes" class="grid grid-cols-2 gap-3 mb-8 max-h-[40vh] overflow-y-auto p-2 bg-slate-50 rounded-2xl custom-scroll">
                 </div>
             <div class="flex gap-4">
-                <button onclick="runCustomExport()" class="flex-1 bg-indigo-600 text-white py-5 rounded-2xl font-bold shadow-xl shadow-indigo-100">تصدير للملف</button>
+                <button onclick="openCustomExportMetaModal()" class="flex-1 bg-indigo-600 text-white py-5 rounded-2xl font-bold shadow-xl shadow-indigo-100">تصدير للملف</button>
                 <button onclick="closeModal('exportModal')" class="flex-1 bg-slate-100 text-slate-500 py-5 rounded-2xl font-bold">تراجع</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="customExportMetaModal" class="fixed inset-0 bg-slate-900/80 hidden z-[1600] flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl modal-anim overflow-hidden">
+            <div class="p-8 border-b border-slate-100 bg-slate-50">
+                <h3 class="text-xl font-black text-slate-800">تأكيد التصدير المخصص</h3>
+                <p class="text-slate-400 text-xs mt-1">أدخل بيانات الأرشفة للملف</p>
+            </div>
+            <div class="p-8 space-y-4">
+                <div><label class="block text-xs font-bold text-slate-400 mb-2">اسم الملف</label><input type="text" id="ceFileName" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm" placeholder="مثال: تقرير شامل"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-bold text-slate-400 mb-2">النوع</label><input type="text" id="ceType" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-400 mb-2">الجهة المانحة</label><input type="text" id="ceDonor" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm"></div>
+                </div>
+                <div><label class="block text-xs font-bold text-slate-400 mb-2">تاريخ الاستفادة</label><input type="date" id="ceDate" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm"></div>
+                
+                <div class="bg-indigo-50 p-4 rounded-xl flex justify-between items-center text-xs font-bold text-indigo-800">
+                    <span>عدد المستفيدين: <span id="ceCountDisplay">0</span></span>
+                    <span>تاريخ الأرشفة: <span id="ceArchiveDate"></span></span>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button onclick="executeCustomExport()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        تصدير
+                    </button>
+                    <button onclick="closeModal('customExportMetaModal')" class="flex-1 bg-slate-100 text-slate-500 py-3 rounded-xl font-bold">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="importModal" class="fixed inset-0 bg-slate-900/80 hidden z-[1650] flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl modal-anim overflow-hidden">
+            <div class="p-8 border-b border-slate-100 bg-slate-50">
+                <h3 class="text-xl font-black text-slate-800">استيراد وأرشفة</h3>
+                <p class="text-slate-400 text-xs mt-1">أدخل بيانات الملف للأرشفة قبل الاستيراد</p>
+            </div>
+            <div class="p-8 space-y-4">
+                <div><label class="block text-xs font-bold text-slate-400 mb-2">اسم الملف</label><input type="text" id="impFileName" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm" placeholder="مثال: كشف وارد"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-bold text-slate-400 mb-2">النوع</label><input type="text" id="impType" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-400 mb-2">الجهة المانحة</label><input type="text" id="impDonor" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm"></div>
+                </div>
+                <div><label class="block text-xs font-bold text-slate-400 mb-2">تاريخ الاستفادة</label><input type="date" id="impDate" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm"></div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button onclick="triggerImportFile()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        اختيار الملف والاستيراد
+                    </button>
+                    <button onclick="closeModal('importModal')" class="flex-1 bg-slate-100 text-slate-500 py-3 rounded-xl font-bold">إلغاء</button>
+                </div>
+                <input type="file" id="realImportInput" hidden onchange="executeImport(event)">
+            </div>
+        </div>
+    </div>
+
+    <div id="mainExportModal" class="fixed inset-0 bg-slate-900/80 hidden z-[1550] flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl modal-anim overflow-hidden">
+            <div class="p-8 border-b border-slate-100 bg-slate-50">
+                <h3 class="text-xl font-black text-slate-800">تصدير الفرز والأرشفة</h3>
+                <p class="text-slate-400 text-xs mt-1">أدخل بيانات الملف للأرشفة قبل التصدير</p>
+            </div>
+            <div class="p-8 space-y-4">
+                <div><label class="block text-xs font-bold text-slate-400 mb-2">اسم الملف</label><input type="text" id="meFileName" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm" placeholder="مثال: كشف الأيتام"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-bold text-slate-400 mb-2">النوع</label><input type="text" id="meType" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-400 mb-2">الجهة المانحة</label><input type="text" id="meDonor" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm"></div>
+                </div>
+                <div><label class="block text-xs font-bold text-slate-400 mb-2">تاريخ الاستفادة</label><input type="date" id="meDate" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm"></div>
+                
+                <div class="bg-indigo-50 p-4 rounded-xl flex justify-between items-center text-xs font-bold text-indigo-800">
+                    <span>عدد المستفيدين: <span id="meCountDisplay">0</span></span>
+                    <span>تاريخ الأرشفة: <span id="meArchiveDate"></span></span>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button onclick="executeMainExport()" class="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        تصدير وأرشفة
+                    </button>
+                    <button onclick="closeModal('mainExportModal')" class="flex-1 bg-slate-100 text-slate-500 py-3 rounded-xl font-bold">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="matchMetadataModal" class="fixed inset-0 bg-slate-900/80 hidden z-[1700] flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl modal-anim overflow-hidden">
+            <div class="p-8 border-b border-slate-100 bg-slate-50">
+                <h3 class="text-xl font-black text-slate-800">أرشفة ملف المطابقة</h3>
+                <p class="text-slate-400 text-xs mt-1">تمت مطابقة <span id="matchCountDisplay" class="text-indigo-600 font-bold">0</span> مستفيد. يرجى إدخال بيانات السجل.</p>
+            </div>
+            <div class="p-8 space-y-4">
+                <div><label class="block text-xs font-bold text-slate-400 mb-2">اسم الملف</label><input type="text" id="mmFileName" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-bold text-slate-400 mb-2">النوع</label><input type="text" id="mmType" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-400 mb-2">الجهة المانحة</label><input type="text" id="mmDonor" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm"></div>
+                </div>
+                <div><label class="block text-xs font-bold text-slate-400 mb-2">تاريخ الاستفادة</label><input type="date" id="mmDate" class="w-full bg-slate-50 border-none rounded-xl p-3 font-bold text-sm"></div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button onclick="executeMatchArchive()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        حفظ في سجل المستفيدين
+                    </button>
+                    <button onclick="closeModal('matchMetadataModal')" class="flex-1 bg-slate-100 text-slate-500 py-3 rounded-xl font-bold">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="beneficiariesModal" class="fixed inset-0 bg-slate-900/80 hidden z-[1500] flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white w-full max-w-6xl rounded-[3rem] shadow-2xl modal-anim overflow-hidden h-[90vh] flex flex-col">
+            <div class="p-4 md:p-8 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50">
+                <h2 class="text-lg md:text-2xl font-black text-slate-800 flex items-center gap-3 w-full md:w-auto">
+                    <div class="w-10 h-10 bg-emerald-600 text-white rounded-xl flex items-center justify-center"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg></div>
+                    نظام المستفيدين والأرشفة
+                </h2>
+                <div class="flex flex-wrap items-center gap-2 md:gap-3 w-full md:w-auto justify-end">
+                    <div class="bg-slate-200 p-1 rounded-xl flex text-[10px] md:text-xs font-bold overflow-x-auto max-w-full">
+                        <button onclick="switchBenTab('new')" id="benTabNew" class="px-4 py-2 bg-white text-slate-800 rounded-lg shadow-sm transition-all">تصدير جديد</button>
+                        <button onclick="switchBenTab('beneficiaries')" id="benTabBen" class="px-4 py-2 text-slate-500 hover:text-slate-700 transition-all">سجل المستفيدين</button>
+                        <button onclick="switchBenTab('history')" id="benTabHistory" class="px-4 py-2 text-slate-500 hover:text-slate-700 transition-all">سجل الأرشيف</button>
+                    </div>
+                    <button onclick="closeModal('beneficiariesModal')" class="p-3 bg-white border rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-all">✕</button>
+                </div>
+            </div>
+            
+            <div id="benNewView" class="flex-1 overflow-y-auto md:overflow-hidden flex flex-col md:flex-row">
+                <div class="flex-1 p-4 md:p-6 md:overflow-y-auto custom-scroll">
+                    <div class="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <h3 class="font-bold text-slate-700">قائمة العائلات</h3>
+                        <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                            <button onclick="triggerMatchImport()" class="text-xs bg-emerald-50 text-emerald-600 px-3 py-2 rounded-lg font-bold flex items-center gap-1 hover:bg-emerald-100 transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                استرداد ملف (مطابقة)
+                            </button>
+                            <input type="file" id="matchImportInput" hidden onchange="processMatchImport(event)">
+                            <input type="text" id="benSearch" oninput="renderBeneficiariesTable()" placeholder="بحث سريع..." class="bg-slate-50 border-none rounded-xl px-4 py-2 text-sm font-bold">
+                            <button onclick="selectAllBen(true)" class="text-xs bg-indigo-50 text-indigo-600 px-3 py-2 rounded-lg font-bold">تحديد الكل</button>
+                            <button onclick="selectAllBen(false)" class="text-xs bg-slate-100 text-slate-500 px-3 py-2 rounded-lg font-bold">إلغاء</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right min-w-[600px]">
+                            <thead class="text-xs text-slate-400 font-bold uppercase border-b bg-slate-50 sticky top-0">
+                                <tr><th class="p-3">اختيار</th><th class="p-3">الاسم</th><th class="p-3">الهوية</th><th class="p-3">الجوال</th><th class="p-3">العدد</th><th class="p-3">المندوب</th></tr>
+                            </thead>
+                            <tbody id="benTableBody" class="text-sm font-bold text-slate-700 divide-y divide-slate-50"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="w-full md:w-96 bg-slate-50 border-b md:border-b-0 md:border-r p-4 md:p-6 md:overflow-y-auto custom-scroll shadow-inner shrink-0 order-first md:order-none">
+                    <div id="exportPanel" class="opacity-50 pointer-events-none transition-all">
+                        <h3 class="font-black text-slate-800 mb-6 text-lg">بيانات التصدير والأرشفة</h3>
+                        <div class="space-y-4">
+                            <div><label class="block text-xs font-bold text-slate-400 mb-2">اسم الملف</label><input type="text" id="expFileName" class="w-full bg-white border-none rounded-xl p-3 font-bold text-sm shadow-sm" placeholder="مثال: توزيعة سلة غذائية"></div>
+                            <div><label class="block text-xs font-bold text-slate-400 mb-2">نوع الملف / المساعدة</label><input type="text" id="expFileType" class="w-full bg-white border-none rounded-xl p-3 font-bold text-sm shadow-sm" placeholder="مثال: طرود صحية"></div>
+                            <div><label class="block text-xs font-bold text-slate-400 mb-2">الجهة المانحة</label><input type="text" id="expDonor" class="w-full bg-white border-none rounded-xl p-3 font-bold text-sm shadow-sm"></div>
+                            <div><label class="block text-xs font-bold text-slate-400 mb-2">تاريخ الاستفادة</label><input type="date" id="expDate" class="w-full bg-white border-none rounded-xl p-3 font-bold text-sm shadow-sm"></div>
+                            <div><label class="block text-xs font-bold text-slate-400 mb-2">ملاحظات إضافية</label><textarea id="expNotes" rows="3" class="w-full bg-white border-none rounded-xl p-3 font-bold text-sm shadow-sm"></textarea></div>
+                            
+                            <div class="pt-4 border-t border-slate-200 mt-4">
+                                <div class="flex justify-between items-center mb-4">
+                                    <span class="text-xs font-bold text-slate-500">العائلات المحددة:</span>
+                                    <span id="selectedCountBadge" class="bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-bold">0</span>
+                                </div>
+                                <button onclick="executeBenExport()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 flex items-center justify-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    تصدير وأرشفة (Excel)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="selectHint" class="text-center text-slate-400 mt-10 text-sm font-bold">
+                        يرجى تحديد عائلة واحدة على الأقل لتفعيل التصدير
+                    </div>
+                </div>
+            </div>
+
+            <div id="benBeneficiariesView" class="hidden flex-1 overflow-y-auto custom-scroll p-4 md:p-8">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right min-w-[900px]">
+                        <thead class="text-xs text-slate-400 font-bold uppercase border-b bg-slate-50 sticky top-0">
+                            <tr>
+                                <th class="p-4">اسم الملف</th>
+                                <th class="p-4">حالة الملف</th>
+                                <th class="p-4">النوع</th>
+                                <th class="p-4">الجهة المانحة</th>
+                                <th class="p-4">تاريخ الاستفادة</th>
+                                <th class="p-4">عدد المستفيدين</th>
+                                <th class="p-4">تاريخ الأرشفة</th>
+                                <th class="p-4">بواسطة</th>
+                                <th class="p-4">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="benBeneficiariesBody" class="text-sm font-bold text-slate-700 divide-y divide-slate-50"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="benHistoryView" class="hidden flex-1 overflow-y-auto custom-scroll p-4 md:p-8">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right min-w-[900px]">
+                        <thead class="text-xs text-slate-400 font-bold uppercase border-b bg-slate-50 sticky top-0">
+                            <tr>
+                                <th class="p-4">اسم الملف</th>
+                                <th class="p-4">حالة الملف</th>
+                                <th class="p-4">النوع</th>
+                                <th class="p-4">الجهة المانحة</th>
+                                <th class="p-4">تاريخ الاستفادة</th>
+                                <th class="p-4">عدد المستفيدين</th>
+                                <th class="p-4">تاريخ الأرشفة</th>
+                                <th class="p-4">بواسطة</th>
+                                <th class="p-4">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="benHistoryBody" class="text-sm font-bold text-slate-700 divide-y divide-slate-50"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -762,6 +1168,7 @@
         let showDupsOnly = false;
         let currentViewData = []; 
         let currentViewMode = 'family'; 
+        let matchedIdsForArchive = []; // To store IDs from match import
 
         const FIELD_MAP = {
             pName: "اسم رب الأسرة",
@@ -1033,7 +1440,9 @@
         // ===========================================
         
         function hasPerm(p) {
-            return window.currentUserData && (window.currentUserData.permissions.includes(p) || window.currentUserData.permissions.includes('all'));
+            if (!window.currentUserData) return false;
+            if (window.currentUserData.role === 'beneficiary' && p === 'edit') return true; // السماح للمستفيد بالتعديل
+            return window.currentUserData.permissions.includes(p) || window.currentUserData.permissions.includes('all');
         }
 
         function runFilters() {
@@ -1062,7 +1471,7 @@
                                          (f.pDelegate || "").toLowerCase().includes(search) ||
                                          (f.totalCount || "").toString().includes(search);
             
-            const isRestricted = !hasPerm('view_sensitive') && window.currentUserData?.role === 'viewer';
+            const isRestricted = window.currentUserData?.role === 'viewer' && !hasPerm('view_all');
 
             // Logic adapted for multiple selections
             if (ageFilters.length > 0 && !ageFilters.includes('all')) {
@@ -1070,6 +1479,7 @@
                     window.families.forEach(f => {
                         if (!matchesSearch(f)) return;
                         (f.members || []).forEach(m => {
+                            if (!m.dob) return;
                             const age = getAge(m.dob);
                             let match = false;
                             
@@ -1100,8 +1510,9 @@
                                 });
                             }
                         });
-                        [ {name: f.pName, dob: f.pDob, id: f.pId, role: 'أب'}, 
-                          {name: f.wifeName, dob: f.wifeDob, id: f.wifeId, role: 'زوجة'} ].forEach(p => {
+                        [ {name: f.pName, dob: f.pDob, id: f.pId, role: 'أب'}, {name: f.wifeName, dob: f.wifeDob, id: f.wifeId, role: 'زوجة'} ]
+                        .filter(p => p.name && p.dob)
+                        .forEach(p => {
                             const age = getAge(p.dob);
                             let match = false;
                             
@@ -1186,7 +1597,7 @@
             }
 
             currentViewData = resultData;
-            renderTable(resultData);
+            renderTable(resultData, isRestricted);
             updateStats(window.families);
         }
 
@@ -1205,15 +1616,84 @@
             document.getElementById('totalDuplicates').innerText = dups;
         }
 
-        function renderTable(data) {
+        window.toggleMainSelectAll = function(source) {
+            const checkboxes = document.querySelectorAll('.main-row-check');
+            checkboxes.forEach(cb => cb.checked = source.checked);
+            updateMainSelection();
+        };
+
+        window.updateMainSelection = function() {
+            const count = document.querySelectorAll('.main-row-check:checked').length;
+            document.getElementById('selectedMainCount').innerText = count;
+            const bar = document.getElementById('bulkActionsBar');
+            if(count > 0) bar.classList.remove('hidden');
+            else bar.classList.add('hidden');
+        };
+
+        window.deleteSelectedRows = async function() {
+            if(!hasPerm('remove')) return alert("ليس لديك صلاحية الحذف");
+            const checks = document.querySelectorAll('.main-row-check:checked');
+            if(checks.length === 0) return;
+            
+            if(!confirm(`هل أنت متأكد من حذف ${checks.length} سجلات؟ (سيتم حذف العائلة بالكامل)`)) return;
+
+            const idsToDelete = new Set();
+            checks.forEach(cb => idsToDelete.add(cb.value)); // value is familyId
+
+            let deletedCount = 0;
+            try {
+                for(let id of idsToDelete) {
+                    await window.fs.deleteDoc(window.fs.doc(window.db, "artifacts", window.appId, "public", "data", "families", id));
+                    deletedCount++;
+                }
+                alert(`تم حذف ${deletedCount} سجل بنجاح`);
+                document.getElementById('bulkActionsBar').classList.add('hidden');
+            } catch(e) {
+                alert("حدث خطأ أثناء الحذف: " + e.message);
+            }
+        };
+
+        function renderTable(data, isRestricted = false) {
             const thead = document.getElementById('tableHeader');
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
             thead.innerHTML = '';
 
+            if (isRestricted) {
+                thead.innerHTML = `<tr class="bg-slate-50/50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b">
+                    <th class="px-4 py-4">الاسم</th>
+                    <th class="px-4 py-4">المندوب</th>
+                    <th class="px-4 py-4 text-center">إجراءات</th>
+                </tr>`;
+
+                data.forEach((row) => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition-all border-b border-slate-50";
+                    
+                    let actionButtons = `<button onclick="viewDetails('${row.familyId}')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="تفاصيل"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>`;
+                    if(hasPerm('edit')) actionButtons += `<button onclick="editFamily('${row.familyId}')" class="p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-all" title="تعديل"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>`;
+                    if(hasPerm('remove')) actionButtons += `<button onclick="triggerDelete('${row.familyId}')" class="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all" title="حذف"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>`;
+                    
+                    const actions = `<div class="flex items-center justify-center gap-2">${actionButtons}</div>`;
+
+                    let nameDisplay = row.pName;
+                    if (currentViewMode === 'individual') nameDisplay = (row.targetName || '-') + " (تابع لـ " + row.pName + ")";
+                    if (currentViewMode === 'health') nameDisplay = (row.patientName || '-') + " (تابع لـ " + row.pName + ")";
+
+                    tr.innerHTML = `
+                        <td class="px-4 py-4 font-bold text-slate-700">${nameDisplay}</td>
+                        <td class="px-4 py-4"><span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold">${row.pDelegate || '-'}</span></td>
+                        <td class="px-4 py-4">${actions}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                return;
+            }
+
             let headersHTML = '';
             if (currentViewMode === 'individual') {
                 headersHTML = `
+                    <th class="px-4 py-4 w-10"><input type="checkbox" onchange="toggleMainSelectAll(this)" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"></th>
                     <th class="px-4 py-4">اسم الفرد</th>
                     <th class="px-4 py-4">هوية الفرد</th>
                     <th class="px-4 py-4">العمر/الصلة</th>
@@ -1226,6 +1706,7 @@
                 `;
             } else if (currentViewMode === 'health') {
                 headersHTML = `
+                    <th class="px-4 py-4 w-10"><input type="checkbox" onchange="toggleMainSelectAll(this)" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"></th>
                     <th class="px-4 py-4">اسم المريض</th>
                     <th class="px-4 py-4">هوية المريض</th>
                     <th class="px-4 py-4">تاريخ الميلاد</th>
@@ -1239,6 +1720,7 @@
                 `;
             } else {
                 headersHTML = `
+                    <th class="px-4 py-4 w-10"><input type="checkbox" onchange="toggleMainSelectAll(this)" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"></th>
                     <th class="px-4 py-4">اسم الأب</th>
                     <th class="px-4 py-4">هوية الأب</th>
                     <th class="px-4 py-4">اسم الزوجة</th>
@@ -1252,10 +1734,11 @@
             }
             thead.innerHTML = `<tr class="bg-slate-50/50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b">${headersHTML}</tr>`;
 
-            data.forEach(row => {
+            data.forEach((row, index) => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition-all border-b border-slate-50";
                 
+                const checkboxHTML = `<td class="px-4 py-4"><input type="checkbox" value="${row.familyId}" data-index="${index}" onchange="updateMainSelection()" class="main-row-check w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"></td>`;
                 let rowHTML = '';
                 
                 let actionButtons = `
@@ -1273,36 +1756,39 @@
 
                 if (currentViewMode === 'individual') {
                      rowHTML = `
+                        ${checkboxHTML}
                         <td class="px-4 py-4 font-bold text-indigo-700">${row.targetName || '-'}</td>
-                        <td class="px-4 py-4 font-mono">${row.targetId || '-'}</td>
+                        <td class="px-4 py-4 font-mono">${isRestricted ? '*****' : (row.targetId || '-')}</td>
                         <td class="px-4 py-4 text-xs font-bold text-slate-500">${row.targetAge} (${row.relation})</td>
                         <td class="px-4 py-4 bg-indigo-50/10">${row.pName}</td>
-                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${row.pId}</td>
+                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : row.pId}</td>
                         <td class="px-4 py-4 bg-indigo-50/10">${row.wifeName || '-'}</td>
-                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${row.wifeId || '-'}</td>
-                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${row.pPhone}</td>
+                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : (row.wifeId || '-')}</td>
+                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : row.pPhone}</td>
                         <td class="px-4 py-4">${actions}</td>
                     `;
                 } else if (currentViewMode === 'health') {
                      rowHTML = `
+                        ${checkboxHTML}
                         <td class="px-4 py-4 font-bold text-red-600">${row.patientName || '-'}</td>
-                        <td class="px-4 py-4 font-mono">${row.patientId || '-'}</td>
+                        <td class="px-4 py-4 font-mono">${isRestricted ? '*****' : (row.patientId || '-')}</td>
                         <td class="px-4 py-4 font-mono">${row.patientDob || '-'}</td>
                         <td class="px-4 py-4 text-xs font-bold bg-red-50 text-red-600 rounded-lg">${row.diseaseType}</td>
                         <td class="px-4 py-4 bg-indigo-50/10">${row.pName}</td>
-                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${row.pId}</td>
+                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : row.pId}</td>
                         <td class="px-4 py-4 bg-indigo-50/10">${row.wifeName || '-'}</td>
-                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${row.wifeId || '-'}</td>
-                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${row.pPhone}</td>
+                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : (row.wifeId || '-')}</td>
+                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : row.pPhone}</td>
                         <td class="px-4 py-4">${actions}</td>
                     `;
                 } else {
                      rowHTML = `
+                        ${checkboxHTML}
                         <td class="px-4 py-4 font-bold text-slate-700">${row.pName}</td>
-                        <td class="px-4 py-4 font-mono text-slate-500">${row.pId}</td>
+                        <td class="px-4 py-4 font-mono text-slate-500">${isRestricted ? '*****' : row.pId}</td>
                         <td class="px-4 py-4">${row.wifeName || '-'}</td>
-                        <td class="px-4 py-4 font-mono text-slate-500">${row.wifeId || '-'}</td>
-                        <td class="px-4 py-4 font-mono text-slate-500">0${row.pPhone}</td>
+                        <td class="px-4 py-4 font-mono text-slate-500">${isRestricted ? '*****' : (row.wifeId || '-')}</td>
+                        <td class="px-4 py-4 font-mono text-slate-500">${isRestricted ? '*****' : `0${row.pPhone}`}</td>
                         <td class="px-4 py-4"><span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold">${row.pDelegate || '-'}</span></td>
                         <td class="px-4 py-4 text-xs font-bold">${row.pSocial || '-'}</td>
                         <td class="px-4 py-4 font-bold">${row.totalCount || 0}</td>
@@ -1316,12 +1802,22 @@
         }
 
         function openForm() {
-            if(!hasPerm('add')) return alert("ليس لديك صلاحية إضافة بيانات");
+            // السماح للمستفيد بفتح النموذج للتعديل فقط
+            if(window.currentUserData.role !== 'beneficiary' && !hasPerm('add')) {
+                return alert("ليس لديك صلاحية إضافة بيانات");
+            }
             document.getElementById('mainForm').reset();
             document.getElementById('editId').value = '';
             document.getElementById('membersList').innerHTML = '';
             document.getElementById('healthList').innerHTML = '';
             document.getElementById('modalTitle').innerText = 'إضافة بيانات عائلة';
+            
+            // إعادة تفعيل حقل المندوب للوضع الافتراضي (للمدراء)
+            const delInput = document.getElementById('pDelegate');
+            delInput.disabled = false;
+            delInput.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+            delInput.classList.add('bg-slate-50');
+
             document.getElementById('formModal').classList.remove('hidden');
         }
 
@@ -1364,8 +1860,35 @@
         async function handleSave(e) {
             e.preventDefault();
             const editId = document.getElementById('editId').value;
-            if(editId && !hasPerm('edit')) return alert("ليس لديك صلاحية تعديل");
-            if(!editId && !hasPerm('add')) return alert("ليس لديك صلاحية إضافة");
+            
+            // التحقق من الصلاحيات
+            if(window.currentUserData.role === 'beneficiary' && editId !== window.currentUserData.id) return alert("غير مصرح لك");
+            if(window.currentUserData.role !== 'beneficiary') {
+                if(editId && !hasPerm('edit')) return alert("ليس لديك صلاحية تعديل");
+                if(!editId && !hasPerm('add')) return alert("ليس لديك صلاحية إضافة");
+            }
+
+            // التحقق من إجبارية تواريخ الميلاد للمستفيد
+            if (window.currentUserData.role === 'beneficiary') {
+                if (!document.getElementById('pDob').value) {
+                    return alert("يرجى تعبئة تاريخ ميلاد رب الأسرة، فهو حقل إجباري.");
+                }
+
+                const wifeName = document.getElementById('wifeName').value;
+                if (wifeName && wifeName.trim() !== '' && !document.getElementById('wifeDob').value) {
+                    return alert("يرجى تعبئة تاريخ ميلاد الزوجة، فهو حقل إجباري.");
+                }
+
+                const memberRows = document.querySelectorAll('.member-row');
+                for (const row of memberRows) {
+                    const memberName = row.querySelector('.m-name').value;
+                    const memberDob = row.querySelector('.m-dob').value;
+                    if (memberName && memberName.trim() !== '' && !memberDob) {
+                        alert(`يرجى تعبئة تاريخ ميلاد الفرد "${memberName}"، فهو حقل إجباري.`);
+                        return;
+                    }
+                }
+            }
 
             const payload = {
                 pName: document.getElementById('pName').value,
@@ -1403,6 +1926,12 @@
                 updatedAt: new Date().toISOString()
             };
 
+            // حماية إضافية: منع المستفيد من تغيير المندوب حتى لو تلاعب بالحقل
+            if (window.currentUserData.role === 'beneficiary') {
+                const original = window.families.find(f => f.id === editId);
+                if (original) payload.pDelegate = original.pDelegate;
+            }
+
             try {
                 if (editId) {
                     await window.fs.updateDoc(window.fs.doc(window.db, "artifacts", window.appId, "public", "data", "families", editId), payload);
@@ -1414,7 +1943,8 @@
         }
 
         async function editFamily(id) {
-            if(!hasPerm('edit')) return alert("ليس لديك صلاحية تعديل");
+            if(window.currentUserData.role !== 'beneficiary' && !hasPerm('edit')) return alert("ليس لديك صلاحية تعديل");
+            
             const f = window.families.find(x => x.id === id);
             if(!f) return;
             openForm();
@@ -1429,6 +1959,14 @@
             if(f.members) f.members.forEach(m => addMemberRow(m));
             if(f.health) f.health.forEach(h => addHealthRow(h));
             
+            // تعطيل حقل المندوب للمستفيدين فقط
+            if (window.currentUserData.role === 'beneficiary') {
+                const delInput = document.getElementById('pDelegate');
+                delInput.disabled = true;
+                delInput.classList.remove('bg-slate-50');
+                delInput.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+            }
+
             document.getElementById('formModal').classList.remove('hidden');
         }
 
@@ -1451,90 +1989,117 @@
             document.getElementById('undoToast').classList.add('hidden');
         }
 
-        function viewDetails(id) {
+        async function viewDetails(id) {
             const f = window.families.find(x => x.id === id);
             if(!f) return;
             
+            const isRestricted = window.currentUserData?.role === 'viewer' && !hasPerm('view_all');
+            const mask = (val) => isRestricted ? '*****' : (val || "-");
+
             const pAge = getAge(f.pDob);
             const wAge = getAge(f.wifeDob);
             
-            const html = `
-                <div class="flex items-center gap-8 mb-12">
-                    <div class="w-24 h-24 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center text-4xl text-white font-black shadow-xl shadow-indigo-100">${(f.pName || "?")[0]}</div>
-                    <div>
-                        <h2 class="text-4xl font-black text-slate-800">${f.pName || "غير متوفر"}</h2>
-                        <p class="text-indigo-500 font-bold tracking-widest uppercase text-sm mt-2">مندوب التوزيع: ${f.pDelegate || "غير محدد"}</p>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
-                    <div class="space-y-8">
-                        <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] border-b pb-4">المعلومات الشخصية</h3>
-                        <div class="grid grid-cols-2 gap-y-6 text-sm">
-                            <span class="text-slate-400">رقم الهوية:</span> <span class="font-mono font-bold">${f.pId || "-"}</span>
-                            <span class="text-slate-400">تاريخ الميلاد:</span> <span class="font-bold">${f.pDob || "-"} (${pAge.y} سنة، ${pAge.m} شهر)</span>
-                            <span class="text-slate-400">رقم الجوال:</span> <span class="font-mono font-bold">0${f.pPhone || "-"}</span>
-                            <span class="text-slate-400">جوال بديل:</span> <span class="font-mono font-bold">0${f.pAltPhone || "-"}</span>
-                            <span class="text-slate-400">الحالة الاجتماعية:</span> <span class="font-bold">${f.pSocial || "-"}</span>
-                            <span class="text-slate-400">السكن الأصلي:</span> <span class="font-bold">${f.originArea || "-"}</span>
-                            <span class="text-slate-400">منطقة النزوح:</span> <span class="font-bold">${f.displaceArea || "-"}</span>
+            let html = '';
+            
+            if (isRestricted) {
+                html = `
+                    <div class="flex items-center gap-8 mb-12">
+                        <div class="w-24 h-24 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center text-4xl text-white font-black shadow-xl shadow-indigo-100">${(f.pName || "?")[0]}</div>
+                        <div>
+                            <h2 class="text-4xl font-black text-slate-800">${f.pName || "غير متوفر"}</h2>
+                            <p class="text-indigo-500 font-bold tracking-widest uppercase text-sm mt-2">مندوب التوزيع: ${f.pDelegate || "غير محدد"}</p>
                         </div>
                     </div>
-                    <div class="space-y-8">
-                        <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] border-b pb-4">بيانات الزوجة</h3>
-                        <div class="grid grid-cols-2 gap-y-6 text-sm">
-                            <span class="text-slate-400">الاسم:</span> <span class="font-bold">${f.wifeName || "غير محدد"}</span>
-                            <span class="text-slate-400">الهوية:</span> <span class="font-mono font-bold">${f.wifeId || "-"}</span>
-                            <span class="text-slate-400">تاريخ الميلاد:</span> <span class="font-bold">${f.wifeDob || "-"}</span>
+                    <div class="p-10 bg-slate-50 rounded-3xl text-center text-slate-400 font-bold">
+                        لا تملك صلاحية لعرض باقي التفاصيل
+                    </div>
+                `;
+            } else {
+                html = `
+                    <div class="flex items-center gap-8 mb-12">
+                        <div class="w-24 h-24 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center text-4xl text-white font-black shadow-xl shadow-indigo-100">${(f.pName || "?")[0]}</div>
+                        <div>
+                            <h2 class="text-4xl font-black text-slate-800">${f.pName || "غير متوفر"}</h2>
+                            <p class="text-indigo-500 font-bold tracking-widest uppercase text-sm mt-2">مندوب التوزيع: ${f.pDelegate || "غير محدد"}</p>
                         </div>
                     </div>
-                </div>
-                <div class="mt-16">
-                    <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] border-b pb-4 mb-8">أفراد العائلة المضافين (${f.members?.length || 0})</h3>
-                    <div class="bg-slate-50 rounded-[3rem] p-10 overflow-x-auto">
-                        <table class="w-full text-right text-xs">
-                            <thead class="text-slate-400 border-b border-slate-200">
-                                <tr><th class="pb-4">الاسم</th><th class="pb-4">الصلة</th><th class="pb-4">تاريخ الميلاد</th><th class="pb-4">العمر</th><th class="pb-4">الهوية</th></tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                ${(f.members || []).map(m => {
-                                    const age = getAge(m.dob);
-                                    return `<tr><td class="py-4 font-bold text-slate-700">${m.name || "-"}</td><td>${m.relation || "-"}</td><td>${m.dob || "-"}</td><td>${age.y} سنة، ${age.m} شهر</td><td class="font-mono">${m.idNum || "-"}</td></tr>`;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mt-16">
-                    <div class="p-10 bg-red-50 rounded-[3rem] border border-red-100">
-                        <h3 class="text-red-600 font-black mb-6">الحالات الصحية</h3>
-                        ${(f.health || []).map(h => `
-                            <div class="mb-4 bg-white p-6 rounded-2xl shadow-sm">
-                                <div class="flex justify-between font-black text-slate-800 mb-3 border-b pb-2">
-                                    <span>${h.name || "بدون اسم"}</span>
-                                    <span class="text-red-500 text-xs bg-red-50 px-2 py-1 rounded-lg">${h.type || "-"}</span>
-                                </div>
-                                <div class="grid grid-cols-2 gap-2 text-xs text-slate-500 mb-3">
-                                     <div><span class="text-slate-400">الهوية:</span> <span class="font-mono font-bold">${h.idNum || "-"}</span></div>
-                                     <div><span class="text-slate-400">الجوال:</span> <span class="font-mono font-bold">${h.phone || "-"}</span></div>
-                                     <div class="col-span-2"><span class="text-slate-400">الميلاد:</span> <span class="font-bold">${h.dob || "-"}</span></div>
-                                </div>
-                                <div class="text-[11px] text-slate-600 bg-slate-50 p-3 rounded-xl">
-                                    <span class="font-bold block mb-1">التفاصيل:</span>
-                                    ${h.desc || "لا يوجد تفاصيل إضافية"}
-                                </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] border-b pb-4">المعلومات الشخصية</h3>
+                            <div class="grid grid-cols-2 gap-y-6 text-sm">
+                                <span class="text-slate-400">رقم الهوية:</span> <span class="font-mono font-bold">${mask(f.pId)}</span>
+                                <span class="text-slate-400">تاريخ الميلاد:</span> <span class="font-bold">${f.pDob || "-"} (${pAge.y} سنة، ${pAge.m} شهر)</span>
+                                <span class="text-slate-400">رقم الجوال:</span> <span class="font-mono font-bold">${isRestricted ? '*****' : '0' + (f.pPhone || "-")}</span>
+                                <span class="text-slate-400">جوال بديل:</span> <span class="font-mono font-bold">${isRestricted ? '*****' : '0' + (f.pAltPhone || "-")}</span>
+                                <span class="text-slate-400">الحالة الاجتماعية:</span> <span class="font-bold">${f.pSocial || "-"}</span>
+                                <span class="text-slate-400">السكن الأصلي:</span> <span class="font-bold">${f.originArea || "-"}</span>
+                                <span class="text-slate-400">منطقة النزوح:</span> <span class="font-bold">${f.displaceArea || "-"}</span>
                             </div>
-                        `).join('') || '<p class="text-xs text-red-300">لا يوجد سجلات مرضية</p>'}
-                    </div>
-                    <div class="p-10 bg-emerald-50 rounded-[3rem] border border-emerald-100">
-                        <h3 class="text-emerald-600 font-black mb-6">المحفظة الإلكترونية</h3>
-                        <div class="space-y-4 text-sm">
-                            <div class="flex justify-between"><span>المالك:</span><span class="font-bold">${f.walletOwner || "-"}</span></div>
-                            <div class="flex justify-between"><span>الهوية:</span><span class="font-mono">${f.walletId || "-"}</span></div>
-                            <div class="flex justify-between"><span>الجوال:</span><span class="font-mono">0${f.walletPhone || "-"}</span></div>
+                        </div>
+                        <div class="space-y-8">
+                            <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] border-b pb-4">بيانات الزوجة</h3>
+                            <div class="grid grid-cols-2 gap-y-6 text-sm">
+                                <span class="text-slate-400">الاسم:</span> <span class="font-bold">${f.wifeName || "غير محدد"}</span>
+                                <span class="text-slate-400">الهوية:</span> <span class="font-mono font-bold">${mask(f.wifeId)}</span>
+                                <span class="text-slate-400">تاريخ الميلاد:</span> <span class="font-bold">${f.wifeDob || "-"}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                    <div class="mt-16">
+                        <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] border-b pb-4 mb-8">أفراد العائلة المضافين (${f.members?.length || 0})</h3>
+                        <div class="bg-slate-50 rounded-[3rem] p-10 overflow-x-auto">
+                            <table class="w-full text-right text-xs">
+                                <thead class="text-slate-400 border-b border-slate-200">
+                                    <tr><th class="pb-4">الاسم</th><th class="pb-4">الصلة</th><th class="pb-4">تاريخ الميلاد</th><th class="pb-4">العمر</th><th class="pb-4">الهوية</th></tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    ${(f.members || []).map(m => {
+                                        const age = getAge(m.dob);
+                                        return `<tr><td class="py-4 font-bold text-slate-700">${m.name || "-"}</td><td>${m.relation || "-"}</td><td>${m.dob || "-"}</td><td>${age.y} سنة، ${age.m} شهر</td><td class="font-mono">${mask(m.idNum)}</td></tr>`;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mt-16">
+                        <div class="p-10 bg-red-50 rounded-[3rem] border border-red-100">
+                            <h3 class="text-red-600 font-black mb-6">الحالات الصحية</h3>
+                            ${(f.health || []).map(h => `
+                                <div class="mb-4 bg-white p-6 rounded-2xl shadow-sm">
+                                    <div class="flex justify-between font-black text-slate-800 mb-3 border-b pb-2">
+                                        <span>${h.name || "بدون اسم"}</span>
+                                        <span class="text-red-500 text-xs bg-red-50 px-2 py-1 rounded-lg">${h.type || "-"}</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2 text-xs text-slate-500 mb-3">
+                                        <div><span class="text-slate-400">الهوية:</span> <span class="font-mono font-bold">${mask(h.idNum)}</span></div>
+                                        <div><span class="text-slate-400">الجوال:</span> <span class="font-mono font-bold">${mask(h.phone)}</span></div>
+                                        <div class="col-span-2"><span class="text-slate-400">الميلاد:</span> <span class="font-bold">${h.dob || "-"}</span></div>
+                                    </div>
+                                    <div class="text-[11px] text-slate-600 bg-slate-50 p-3 rounded-xl">
+                                        <span class="font-bold block mb-1">التفاصيل:</span>
+                                        ${h.desc || "لا يوجد تفاصيل إضافية"}
+                                    </div>
+                                </div>
+                            `).join('') || '<p class="text-xs text-red-300">لا يوجد سجلات مرضية</p>'}
+                        </div>
+                        <div class="p-10 bg-emerald-50 rounded-[3rem] border border-emerald-100">
+                            <h3 class="text-emerald-600 font-black mb-6">المحفظة الإلكترونية</h3>
+                            <div class="space-y-4 text-sm">
+                                <div class="flex justify-between"><span>المالك:</span><span class="font-bold">${f.walletOwner || "-"}</span></div>
+                                <div class="flex justify-between"><span>الهوية:</span><span class="font-mono">${mask(f.walletId)}</span></div>
+                                <div class="flex justify-between"><span>الجوال:</span><span class="font-mono">${isRestricted ? '*****' : '0' + (f.walletPhone || "-")}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-16">
+                        <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] border-b pb-4 mb-8">سجل الاستفادة</h3>
+                        <div id="benefitHistoryContainer" class="bg-slate-50 rounded-[3rem] p-10 overflow-x-auto">
+                            <p class="text-center text-slate-400">جاري تحميل السجل...</p>
+                        </div>
+                    </div>
+                `;
+            }
+
             document.getElementById('detailsContent').innerHTML = html;
             
             const actionContainer = document.getElementById('detailActions');
@@ -1555,6 +2120,51 @@
             }
             
             document.getElementById('detailsModal').classList.remove('hidden');
+            if (!isRestricted) {
+                await fetchAndRenderBenefitHistory(id);
+            }
+        }
+
+        async function fetchAndRenderBenefitHistory(familyId) {
+            const container = document.getElementById('benefitHistoryContainer');
+            try {
+                const q = window.fs.query(
+                    window.fs.collection(window.db, "artifacts", window.appId, "public", "data", "archives"),
+                    window.fs.where("familyIds", "array-contains", familyId)
+                );
+                const snap = await window.fs.getDocs(q);
+
+                if (snap.empty) {
+                    container.innerHTML = '<p class="text-center text-slate-400">لا يوجد سجل استفادة لهذه العائلة.</p>';
+                    return;
+                }
+
+                let docs = [];
+                snap.forEach(doc => docs.push(doc.data()));
+                docs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                let historyHTML = `
+                    <table class="w-full text-right text-sm">
+                        <thead class="text-slate-400 border-b border-slate-200">
+                            <tr><th class="pb-4">اسم الملف</th><th class="pb-4">تاريخ الاستفادة</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                `;
+                let hasRecords = false;
+                docs.forEach(d => {
+                    // عرض السجلات من فئة "سجل المستفيدين" فقط
+                    if (d.category === 'beneficiaries') {
+                        historyHTML += `<tr><td class="py-4 font-bold text-slate-700">${d.fileName}</td><td class="font-mono">${d.date}</td></tr>`;
+                        hasRecords = true;
+                    }
+                });
+                historyHTML += '</tbody></table>';
+                container.innerHTML = hasRecords ? historyHTML : '<p class="text-center text-slate-400">لا يوجد سجل استفادة لهذه العائلة في سجل المستفيدين.</p>';
+
+            } catch (e) {
+                console.error("Error fetching benefit history:", e);
+                container.innerHTML = '<p class="text-center text-red-500">حدث خطأ أثناء تحميل السجل.</p>';
+            }
         }
 
         function downloadTemplate() { 
@@ -1569,9 +2179,36 @@
             XLSX.writeFile(wb, "النموذج_الشامل_للعائلات.xlsx");
         }
 
-        async function importData(e) {
+        function openImportModal() {
             if(!hasPerm('add')) return alert("ليس لديك صلاحية استيراد");
+            document.getElementById('impFileName').value = '';
+            document.getElementById('impType').value = '';
+            document.getElementById('impDonor').value = '';
+            document.getElementById('impDate').valueAsDate = new Date();
+            document.getElementById('importModal').classList.remove('hidden');
+        }
+
+        function triggerImportFile() {
+            const vFileName = document.getElementById('impFileName').value.trim();
+            const vType = document.getElementById('impType').value.trim();
+            const vDonor = document.getElementById('impDonor').value.trim();
+            const vDate = document.getElementById('impDate').value;
+
+            if (!vFileName || !vType || !vDonor || !vDate) {
+                return alert("يرجى تعبئة جميع حقول الأرشفة (اسم الملف، النوع، الجهة المانحة، التاريخ) قبل الاستيراد");
+            }
+            document.getElementById('realImportInput').click();
+        }
+
+        async function executeImport(e) {
             const file = e.target.files[0];
+            if(!file) return;
+            
+            const vFileName = document.getElementById('impFileName').value.trim();
+            const vType = document.getElementById('impType').value.trim();
+            const vDonor = document.getElementById('impDonor').value.trim();
+            const vDate = document.getElementById('impDate').value;
+
             const reader = new FileReader();
             reader.onload = async (evt) => {
                 const data = evt.target.result;
@@ -1623,10 +2260,28 @@
                         try { await window.fs.addDoc(window.fs.collection(window.db, "artifacts", window.appId, "public", "data", "families"), obj); successCount++; } catch(err) { console.error("Import Error", err); }
                     }
                 }
+                    
+                    // Log Import to Archive
+                    try {
+                        await window.fs.addDoc(window.fs.collection(window.db, "artifacts", window.appId, "public", "data", "archives"), {
+                            fileName: vFileName,
+                            type: vType,
+                            donor: vDonor,
+                            date: vDate,
+                            count: successCount,
+                            createdAt: new Date().toISOString(),
+                            createdBy: window.currentUserData ? window.currentUserData.name : 'Unknown',
+                            notes: 'تم استيراد البيانات من ملف خارجي: ' + file.name,
+                            fileStatus: 'مرفوع',
+                            category: 'archive'
+                        });
+                    } catch(e) { console.error("Archive Log Error", e); }
+
                 alert(`تم استيراد ${successCount} عائلة بنجاح`);
                 location.reload(); 
             };
             reader.readAsBinaryString(file);
+            closeModal('importModal');
         }
 
         function exportSingleToExcel(f) {
@@ -1684,19 +2339,74 @@
             window.print();
         }
 
-        function exportCurrentView() {
+        function openMainExportModal() {
+            const checks = document.querySelectorAll('.main-row-check:checked');
+            const count = checks.length > 0 ? checks.length : currentViewData.length;
+            
+            document.getElementById('meCountDisplay').innerText = count;
+            document.getElementById('meArchiveDate').innerText = new Date().toLocaleDateString('ar-EG');
+            document.getElementById('meDate').valueAsDate = new Date();
+            
+            document.getElementById('mainExportModal').classList.remove('hidden');
+        }
+
+        async function executeMainExport() {
+            const vFileName = document.getElementById('meFileName').value.trim();
+            const vType = document.getElementById('meType').value.trim();
+            const vDonor = document.getElementById('meDonor').value.trim();
+            const vDate = document.getElementById('meDate').value;
+
+            if (!vFileName || !vType || !vDonor || !vDate) {
+                return alert("يرجى تعبئة جميع حقول الأرشفة (اسم الملف، النوع، الجهة المانحة، التاريخ) قبل التصدير");
+            }
+
+            const checks = document.querySelectorAll('.main-row-check:checked');
+            let dataToExport = [];
+            
+            if (checks.length > 0) {
+                // Export selected only
+                checks.forEach(cb => {
+                    const idx = parseInt(cb.getAttribute('data-index'));
+                    if(currentViewData[idx]) dataToExport.push(currentViewData[idx]);
+                });
+            } else {
+                // Export all in view
+                dataToExport = currentViewData;
+            }
+
+            // Archive Meta
+            const meta = {
+                fileName: vFileName,
+                type: vType,
+                donor: vDonor,
+                date: vDate,
+                count: dataToExport.length,
+                createdAt: new Date().toISOString(),
+                createdBy: window.currentUserData ? window.currentUserData.name : 'Unknown',
+                notes: 'تصدير من الجدول الرئيسي',
+                fileStatus: 'تنزيل',
+                category: 'archive'
+            };
+
+            try {
+                await window.fs.addDoc(window.fs.collection(window.db, "artifacts", window.appId, "public", "data", "archives"), meta);
+            } catch(e) {
+                console.error("Archiving failed", e);
+            }
+
             let dataForExcel = [];
             if (currentViewMode === 'individual') {
-                dataForExcel = currentViewData.map(d => ({ "اسم الفرد": d.targetName, "هوية الفرد": d.targetId, "العمر/الصلة": `${d.targetAge} (${d.relation})`, "اسم الأب": d.pName, "هوية الأب": d.pId, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone }));
+                dataForExcel = dataToExport.map(d => ({ "اسم الفرد": d.targetName, "هوية الفرد": d.targetId, "العمر/الصلة": `${d.targetAge} (${d.relation})`, "اسم الأب": d.pName, "هوية الأب": d.pId, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone }));
             } else if (currentViewMode === 'health') {
-                dataForExcel = currentViewData.map(d => ({ "اسم المريض": d.patientName, "هوية المريض": d.patientId, "تاريخ الميلاد": d.patientDob, "نوع المرض": d.diseaseType, "تفاصيل المرض": d.diseaseDesc, "اسم الأب": d.pName, "هوية الأب": d.pId, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone }));
+                dataForExcel = dataToExport.map(d => ({ "اسم المريض": d.patientName, "هوية المريض": d.patientId, "تاريخ الميلاد": d.patientDob, "نوع المرض": d.diseaseType, "تفاصيل المرض": d.diseaseDesc, "اسم الأب": d.pName, "هوية الأب": d.pId, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone }));
             } else {
-                dataForExcel = currentViewData.map(d => ({ "اسم الأب": d.pName, "هوية الأب": d.pId, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone, "المندوب": d.pDelegate, "الحالة الاجتماعية": d.pSocial, "إجمالي الأجمالي": d.totalCount }));
+                dataForExcel = dataToExport.map(d => ({ "اسم الأب": d.pName, "هوية الأب": d.pId, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone, "المندوب": d.pDelegate, "الحالة الاجتماعية": d.pSocial, "إجمالي الأفراد": d.totalCount }));
             }
             const ws = XLSX.utils.json_to_sheet(dataForExcel);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Export");
-            XLSX.writeFile(wb, "تصدير_البيانات.xlsx");
+            XLSX.writeFile(wb, `${meta.fileName}.xlsx`);
+            closeModal('mainExportModal');
         }
 
         function openExportModal() {
@@ -1706,13 +2416,51 @@
             document.getElementById('exportModal').classList.remove('hidden');
         }
 
-        function runCustomExport() {
+        function openCustomExportMetaModal() {
+            const count = window.families.length;
+            document.getElementById('ceCountDisplay').innerText = count;
+            document.getElementById('ceArchiveDate').innerText = new Date().toLocaleDateString('ar-EG');
+            document.getElementById('ceDate').valueAsDate = new Date();
+            document.getElementById('customExportMetaModal').classList.remove('hidden');
+        }
+
+        async function executeCustomExport() {
+            const vFileName = document.getElementById('ceFileName').value.trim();
+            const vType = document.getElementById('ceType').value.trim();
+            const vDonor = document.getElementById('ceDonor').value.trim();
+            const vDate = document.getElementById('ceDate').value;
+
+            if (!vFileName || !vType || !vDonor || !vDate) {
+                return alert("يرجى تعبئة جميع حقول الأرشفة (اسم الملف، النوع، الجهة المانحة، التاريخ) قبل التصدير");
+            }
+
+            // Archive Meta
+            const meta = {
+                fileName: vFileName,
+                type: vType,
+                donor: vDonor,
+                date: vDate,
+                count: window.families.length,
+                createdAt: new Date().toISOString(),
+                createdBy: window.currentUserData ? window.currentUserData.name : 'Unknown',
+                notes: 'تصدير مخصص (أعمدة محددة)',
+                fileStatus: 'تنزيل',
+                category: 'archive'
+            };
+
+            try {
+                await window.fs.addDoc(window.fs.collection(window.db, "artifacts", window.appId, "public", "data", "archives"), meta);
+            } catch(e) {
+                console.error("Archiving failed", e);
+            }
+
             const selected = Array.from(document.querySelectorAll('#exportFieldCheckboxes input:checked')).map(i => i.value);
             const data = window.families.map(f => { let obj = {}; selected.forEach(k => obj[FIELD_MAP[k]] = f[k] || ""); return obj; });
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "CustomExport");
-            XLSX.writeFile(wb, "تصدير_مخصص.xlsx");
+            XLSX.writeFile(wb, `${meta.fileName}.xlsx`);
+            closeModal('customExportMetaModal');
             closeModal('exportModal');
         }
 
@@ -1721,6 +2469,326 @@
             document.getElementById('dupIconBox').className = showDupsOnly ? "w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center text-white" : "w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center text-red-600";
             runFilters();
         }
+
+        // ===========================================
+        //       Beneficiaries System Logic
+        // ===========================================
+
+        function openBeneficiaries() {
+            document.getElementById('beneficiariesModal').classList.remove('hidden');
+            switchBenTab('new');
+            renderBeneficiariesTable();
+        }
+
+        function renderBeneficiariesTable() {
+            const tbody = document.getElementById('benTableBody');
+            const search = (document.getElementById('benSearch').value || '').toLowerCase();
+            tbody.innerHTML = '';
+            window.families.forEach(f => {
+                if(search && !f.pName.includes(search) && !f.pId.includes(search)) return;
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-indigo-50 transition-all border-b border-slate-50";
+                tr.innerHTML = `<td class="p-3"><input type="checkbox" value="${f.id}" onchange="updateBenSelection()" class="ben-check w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"></td><td class="p-3 font-bold">${f.pName}</td><td class="p-3 font-mono text-slate-500">${f.pId}</td><td class="p-3 font-mono text-slate-500">${f.pPhone}</td><td class="p-3 font-bold text-center">${f.totalCount}</td><td class="p-3 text-xs font-bold text-indigo-600">${f.pDelegate || '-'}</td>`;
+                tbody.appendChild(tr);
+            });
+            updateBenSelection();
+        }
+
+        function updateBenSelection() {
+            const checks = document.querySelectorAll('.ben-check:checked');
+            const count = checks.length;
+            document.getElementById('selectedCountBadge').innerText = count;
+            const panel = document.getElementById('exportPanel');
+            const hint = document.getElementById('selectHint');
+            if(count > 0) { panel.classList.remove('opacity-50', 'pointer-events-none'); hint.classList.add('hidden'); }
+            else { panel.classList.add('opacity-50', 'pointer-events-none'); hint.classList.remove('hidden'); }
+        }
+
+        function selectAllBen(select) {
+            document.querySelectorAll('.ben-check').forEach(cb => cb.checked = select);
+            updateBenSelection();
+        }
+
+        async function executeBenExport() {
+            const checks = document.querySelectorAll('.ben-check:checked');
+            if(checks.length === 0) return;
+
+            const vFileName = document.getElementById('expFileName').value.trim();
+            const vFileType = document.getElementById('expFileType').value.trim();
+            const vDonor = document.getElementById('expDonor').value.trim();
+            const vDate = document.getElementById('expDate').value;
+
+            if (!vFileName || !vFileType || !vDonor || !vDate) {
+                return alert("يرجى تعبئة جميع حقول الأرشفة (اسم الملف، النوع، الجهة المانحة، التاريخ) قبل التصدير");
+            }
+
+            const ids = Array.from(checks).map(cb => cb.value);
+            const selectedFamilies = window.families.filter(f => ids.includes(f.id));
+            const meta = {
+                fileName: vFileName,
+                type: vFileType,
+                donor: vDonor,
+                date: vDate,
+                notes: document.getElementById('expNotes').value || '-',
+                familyIds: ids,
+                count: ids.length,
+                createdAt: new Date().toISOString(),
+                createdBy: window.currentUserData.name,
+                fileStatus: 'تنزيل',
+                category: 'beneficiaries'
+            };
+
+            try {
+                await window.fs.addDoc(window.fs.collection(window.db, "artifacts", window.appId, "public", "data", "archives"), meta);
+            } catch(e) {
+                console.error("Archiving failed", e);
+                alert("تحذير: فشل حفظ الأرشيف في قاعدة البيانات، سيتم تحميل الملف فقط.");
+            }
+
+            const wb = XLSX.utils.book_new();
+            const data = [["تقرير المستفيدين - نظام الأرشفة"], ["اسم الملف", meta.fileName, "نوع المساعدة", meta.type], ["الجهة المانحة", meta.donor, "تاريخ الاستفادة", meta.date], ["ملاحظات", meta.notes], [], ["اسم رب الأسرة", "رقم الهوية", "رقم الجوال", "عدد الأفراد", "المندوب", "الزوجة", "هوية الزوجة"]];
+            selectedFamilies.forEach(f => { data.push([f.pName, f.pId, f.pPhone, f.totalCount, f.pDelegate, f.wifeName, f.wifeId]); });
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            ws['!cols'] = [{wch: 25}, {wch: 15}, {wch: 15}, {wch: 10}, {wch: 15}, {wch: 20}, {wch: 15}];
+            XLSX.utils.book_append_sheet(wb, ws, "المستفيدين");
+            XLSX.writeFile(wb, `${meta.fileName}.xlsx`);
+            alert("تم تصدير الملف بنجاح");
+            switchBenTab('beneficiaries');
+        }
+
+        // ===========================================
+        //       Match Import Logic
+        // ===========================================
+
+        window.triggerMatchImport = function() {
+            document.getElementById('matchImportInput').click();
+        };
+
+        window.processMatchImport = function(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = evt.target.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+                const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                
+                // Extract IDs (assuming column name contains 'هوية' or is the first column)
+                const extractedIds = [];
+                rawData.forEach(row => {
+                    // Try to find ID in common column names or values
+                    const val = row['رقم الهوية'] || row['الهوية'] || row['ID'] || Object.values(row)[0]; 
+                    if(val) extractedIds.push(String(val).trim());
+                });
+
+                // Find matches in DB
+                const matches = window.families.filter(f => extractedIds.includes(f.pId));
+                matchedIdsForArchive = matches.map(f => f.id);
+
+                if(matchedIdsForArchive.length === 0) {
+                    alert("لم يتم العثور على أي مطابقة لأرقام الهويات في الملف");
+                    return;
+                }
+
+                // Open Metadata Modal
+                document.getElementById('matchCountDisplay').innerText = matchedIdsForArchive.length;
+                document.getElementById('mmFileName').value = file.name.replace('.xlsx', '').replace('.xls', '');
+                document.getElementById('mmDate').valueAsDate = new Date();
+                document.getElementById('matchMetadataModal').classList.remove('hidden');
+            };
+            reader.readAsBinaryString(file);
+            e.target.value = ''; // Reset input
+        };
+
+        window.executeMatchArchive = async function() {
+            const meta = {
+                fileName: document.getElementById('mmFileName').value || 'ملف مطابقة',
+                type: document.getElementById('mmType').value || 'مطابقة',
+                donor: document.getElementById('mmDonor').value || '-',
+                date: document.getElementById('mmDate').value || new Date().toLocaleDateString('ar-EG'),
+                count: matchedIdsForArchive.length,
+                familyIds: matchedIdsForArchive,
+                createdAt: new Date().toISOString(),
+                createdBy: window.currentUserData.name,
+                fileStatus: 'مرفوع', // As requested: Imported files are "Uploaded"
+                notes: 'تم إنشاء السجل عن طريق استرداد ملف ومطابقة الهويات',
+                category: 'beneficiaries'
+            };
+
+            try {
+                await window.fs.addDoc(window.fs.collection(window.db, "artifacts", window.appId, "public", "data", "archives"), meta);
+                closeModal('matchMetadataModal');
+                switchBenTab('beneficiaries'); // Switch to Beneficiaries Record
+                alert("تم حفظ السجل في سجل المستفيدين بنجاح");
+            } catch(e) {
+                console.error(e);
+                alert("حدث خطأ أثناء الحفظ");
+            }
+        };
+
+        function switchBenTab(tab) {
+            // Reset all tabs
+            document.getElementById('benNewView').classList.add('hidden');
+            document.getElementById('benBeneficiariesView').classList.add('hidden');
+            document.getElementById('benHistoryView').classList.add('hidden');
+            
+            document.getElementById('benTabNew').className = "px-4 py-2 text-slate-500 hover:text-slate-700 transition-all";
+            document.getElementById('benTabBen').className = "px-4 py-2 text-slate-500 hover:text-slate-700 transition-all";
+            document.getElementById('benTabHistory').className = "px-4 py-2 text-slate-500 hover:text-slate-700 transition-all";
+
+            if(tab === 'new') {
+                document.getElementById('benNewView').classList.remove('hidden');
+                document.getElementById('benTabNew').className = "px-4 py-2 bg-white text-slate-800 rounded-lg shadow-sm transition-all";
+            } else if (tab === 'beneficiaries') {
+                document.getElementById('benBeneficiariesView').classList.remove('hidden');
+                document.getElementById('benTabBen').className = "px-4 py-2 bg-white text-slate-800 rounded-lg shadow-sm transition-all";
+                fetchArchiveData('beneficiaries');
+            } else {
+                document.getElementById('benHistoryView').classList.remove('hidden');
+                document.getElementById('benTabHistory').className = "px-4 py-2 bg-white text-slate-800 rounded-lg shadow-sm transition-all";
+                fetchArchiveData('archive');
+            }
+        }
+
+        async function fetchArchiveData(category) {
+            const tbody = category === 'beneficiaries' ? document.getElementById('benBeneficiariesBody') : document.getElementById('benHistoryBody');
+            tbody.innerHTML = '<tr><td colspan="9" class="p-4 text-center">جاري التحميل...</td></tr>';
+            try {
+                const q = window.fs.query(window.fs.collection(window.db, "artifacts", window.appId, "public", "data", "archives"), window.fs.orderBy("createdAt", "desc"));
+                const snap = await window.fs.getDocs(q);
+                tbody.innerHTML = '';
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    
+                    // Filter Logic
+                    if (category === 'beneficiaries') {
+                        if (d.category !== 'beneficiaries') return;
+                    } else {
+                        if (d.category === 'beneficiaries') return;
+                    }
+
+                    const statusBadge = d.fileStatus === 'مرفوع' ? 
+                        '<span class="bg-orange-50 text-orange-600 px-2 py-1 rounded-lg text-xs font-bold">مرفوع</span>' : 
+                        '<span class="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg text-xs font-bold">تنزيل</span>';
+                    const isSuper = window.currentUserData && window.currentUserData.role === 'super_admin';
+                    const deleteBtn = isSuper ? `<button onclick="deleteArchive('${doc.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 px-3 py-2 rounded-lg mr-2">حذف</button>` : '';
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition-all border-b border-slate-50";
+                    tr.innerHTML = `
+                        <td class="p-4">${d.fileName}</td>
+                        <td class="p-4">${statusBadge}</td>
+                        <td class="p-4">${d.type}</td>
+                        <td class="p-4">${d.donor}</td>
+                        <td class="p-4 font-mono">${d.date}</td>
+                        <td class="p-4 font-bold text-center">${d.count}</td>
+                        <td class="p-4 text-xs text-slate-400 font-mono">${new Date(d.createdAt).toLocaleDateString('ar-EG')}</td>
+                        <td class="p-4 text-xs font-bold text-slate-600">${d.createdBy || '-'}</td>
+                        <td class="p-4 flex items-center gap-2">
+                            <button onclick='reDownloadArchive(${JSON.stringify(d).replace(/'/g, "&#39;")})' class="text-indigo-600 hover:text-indigo-800 font-bold text-xs bg-indigo-50 px-3 py-2 rounded-lg">تحميل نسخة</button>
+                            ${deleteBtn}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                if(tbody.innerHTML === '') tbody.innerHTML = '<tr><td colspan="9" class="p-4 text-center text-slate-400">لا يوجد سجلات</td></tr>';
+            } catch(e) {
+                console.error(e);
+                tbody.innerHTML = '<tr><td colspan="9" class="p-4 text-center text-red-400">خطأ في تحميل البيانات</td></tr>';
+            }
+        }
+
+        window.deleteArchive = async function(id) {
+            if(!confirm("هل أنت متأكد من حذف هذا السجل من الأرشيف؟")) return;
+            try {
+                await window.fs.deleteDoc(window.fs.doc(window.db, "artifacts", window.appId, "public", "data", "archives", id));
+                const activeTab = document.getElementById('benTabBen').classList.contains('bg-white') ? 'beneficiaries' : 'archive';
+                fetchArchiveData(activeTab);
+            } catch(e) {
+                alert("خطأ: " + e.message);
+            }
+        };
+
+        window.reDownloadArchive = function(meta) {
+            const selectedFamilies = window.families.filter(f => (meta.familyIds || []).includes(f.id));
+            if(selectedFamilies.length === 0) return alert("لم يتم العثور على بيانات العائلات المؤرشفة (ربما تم حذفها)");
+            
+            const wb = XLSX.utils.book_new();
+            const data = [["تقرير المستفيدين - أرشيف"], ["اسم الملف", meta.fileName, "نوع المساعدة", meta.type], ["الجهة المانحة", meta.donor, "تاريخ الاستفادة", meta.date], ["ملاحظات", meta.notes], [], ["اسم رب الأسرة", "رقم الهوية", "رقم الجوال", "عدد الأفراد", "المندوب", "الزوجة", "هوية الزوجة"]];
+            selectedFamilies.forEach(f => { data.push([f.pName, f.pId, f.pPhone, f.totalCount, f.pDelegate, f.wifeName, f.wifeId]); });
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            ws['!cols'] = [{wch: 25}, {wch: 15}, {wch: 15}, {wch: 10}, {wch: 15}, {wch: 20}, {wch: 15}];
+            XLSX.utils.book_append_sheet(wb, ws, "المستفيدين");
+            XLSX.writeFile(wb, `${meta.fileName}_archive.xlsx`);
+        };
+
+        // ===========================================
+        //       Beneficiary View Logic
+        // ===========================================
+        window.renderBeneficiaryView = function() {
+            const f = window.families[0]; // المستفيد لديه سجل واحد فقط في المصفوفة
+            if (!f) return;
+
+            const pAge = getAge(f.pDob);
+            const html = `
+                <div class="p-10 md:p-16">
+                    <div class="flex flex-col md:flex-row items-center gap-8 mb-12 border-b border-slate-100 pb-8">
+                        <div class="w-24 h-24 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center text-4xl text-white font-black shadow-xl shadow-indigo-100">${(f.pName || "?")[0]}</div>
+                        <div class="text-center md:text-right flex-1">
+                            <h2 class="text-3xl font-black text-slate-800">${f.pName || "غير متوفر"}</h2>
+                            <div class="flex flex-wrap gap-3 mt-4 justify-center md:justify-start">
+                                <span class="px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold text-slate-600">رقم الهوية (هوية الاب): ${f.pId}</span>
+                                <span class="px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold text-slate-600">الجوال: ${f.pPhone}</span>
+                                <span class="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold">المندوب: ${f.pDelegate || "غير محدد"}</span>
+                            </div>
+                        </div>
+                        <button onclick="editFamily('${f.id}')" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            تحديث بياناتي
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="bg-slate-50 p-6 rounded-3xl">
+                            <h3 class="font-bold text-slate-800 mb-4">أفراد العائلة (${f.totalCount || 0})</h3>
+                            <ul class="space-y-2 text-sm text-slate-600">
+                                ${(f.members || []).map(m => `<li class="flex justify-between bg-white p-3 rounded-xl"><span>${m.name}</span><span class="text-slate-400">${m.relation}</span></li>`).join('') || '<li>لا يوجد أفراد مضافين</li>'}
+                            </ul>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-3xl">
+                            <h3 class="font-bold text-slate-800 mb-4">البيانات الإضافية</h3>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between"><span>الزوجة:</span> <span class="font-bold">${f.wifeName || '-'}</span></div>
+                                <div class="flex justify-between"><span>السكن:</span> <span class="font-bold">${f.originArea || '-'}</span></div>
+                                <div class="flex justify-between"><span>النزوح:</span> <span class="font-bold">${f.displaceArea || '-'}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h3 class="font-bold text-slate-800 mb-4">سجل الاستفادة</h3>
+                        <div id="benefitHistoryContainer" class="bg-slate-50 rounded-3xl p-6 overflow-x-auto">
+                            <p class="text-center text-slate-400">جاري تحميل السجل...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('benProfileContent').innerHTML = html;
+            fetchAndRenderBenefitHistory(f.id);
+        };
+
+        window.togglePersonalSettings = function() {
+            const menu = document.getElementById('personalSettingsMenu');
+            menu.classList.toggle('hidden');
+        };
+
+        window.addEventListener('click', function(e) {
+            const menu = document.getElementById('personalSettingsMenu');
+            const btn = document.querySelector('button[onclick="togglePersonalSettings()"]');
+            if (menu && !menu.classList.contains('hidden') && !menu.contains(e.target) && !btn.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
 
         window.closeModal = closeModal;
         window.openForm = openForm;
@@ -1734,10 +2802,14 @@
         window.runFilters = runFilters;
         window.toggleDuplicateFilter = toggleDuplicateFilter;
         window.downloadTemplate = downloadTemplate;
-        window.importData = importData;
-        window.exportCurrentView = exportCurrentView;
+        window.openImportModal = openImportModal;
+        window.triggerImportFile = triggerImportFile;
+        window.executeImport = executeImport;
+        window.openMainExportModal = openMainExportModal;
+        window.executeMainExport = executeMainExport;
         window.openExportModal = openExportModal;
-        window.runCustomExport = runCustomExport;
+        window.openCustomExportMetaModal = openCustomExportMetaModal;
+        window.executeCustomExport = executeCustomExport;
         window.printFamilyDetails = printFamilyDetails;
         window.openUserManagement = openUserManagement;
         window.switchUserTab = switchUserTab;
@@ -1748,6 +2820,14 @@
         window.handleSaveCreds = handleSaveCreds;
         window.openMyProfile = openMyProfile;
         window.toggleMultiSelect = toggleMultiSelect;
+        window.openBeneficiaries = openBeneficiaries;
+        window.renderBeneficiariesTable = renderBeneficiariesTable;
+        window.updateBenSelection = updateBenSelection;
+        window.selectAllBen = selectAllBen;
+        window.executeBenExport = executeBenExport;
+        window.switchBenTab = switchBenTab;
+        window.fetchArchiveData = fetchArchiveData;
+        window.deleteArchive = deleteArchive;
     </script>
 </body>
-</html>
+</html>  
