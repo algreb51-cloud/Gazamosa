@@ -1479,7 +1479,7 @@
                     window.families.forEach(f => {
                         if (!matchesSearch(f)) return;
                         (f.members || []).forEach(m => {
-                            if (!m.dob) return;
+                            if (!m.dob || m.dob.trim() === '') return;
                             const age = getAge(m.dob);
                             let match = false;
                             
@@ -1491,7 +1491,7 @@
                                 if (ageF === '10-17' && age.y > 10 && age.y <= 17) match = true;
                                 if (ageF === '18-25' && age.y > 17 && age.y <= 25) match = true;
                                 if (ageF === '26-40' && age.y > 25 && age.y <= 40) match = true;
-                                if (ageF === '41-80' && age.y > 40 && age.y <= 80) match = true;
+                                if (ageF === '41-100' && age.y > 40 && age.y <= 100) match = true;
                             });
 
                             if (match) {
@@ -1511,7 +1511,7 @@
                             }
                         });
                         [ {name: f.pName, dob: f.pDob, id: f.pId, role: 'أب'}, {name: f.wifeName, dob: f.wifeDob, id: f.wifeId, role: 'زوجة'} ]
-                        .filter(p => p.name && p.dob)
+                        .filter(p => p.name && p.dob && p.dob.trim() !== '')
                         .forEach(p => {
                             const age = getAge(p.dob);
                             let match = false;
