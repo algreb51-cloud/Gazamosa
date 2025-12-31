@@ -860,9 +860,9 @@
                     <input type="text" id="pAltPhone" maxlength="9" oninput="only9Numbers(this)" placeholder="جوال بديل" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-mono">
                     <input type="text" id="originArea" placeholder="السكن الأصلي" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
                     <input type="text" id="displaceArea" placeholder="منطقة النزوح" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
-                    <input type="number" id="totalCount" placeholder="إجمالي الأفراد" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
-                    <input type="number" id="maleCount" placeholder="عدد الذكور" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
-                    <input type="number" id="femaleCount" placeholder="عدد الإناث" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
+                    <input type="number" id="totalCount" placeholder="إجمالي الأفراد" class="bg-slate-100 text-slate-500 border-none rounded-2xl p-5 text-sm font-bold cursor-not-allowed" readonly title="يتم الحساب تلقائياً">
+                    <input type="number" id="maleCount" placeholder="عدد الذكور" class="bg-slate-100 text-slate-500 border-none rounded-2xl p-5 text-sm font-bold cursor-not-allowed" readonly title="يتم الحساب تلقائياً">
+                    <input type="number" id="femaleCount" placeholder="عدد الإناث" class="bg-slate-100 text-slate-500 border-none rounded-2xl p-5 text-sm font-bold cursor-not-allowed" readonly title="يتم الحساب تلقائياً">
                 </div>
 
                 <div class="pt-8">
@@ -1604,7 +1604,11 @@
         function updateStats(data) {
             document.getElementById('totalFamilies').innerText = data.length;
             let total = 0;
-            data.forEach(f => total += parseInt(f.totalCount || 0));
+            data.forEach(f => {
+                total++; // رب الأسرة
+                if (f.wifeName && f.wifeName.trim()) total++; // الزوجة
+                if (f.members && Array.isArray(f.members)) total += f.members.length; // الأفراد المضافين
+            });
             document.getElementById('totalPersons').innerText = total;
 
             const idCounts = {};
@@ -1890,6 +1894,34 @@
                 }
             }
 
+            // حساب الأعداد تلقائياً بناءً على المدخلات
+            let calcTotal = 1; // رب الأسرة
+            let calcMale = 0;
+            let calcFemale = 0;
+
+            const pSocial = document.getElementById('pSocial').value;
+            if(['ارمله', 'مطلقة', 'مهجورة'].includes(pSocial)) calcFemale++;
+            else calcMale++;
+
+            const wifeName = document.getElementById('wifeName').value;
+            if(wifeName && wifeName.trim()) {
+                calcTotal++;
+                calcFemale++;
+            }
+
+            const members = Array.from(document.querySelectorAll('.member-row')).map(r => ({
+                name: r.querySelector('.m-name').value,
+                relation: r.querySelector('.m-rel').value,
+                dob: r.querySelector('.m-dob').value,
+                idNum: r.querySelector('.m-id').value
+            }));
+
+            members.forEach(m => {
+                calcTotal++;
+                if(['اخ', 'ابن', 'اب', 'جد'].includes(m.relation)) calcMale++;
+                else calcFemale++;
+            });
+
             const payload = {
                 pName: document.getElementById('pName').value,
                 pId: document.getElementById('pId').value,
@@ -1903,18 +1935,13 @@
                 pAltPhone: document.getElementById('pAltPhone').value,
                 originArea: document.getElementById('originArea').value,
                 displaceArea: document.getElementById('displaceArea').value,
-                totalCount: document.getElementById('totalCount').value,
-                maleCount: document.getElementById('maleCount').value,
-                femaleCount: document.getElementById('femaleCount').value,
+                totalCount: calcTotal,
+                maleCount: calcMale,
+                femaleCount: calcFemale,
                 walletOwner: document.getElementById('walletOwner').value,
                 walletId: document.getElementById('walletId').value,
                 walletPhone: document.getElementById('walletPhone').value,
-                members: Array.from(document.querySelectorAll('.member-row')).map(r => ({
-                    name: r.querySelector('.m-name').value,
-                    relation: r.querySelector('.m-rel').value,
-                    dob: r.querySelector('.m-dob').value,
-                    idNum: r.querySelector('.m-id').value
-                })),
+                members: members,
                 health: Array.from(document.querySelectorAll('.health-row')).map(r => ({
                     type: r.querySelector('.h-type').value,
                     name: r.querySelector('.h-name').value,
