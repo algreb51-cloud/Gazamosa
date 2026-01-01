@@ -358,6 +358,7 @@
                 onSnapshot(q, (snapshot) => {
                     window.families = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     updateDelegateFilterOptions();
+                    updateSocialFilterOptions();
                     runFilters();
                 }, (err) => console.error("Firebase Snapshot Error", err));
             }
@@ -1467,6 +1468,23 @@
             container.innerHTML = html;
         }
 
+        function updateSocialFilterOptions() {
+            const container = document.getElementById('filterSocial-options');
+            if (!container) return;
+            
+            const currentChecked = Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+            const socials = [...new Set(window.families.map(f => f.pSocial ? f.pSocial.trim() : "").filter(s => s !== ""))].sort();
+            
+            let html = '';
+            socials.forEach(s => {
+                const isChecked = currentChecked.includes(s) ? 'checked' : '';
+                html += `<label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="${s}" ${isChecked}> ${s}</label>`;
+            });
+            
+            if(socials.length === 0) html = '<div class="p-2 text-xs text-slate-400 text-center">لا يوجد بيانات</div>';
+            container.innerHTML = html;
+        }
+
         function runFilters() {
             const search = document.getElementById('searchInput').value.toLowerCase();
             
@@ -1594,7 +1612,7 @@
                 let filtered = window.families.filter(f => {
                     const mSearch = matchesSearch(f);
                     const mDelegate = delegateFilters.length === 0 || delegateFilters.includes('all') || delegateFilters.includes((f.pDelegate || "").trim());
-                    const mSocial = socialFilters.length === 0 || socialFilters.includes('all') || socialFilters.includes(f.pSocial);
+                    const mSocial = socialFilters.length === 0 || socialFilters.includes('all') || socialFilters.includes((f.pSocial || "").trim());
                     
                     let calculatedCount = 1;
                     if(f.wifeName && f.wifeName.trim()) calculatedCount++;
