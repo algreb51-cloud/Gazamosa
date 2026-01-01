@@ -357,6 +357,7 @@
                 );
                 onSnapshot(q, (snapshot) => {
                     window.families = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    updateDelegateFilterOptions();
                     runFilters();
                 }, (err) => console.error("Firebase Snapshot Error", err));
             }
@@ -1448,6 +1449,23 @@
             return window.currentUserData.permissions.includes(p) || window.currentUserData.permissions.includes('all');
         }
 
+        function updateDelegateFilterOptions() {
+            const container = document.getElementById('filterDelegate-options');
+            if (!container) return;
+            
+            const currentChecked = Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+            const delegates = [...new Set(window.families.map(f => f.pDelegate ? f.pDelegate.trim() : "").filter(d => d !== ""))].sort();
+            
+            let html = '';
+            delegates.forEach(d => {
+                const isChecked = currentChecked.includes(d) ? 'checked' : '';
+                html += `<label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="${d}" ${isChecked}> ${d}</label>`;
+            });
+            
+            if(delegates.length === 0) html = '<div class="p-2 text-xs text-slate-400 text-center">لا يوجد مناديب</div>';
+            container.innerHTML = html;
+        }
+
         function runFilters() {
             const search = document.getElementById('searchInput').value.toLowerCase();
             
@@ -1574,9 +1592,14 @@
                 currentViewMode = 'family';
                 let filtered = window.families.filter(f => {
                     const mSearch = matchesSearch(f);
-                    const mDelegate = delegateFilters.length === 0 || delegateFilters.includes('all') || delegateFilters.includes(f.pDelegate);
+                    const mDelegate = delegateFilters.length === 0 || delegateFilters.includes('all') || delegateFilters.includes((f.pDelegate || "").trim());
                     const mSocial = socialFilters.length === 0 || socialFilters.includes('all') || socialFilters.includes(f.pSocial);
-                    const mCount = countFilters.length === 0 || countFilters.includes('all') || countFilters.includes((f.totalCount || "").toString());
+                    
+                    let calculatedCount = 1;
+                    if(f.wifeName && f.wifeName.trim()) calculatedCount++;
+                    if(f.members && Array.isArray(f.members)) calculatedCount += f.members.length;
+
+                    const mCount = countFilters.length === 0 || countFilters.includes('all') || countFilters.includes(calculatedCount.toString());
                     return mSearch && mDelegate && mSocial && mCount;
                 });
                 if (showDupsOnly) {
@@ -1609,6 +1632,7 @@
             renderTable(resultData, isRestricted);
             updateStats(window.families);
         }
+        window.runFilters = runFilters;
 
         function updateStats(data) {
             document.getElementById('totalFamilies').innerText = data.length;
@@ -2536,9 +2560,15 @@
             tbody.innerHTML = '';
             window.families.forEach(f => {
                 if(search && !f.pName.includes(search) && !f.pId.includes(search)) return;
+                
+                let count = 1;
+                if(f.wifeName && f.wifeName.trim()) count++;
+                if(f.members && Array.isArray(f.members)) count += f.members.length;
+
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-indigo-50 transition-all border-b border-slate-50";
                 tr.innerHTML = `<td class="p-3"><input type="checkbox" value="${f.id}" onchange="updateBenSelection()" class="ben-check w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"></td><td class="p-3 font-bold">${f.pName}</td><td class="p-3 font-mono text-slate-500">${f.pId}</td><td class="p-3 font-mono text-slate-500">${f.pPhone}</td><td class="p-3 font-bold text-center">${f.totalCount}</td><td class="p-3 text-xs font-bold text-indigo-600">${f.pDelegate || '-'}</td>`;
+                tr.innerHTML = `<td class="p-3"><input type="checkbox" value="${f.id}" onchange="updateBenSelection()" class="ben-check w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"></td><td class="p-3 font-bold">${f.pName}</td><td class="p-3 font-mono text-slate-500">${f.pId}</td><td class="p-3 font-mono text-slate-500">${f.pPhone}</td><td class="p-3 font-bold text-center">${count}</td><td class="p-3 text-xs font-bold text-indigo-600">${f.pDelegate || '-'}</td>`;
                 tbody.appendChild(tr);
             });
             updateBenSelection();
@@ -2598,6 +2628,12 @@
             const wb = XLSX.utils.book_new();
             const data = [["تقرير المستفيدين - نظام الأرشفة"], ["اسم الملف", meta.fileName, "نوع المساعدة", meta.type], ["الجهة المانحة", meta.donor, "تاريخ الاستفادة", meta.date], ["ملاحظات", meta.notes], [], ["اسم رب الأسرة", "رقم الهوية", "رقم الجوال", "عدد الأفراد", "المندوب", "الزوجة", "هوية الزوجة"]];
             selectedFamilies.forEach(f => { data.push([f.pName, f.pId, f.pPhone, f.totalCount, f.pDelegate, f.wifeName, f.wifeId]); });
+            selectedFamilies.forEach(f => { 
+                let count = 1;
+                if(f.wifeName && f.wifeName.trim()) count++;
+                if(f.members && Array.isArray(f.members)) count += f.members.length;
+                data.push([f.pName, f.pId, f.pPhone, count, f.pDelegate, f.wifeName, f.wifeId]); 
+            });
             const ws = XLSX.utils.aoa_to_sheet(data);
             ws['!cols'] = [{wch: 25}, {wch: 15}, {wch: 15}, {wch: 10}, {wch: 15}, {wch: 20}, {wch: 15}];
             XLSX.utils.book_append_sheet(wb, ws, "المستفيدين");
