@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة إدارة البيانات للنازحين</title>
+    <title>بوابة إدارة البيانات الاحترافية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
@@ -835,6 +835,10 @@
                         <input type="text" id="pId" maxlength="9" required oninput="only9Numbers(this)" class="w-full bg-slate-50 border-none rounded-2xl p-5 input-focus text-sm font-mono tracking-widest font-bold">
                     </div>
                     <div>
+                        <label class="block text-xs font-bold text-slate-400 mb-2">اصدار الهوية</label>
+                        <input type="text" id="pIdIssue" class="w-full bg-slate-50 border-none rounded-2xl p-5 input-focus text-sm font-bold">
+                    </div>
+                    <div>
                         <label class="block text-xs font-bold text-slate-400 mb-2">رقم الجوال (بدون 0)</label>
                         <input type="text" id="pPhone" maxlength="9" required oninput="only9Numbers(this)" placeholder="59XXXXXXX" class="w-full bg-slate-50 border-none rounded-2xl p-5 input-focus text-sm font-mono font-bold">
                     </div>
@@ -870,9 +874,6 @@
                     <input type="number" id="totalCount" placeholder="إجمالي الأفراد" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
                     <input type="number" id="maleCount" placeholder="عدد الذكور" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
                     <input type="number" id="femaleCount" placeholder="عدد الإناث" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
-                    <input type="number" id="totalCount" placeholder="إجمالي الأفراد" class="bg-slate-100 text-slate-500 border-none rounded-2xl p-5 text-sm font-bold cursor-not-allowed" readonly title="يتم الحساب تلقائياً">
-                    <input type="number" id="maleCount" placeholder="عدد الذكور" class="bg-slate-100 text-slate-500 border-none rounded-2xl p-5 text-sm font-bold cursor-not-allowed" readonly title="يتم الحساب تلقائياً">
-                    <input type="number" id="femaleCount" placeholder="عدد الإناث" class="bg-slate-100 text-slate-500 border-none rounded-2xl p-5 text-sm font-bold cursor-not-allowed" readonly title="يتم الحساب تلقائياً">
                 </div>
 
                 <div class="pt-8">
@@ -1183,6 +1184,7 @@
         const FIELD_MAP = {
             pName: "اسم رب الأسرة",
             pId: "هوية رب الأسرة",
+            pIdIssue: "اصدار الهوية",
             pDob: "تاريخ ميلاد رب الأسرة",
             pPhone: "رقم الجوال",
             wifeName: "اسم الزوجة",
@@ -1989,6 +1991,7 @@
             const payload = {
                 pName: document.getElementById('pName').value,
                 pId: document.getElementById('pId').value,
+                pIdIssue: document.getElementById('pIdIssue').value,
                 pDob: document.getElementById('pDob').value,
                 pPhone: document.getElementById('pPhone').value,
                 pSocial: document.getElementById('pSocial').value,
@@ -2126,6 +2129,7 @@
                             <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] border-b pb-4">المعلومات الشخصية</h3>
                             <div class="grid grid-cols-2 gap-y-6 text-sm">
                                 <span class="text-slate-400">رقم الهوية:</span> <span class="font-mono font-bold">${mask(f.pId)}</span>
+                                <span class="text-slate-400">اصدار الهوية:</span> <span class="font-bold">${f.pIdIssue || "-"}</span>
                                 <span class="text-slate-400">تاريخ الميلاد:</span> <span class="font-bold">${f.pDob || "-"} (${pAge.y} سنة، ${pAge.m} شهر)</span>
                                 <span class="text-slate-400">رقم الجوال:</span> <span class="font-mono font-bold">${isRestricted ? '*****' : '0' + (f.pPhone || "-")}</span>
                                 <span class="text-slate-400">جوال بديل:</span> <span class="font-mono font-bold">${isRestricted ? '*****' : '0' + (f.pAltPhone || "-")}</span>
@@ -2266,7 +2270,7 @@
         }
 
         function downloadTemplate() { 
-            const headers = ["اسم رب الأسرة", "تاريخ ميلاد رب الأسرة", "هوية رب الأسرة", "رقم الجوال", "اسم الزوجة", "هوية الزوجة", "تاريخ ميلاد الزوجة", "الحالة الاجتماعية", "عدد الأفراد الكلي", "عدد الذكور", "عدد الإناث"];
+            const headers = ["اسم رب الأسرة", "تاريخ ميلاد رب الأسرة", "هوية رب الأسرة", "اصدار الهوية", "رقم الجوال", "اسم الزوجة", "هوية الزوجة", "تاريخ ميلاد الزوجة", "الحالة الاجتماعية", "عدد الأفراد الكلي", "عدد الذكور", "عدد الإناث"];
             for(let i=1; i<=10; i++) headers.push(`اسم الفرد ${i}`, `صلة القرابة ${i}`, `تاريخ الميلاد الفرد ${i}`, `رقم الهوية الفرد ${i}`);
             headers.push("منطقة السكن الأصلية", "منطقة النزوح", "المندوب", "جوال بديل");
             for(let i=1; i<=5; i++) headers.push(`الاسم الحالة ${i}`, `رقم الهوية الحالة ${i}`, `رقم الجوال الحالة ${i}`, `نوع المرض ${i}`);
@@ -2319,6 +2323,7 @@
                         pName: row["اسم رب الأسرة"] || "",
                         pDob: row["تاريخ ميلاد رب الأسرة"] || "",
                         pId: String(row["هوية رب الأسرة"] || ""),
+                        pIdIssue: String(row["اصدار الهوية"] || ""),
                         pPhone: String(row["رقم الجوال"] || ""),
                         wifeName: row["اسم الزوجة"] || "",
                         wifeId: String(row["هوية الزوجة"] || ""),
@@ -2387,7 +2392,7 @@
             const data = [];
             data.push(["البيانات الأساسية للعائلة"]);
             data.push(["اسم رب الأسرة", f.pName || "", "رقم الهوية", f.pId || ""]);
-            data.push(["تاريخ الميلاد", f.pDob || "", "رقم الجوال", f.pPhone || ""]);
+            data.push(["تاريخ الميلاد", f.pDob || "", "رقم الجوال", f.pPhone || "", "اصدار الهوية", f.pIdIssue || ""]);
             data.push(["الحالة الاجتماعية", f.pSocial || "", "المندوب", f.pDelegate || ""]);
             data.push(["اسم الزوجة", f.wifeName || "", "هوية الزوجة", f.wifeId || ""]);
             data.push(["تاريخ ميلاد الزوجة", f.wifeDob || "", "جوال بديل", f.pAltPhone || ""]);
@@ -2421,7 +2426,7 @@
                     <div class="print-header"><h1 class="print-title">استمارة بيانات عائلة</h1><p class="print-meta">تاريخ الطباعة: ${new Date().toLocaleDateString('ar-EG')}</p></div>
                     <div class="section-title">1. البيانات الأساسية</div>
                     <div class="info-grid">
-                        <table class="print-table"><tr><th>رب الأسرة</th><td>${f.pName || '-'}</td></tr><tr><th>رقم الهوية</th><td>${f.pId || '-'}</td></tr><tr><th>رقم الجوال</th><td>${f.pPhone || '-'}</td></tr><tr><th>تاريخ الميلاد</th><td>${f.pDob || '-'} (${pAge.y} سنة)</td></tr></table>
+                        <table class="print-table"><tr><th>رب الأسرة</th><td>${f.pName || '-'}</td></tr><tr><th>رقم الهوية</th><td>${f.pId || '-'}</td></tr><tr><th>اصدار الهوية</th><td>${f.pIdIssue || '-'}</td></tr><tr><th>رقم الجوال</th><td>${f.pPhone || '-'}</td></tr><tr><th>تاريخ الميلاد</th><td>${f.pDob || '-'} (${pAge.y} سنة)</td></tr></table>
                         <table class="print-table"><tr><th>الزوجة</th><td>${f.wifeName || '-'}</td></tr><tr><th>هوية الزوجة</th><td>${f.wifeId || '-'}</td></tr><tr><th>السكن الأصلي</th><td>${f.originArea || '-'}</td></tr><tr><th>منطقة النزوح</th><td>${f.displaceArea || '-'}</td></tr></table>
                     </div>
                     <table class="print-table" style="margin-top: 10px;"><tr><th>المندوب</th><td>${f.pDelegate || '-'}</td><th>الحالة الاجتماعية</th><td>${f.pSocial || '-'}</td><th>عدد الأفراد</th><td>${f.totalCount || '0'}</td></tr></table>
@@ -2940,5 +2945,4 @@
         window.deleteArchive = deleteArchive;
     </script>
 </body>
-
 </html>  
