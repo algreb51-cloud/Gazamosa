@@ -546,6 +546,7 @@
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعاقة سمعية"> إعاقة سمعية</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعاقة حركية"> إعاقة حركية</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعاقة بصرية"> إعاقة بصرية</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اخرى"> اخرى</label>
                                     </div>
                                 </div>
                             </div>
@@ -1748,6 +1749,7 @@
                     <th class="px-4 py-4">هوية المريض</th>
                     <th class="px-4 py-4">تاريخ الميلاد</th>
                     <th class="px-4 py-4">نوع المرض</th>
+                    <th class="px-4 py-4">تفاصيل المرض</th>
                     <th class="px-4 py-4 bg-indigo-50/50">اسم الأب</th>
                     <th class="px-4 py-4 bg-indigo-50/50">هوية الأب</th>
                     <th class="px-4 py-4 bg-indigo-50/50">اسم الزوجة</th>
@@ -1811,6 +1813,7 @@
                         <td class="px-4 py-4 font-mono">${isRestricted ? '*****' : (row.patientId || '-')}</td>
                         <td class="px-4 py-4 font-mono">${row.patientDob || '-'}</td>
                         <td class="px-4 py-4 text-xs font-bold bg-red-50 text-red-600 rounded-lg">${row.diseaseType}</td>
+                        <td class="px-4 py-4 text-xs max-w-[200px] truncate" title="${row.diseaseDesc || ''}">${row.diseaseDesc || '-'}</td>
                         <td class="px-4 py-4 bg-indigo-50/10">${row.pName}</td>
                         <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : row.pId}</td>
                         <td class="px-4 py-4 bg-indigo-50/10">${row.wifeName || '-'}</td>
@@ -1986,7 +1989,6 @@
                     dob: r.querySelector('.m-dob').value,
                     idNum: r.querySelector('.m-id').value
                 })),
-                members: members,
                 health: Array.from(document.querySelectorAll('.health-row')).map(r => ({
                     type: r.querySelector('.h-type').value,
                     name: r.querySelector('.h-name').value,
