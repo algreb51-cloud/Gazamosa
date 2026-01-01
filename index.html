@@ -380,11 +380,11 @@
             
             <div class="space-y-4 text-right">
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-2 mr-1">اسم المستخدم / رقم الهوية (هوية الاب)</label>
+                    <label class="block text-xs font-bold text-slate-400 mb-2 mr-1">اسم المستخدم / رقم الهوية (هوية رب الأسرة)</label>
                     <input type="text" id="loginUser" class="w-full p-4 bg-slate-50 border-none rounded-2xl text-left text-sm font-bold focus:ring-2 focus:ring-indigo-500" placeholder="Username / ID">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-2 mr-1">كلمة المرور / رقم الجوال</label>
+                    <label class="block text-xs font-bold text-slate-400 mb-2 mr-1">كلمة المرور / رقم الجوال (بدون 0)</label>
                     <input type="password" id="loginPass" class="w-full p-4 bg-slate-50 border-none rounded-2xl text-center text-xl tracking-widest focus:ring-2 focus:ring-indigo-500" placeholder="•••••••• / Phone">
                 </div>
                 <div id="loginError" class="text-red-500 text-xs font-bold hidden text-center"></div>
@@ -837,7 +837,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-400 mb-2">الحالة الاجتماعية</label>
-                        <select id="pSocial" class="w-full bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
+                        <select id="pSocial" onchange="calculateFamilyCounts()" class="w-full bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
                             <option>متزوج</option><option>ارمله</option><option>مطلقة</option><option>مهجورة</option><option>اعزب</option><option>أيتام</option>
                         </select>
                     </div>
@@ -849,7 +849,7 @@
                         بيانات الزوجة
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <input type="text" id="wifeName" placeholder="اسم الزوجة" class="bg-white border-none rounded-2xl p-5 text-sm font-bold shadow-sm">
+                        <input type="text" id="wifeName" oninput="calculateFamilyCounts()" placeholder="اسم الزوجة" class="bg-white border-none rounded-2xl p-5 text-sm font-bold shadow-sm">
                         <input type="text" id="wifeId" maxlength="9" oninput="only9Numbers(this)" placeholder="هوية الزوجة" class="bg-white border-none rounded-2xl p-5 text-sm font-mono shadow-sm">
                         <input type="date" id="wifeDob" class="bg-white border-none rounded-2xl p-5 text-sm shadow-sm">
                     </div>
@@ -1584,19 +1584,25 @@
                     window.families.forEach(f => idCounts[f.pId] = (idCounts[f.pId] || 0) + 1);
                     filtered = filtered.filter(f => idCounts[f.pId] > 1);
                 }
-                resultData = filtered.map(f => ({
-                    type: 'family',
-                    familyId: f.id,
-                    pName: f.pName,
-                    pId: f.pId,
-                    wifeName: f.wifeName,
-                    wifeId: f.wifeId,
-                    pPhone: f.pPhone,
-                    pDelegate: f.pDelegate,
-                    pSocial: f.pSocial,
-                    totalCount: f.totalCount,
-                    raw: f 
-                }));
+                resultData = filtered.map(f => {
+                    let count = 1; // رب الأسرة
+                    if(f.wifeName && f.wifeName.trim()) count++; // الزوجة
+                    if(f.members && Array.isArray(f.members)) count += f.members.length; // الأفراد
+
+                    return {
+                        type: 'family',
+                        familyId: f.id,
+                        pName: f.pName,
+                        pId: f.pId,
+                        wifeName: f.wifeName,
+                        wifeId: f.wifeId,
+                        pPhone: f.pPhone,
+                        pDelegate: f.pDelegate,
+                        pSocial: f.pSocial,
+                        totalCount: count,
+                        raw: f 
+                    };
+                });
             }
 
             currentViewData = resultData;
@@ -1828,19 +1834,50 @@
             document.getElementById('formModal').classList.remove('hidden');
         }
 
+        window.calculateFamilyCounts = function() {
+            let calcTotal = 1; // رب الأسرة
+            let calcMale = 0;
+            let calcFemale = 0;
+
+            const pSocial = document.getElementById('pSocial').value;
+            if(['ارمله', 'مطلقة', 'مهجورة'].includes(pSocial)) calcFemale++;
+            else calcMale++;
+
+            const wifeName = document.getElementById('wifeName').value;
+            if(wifeName && wifeName.trim()) {
+                calcTotal++;
+                calcFemale++;
+            }
+
+            const members = document.querySelectorAll('.member-row');
+            members.forEach(row => {
+                const relation = row.querySelector('.m-rel').value;
+                calcTotal++;
+                if(['اخ', 'ابن', 'اب', 'جد'].includes(relation)) calcMale++;
+                else calcFemale++;
+            });
+
+            document.getElementById('totalCount').value = calcTotal;
+            document.getElementById('maleCount').value = calcMale;
+            document.getElementById('femaleCount').value = calcFemale;
+
+            return { total: calcTotal, male: calcMale, female: calcFemale };
+        };
+
         function addMemberRow(data = {}) {
             const div = document.createElement('div');
             div.className = "grid grid-cols-1 md:grid-cols-4 gap-3 bg-white p-6 rounded-3xl shadow-sm border border-slate-100 relative member-row";
             div.innerHTML = `
                 <input type="text" placeholder="اسم الفرد" class="m-name border-none bg-slate-50 rounded-xl p-4 text-xs font-bold" value="${data.name || ''}">
-                <select class="m-rel border-none bg-slate-50 rounded-xl p-4 text-xs font-bold">
+                <select class="m-rel border-none bg-slate-50 rounded-xl p-4 text-xs font-bold" onchange="calculateFamilyCounts()">
                     ${['اخ', 'اخت', 'زوجة', 'ابن', 'ابنه', 'ام', 'اب', 'خاله', 'عمه', 'جد', 'جده', 'محتضنه'].map(r => `<option ${data.relation === r ? 'selected' : ''}>${r}</option>`).join('')}
                 </select>
                 <input type="date" class="m-dob border-none bg-slate-50 rounded-xl p-4 text-xs font-bold" value="${data.dob || ''}">
                 <input type="text" maxlength="9" placeholder="رقم الهوية" class="m-id border-none bg-slate-50 rounded-xl p-4 text-xs font-mono font-bold" value="${data.idNum || ''}">
-                <button type="button" onclick="this.parentElement.remove()" class="absolute -left-2 -top-2 bg-white text-red-500 w-8 h-8 rounded-full shadow-md border flex items-center justify-center font-black">×</button>
+                <button type="button" onclick="this.parentElement.remove(); calculateFamilyCounts()" class="absolute -left-2 -top-2 bg-white text-red-500 w-8 h-8 rounded-full shadow-md border flex items-center justify-center font-black">×</button>
             `;
             document.getElementById('membersList').appendChild(div);
+            calculateFamilyCounts();
         }
 
         function addHealthRow(data = {}) {
@@ -1898,32 +1935,7 @@
             }
 
             // حساب الأعداد تلقائياً بناءً على المدخلات
-            let calcTotal = 1; // رب الأسرة
-            let calcMale = 0;
-            let calcFemale = 0;
-
-            const pSocial = document.getElementById('pSocial').value;
-            if(['ارمله', 'مطلقة', 'مهجورة'].includes(pSocial)) calcFemale++;
-            else calcMale++;
-
-            const wifeName = document.getElementById('wifeName').value;
-            if(wifeName && wifeName.trim()) {
-                calcTotal++;
-                calcFemale++;
-            }
-
-            const members = Array.from(document.querySelectorAll('.member-row')).map(r => ({
-                name: r.querySelector('.m-name').value,
-                relation: r.querySelector('.m-rel').value,
-                dob: r.querySelector('.m-dob').value,
-                idNum: r.querySelector('.m-id').value
-            }));
-
-            members.forEach(m => {
-                calcTotal++;
-                if(['اخ', 'ابن', 'اب', 'جد'].includes(m.relation)) calcMale++;
-                else calcFemale++;
-            });
+            const counts = calculateFamilyCounts();
 
             const payload = {
                 pName: document.getElementById('pName').value,
@@ -1938,12 +1950,9 @@
                 pAltPhone: document.getElementById('pAltPhone').value,
                 originArea: document.getElementById('originArea').value,
                 displaceArea: document.getElementById('displaceArea').value,
-                totalCount: document.getElementById('totalCount').value,
-                maleCount: document.getElementById('maleCount').value,
-                femaleCount: document.getElementById('femaleCount').value,
-                totalCount: calcTotal,
-                maleCount: calcMale,
-                femaleCount: calcFemale,
+                totalCount: counts.total,
+                maleCount: counts.male,
+                femaleCount: counts.female,
                 walletOwner: document.getElementById('walletOwner').value,
                 walletId: document.getElementById('walletId').value,
                 walletPhone: document.getElementById('walletPhone').value,
@@ -1998,6 +2007,8 @@
             if(f.members) f.members.forEach(m => addMemberRow(m));
             if(f.health) f.health.forEach(h => addHealthRow(h));
             
+            calculateFamilyCounts();
+
             // تعطيل حقل المندوب للمستفيدين فقط
             if (window.currentUserData.role === 'beneficiary') {
                 const delInput = document.getElementById('pDelegate');
@@ -2185,7 +2196,7 @@
                 let historyHTML = `
                     <table class="w-full text-right text-sm">
                         <thead class="text-slate-400 border-b border-slate-200">
-                            <tr><th class="pb-4">اسم الملف</th><th class="pb-4">تاريخ الاستفادة</th></tr>
+                            <tr><th class="pb-4">الأستفادة</th><th class="pb-4">تاريخ الاستفادة</th></tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                 `;
