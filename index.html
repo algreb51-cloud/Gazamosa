@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة إدارة البيانات للنازحين</title>
+    <title>بوابة إدارة البيانات الاحترافية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
@@ -1547,9 +1547,12 @@
                                     targetName: m.name,
                                     targetId: m.idNum,
                                     targetAge: `${age.y} سنة`,
+                                    targetDob: m.dob,
                                     relation: m.relation,
                                     pName: f.pName,
                                     pId: f.pId,
+                                    pDob: f.pDob,
+                                    pSocial: f.pSocial,
                                     wifeName: f.wifeName,
                                     wifeId: f.wifeId,
                                     pPhone: f.pPhone
@@ -1580,9 +1583,12 @@
                                     targetName: p.name,
                                     targetId: p.id,
                                     targetAge: `${age.y} سنة`,
+                                    targetDob: p.dob,
                                     relation: p.role,
                                     pName: f.pName,
                                     pId: f.pId,
+                                    pDob: f.pDob,
+                                    pSocial: f.pSocial,
                                     wifeName: f.wifeName,
                                     wifeId: f.wifeId,
                                     pPhone: f.pPhone
@@ -1596,16 +1602,21 @@
                     if (!matchesSearch(f)) return;
                     (f.health || []).forEach(h => {
                         if (diseaseFilters.includes(h.type)) {
+                            const patientAge = getAge(h.dob);
+                            const pAge = getAge(f.pDob);
                             resultData.push({
                                 type: 'health',
                                 familyId: f.id,
                                 patientName: h.name,
                                 patientId: h.idNum,
                                 patientDob: h.dob,
+                                patientAge: `${patientAge.y} سنة`,
                                 diseaseType: h.type,
                                 diseaseDesc: h.desc,
                                 pName: f.pName,
                                 pId: f.pId,
+                                pAge: `${pAge.y} سنة`,
+                                pSocial: f.pSocial,
                                 wifeName: f.wifeName,
                                 wifeId: f.wifeId,
                                 pPhone: f.pPhone
@@ -1758,9 +1769,12 @@
                     <th class="px-4 py-4 w-10"><input type="checkbox" onchange="toggleMainSelectAll(this)" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"></th>
                     <th class="px-4 py-4">اسم الفرد</th>
                     <th class="px-4 py-4">هوية الفرد</th>
+                    <th class="px-4 py-4">تاريخ الميلاد</th>
                     <th class="px-4 py-4">العمر/الصلة</th>
                     <th class="px-4 py-4 bg-indigo-50/50">اسم الأب</th>
                     <th class="px-4 py-4 bg-indigo-50/50">هوية الأب</th>
+                    <th class="px-4 py-4 bg-indigo-50/50">تاريخ ميلاد الأب</th>
+                    <th class="px-4 py-4 bg-indigo-50/50">الحالة الاجتماعية</th>
                     <th class="px-4 py-4 bg-indigo-50/50">اسم الزوجة</th>
                     <th class="px-4 py-4 bg-indigo-50/50">هوية الزوجة</th>
                     <th class="px-4 py-4 bg-indigo-50/50">رقم الجوال</th>
@@ -1772,10 +1786,13 @@
                     <th class="px-4 py-4">اسم المريض</th>
                     <th class="px-4 py-4">هوية المريض</th>
                     <th class="px-4 py-4">تاريخ الميلاد</th>
+                    <th class="px-4 py-4">عمر المريض</th>
                     <th class="px-4 py-4">نوع المرض</th>
                     <th class="px-4 py-4">تفاصيل المرض</th>
                     <th class="px-4 py-4 bg-indigo-50/50">اسم الأب</th>
                     <th class="px-4 py-4 bg-indigo-50/50">هوية الأب</th>
+                    <th class="px-4 py-4 bg-indigo-50/50">عمر الأب</th>
+                    <th class="px-4 py-4 bg-indigo-50/50">الحالة الاجتماعية</th>
                     <th class="px-4 py-4 bg-indigo-50/50">اسم الزوجة</th>
                     <th class="px-4 py-4 bg-indigo-50/50">هوية الزوجة</th>
                     <th class="px-4 py-4 bg-indigo-50/50">رقم الجوال</th>
@@ -1822,9 +1839,12 @@
                         ${checkboxHTML}
                         <td class="px-4 py-4 font-bold text-indigo-700">${row.targetName || '-'}</td>
                         <td class="px-4 py-4 font-mono">${isRestricted ? '*****' : (row.targetId || '-')}</td>
+                        <td class="px-4 py-4 font-mono">${row.targetDob || '-'}</td>
                         <td class="px-4 py-4 text-xs font-bold text-slate-500">${row.targetAge} (${row.relation})</td>
                         <td class="px-4 py-4 bg-indigo-50/10">${row.pName}</td>
                         <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : row.pId}</td>
+                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${row.pDob || '-'}</td>
+                        <td class="px-4 py-4 bg-indigo-50/10">${row.pSocial || '-'}</td>
                         <td class="px-4 py-4 bg-indigo-50/10">${row.wifeName || '-'}</td>
                         <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : (row.wifeId || '-')}</td>
                         <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : row.pPhone}</td>
@@ -1836,10 +1856,13 @@
                         <td class="px-4 py-4 font-bold text-red-600">${row.patientName || '-'}</td>
                         <td class="px-4 py-4 font-mono">${isRestricted ? '*****' : (row.patientId || '-')}</td>
                         <td class="px-4 py-4 font-mono">${row.patientDob || '-'}</td>
+                        <td class="px-4 py-4 text-xs font-bold text-slate-500">${row.patientAge || '-'}</td>
                         <td class="px-4 py-4 text-xs font-bold bg-red-50 text-red-600 rounded-lg">${row.diseaseType}</td>
                         <td class="px-4 py-4 text-xs max-w-[200px] truncate" title="${row.diseaseDesc || ''}">${row.diseaseDesc || '-'}</td>
                         <td class="px-4 py-4 bg-indigo-50/10">${row.pName}</td>
                         <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : row.pId}</td>
+                        <td class="px-4 py-4 bg-indigo-50/10">${row.pAge || '-'}</td>
+                        <td class="px-4 py-4 bg-indigo-50/10">${row.pSocial || '-'}</td>
                         <td class="px-4 py-4 bg-indigo-50/10">${row.wifeName || '-'}</td>
                         <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : (row.wifeId || '-')}</td>
                         <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : row.pPhone}</td>
@@ -2499,9 +2522,9 @@
 
             let dataForExcel = [];
             if (currentViewMode === 'individual') {
-                dataForExcel = dataToExport.map(d => ({ "اسم الفرد": d.targetName, "هوية الفرد": d.targetId, "العمر/الصلة": `${d.targetAge} (${d.relation})`, "اسم الأب": d.pName, "هوية الأب": d.pId, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone }));
+                dataForExcel = dataToExport.map(d => ({ "اسم الفرد": d.targetName, "هوية الفرد": d.targetId, "تاريخ ميلاد الفرد": d.targetDob, "العمر/الصلة": `${d.targetAge} (${d.relation})`, "اسم الأب": d.pName, "هوية الأب": d.pId, "تاريخ ميلاد الأب": d.pDob, "الحالة الاجتماعية": d.pSocial, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone }));
             } else if (currentViewMode === 'health') {
-                dataForExcel = dataToExport.map(d => ({ "اسم المريض": d.patientName, "هوية المريض": d.patientId, "تاريخ الميلاد": d.patientDob, "نوع المرض": d.diseaseType, "تفاصيل المرض": d.diseaseDesc, "اسم الأب": d.pName, "هوية الأب": d.pId, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone }));
+                dataForExcel = dataToExport.map(d => ({ "اسم المريض": d.patientName, "هوية المريض": d.patientId, "تاريخ الميلاد": d.patientDob, "عمر المريض": d.patientAge, "نوع المرض": d.diseaseType, "تفاصيل المرض": d.diseaseDesc, "اسم الأب": d.pName, "هوية الأب": d.pId, "عمر الأب": d.pAge, "الحالة الاجتماعية": d.pSocial, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone }));
             } else {
                 dataForExcel = dataToExport.map(d => ({ "اسم الأب": d.pName, "هوية الأب": d.pId, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone, "المندوب": d.pDelegate, "الحالة الاجتماعية": d.pSocial, "إجمالي الأفراد": d.totalCount }));
             }
@@ -2945,5 +2968,4 @@
         window.deleteArchive = deleteArchive;
     </script>
 </body>
-
 </html>  
