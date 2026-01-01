@@ -1653,6 +1653,7 @@
                         familyId: f.id,
                         pName: f.pName,
                         pId: f.pId,
+                        pDob: f.pDob,
                         wifeName: f.wifeName,
                         wifeId: f.wifeId,
                         pPhone: f.pPhone,
@@ -1803,6 +1804,8 @@
                     <th class="px-4 py-4 w-10"><input type="checkbox" onchange="toggleMainSelectAll(this)" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"></th>
                     <th class="px-4 py-4">اسم الأب</th>
                     <th class="px-4 py-4">هوية الأب</th>
+                    <th class="px-4 py-4">تاريخ الميلاد</th>
+                    <th class="px-4 py-4">العمر</th>
                     <th class="px-4 py-4">اسم الزوجة</th>
                     <th class="px-4 py-4">هوية الزوجة</th>
                     <th class="px-4 py-4">الجوال</th>
@@ -1869,10 +1872,13 @@
                         <td class="px-4 py-4">${actions}</td>
                     `;
                 } else {
+                    const pAge = getAge(row.pDob);
                      rowHTML = `
                         ${checkboxHTML}
                         <td class="px-4 py-4 font-bold text-slate-700">${row.pName}</td>
                         <td class="px-4 py-4 font-mono text-slate-500">${isRestricted ? '*****' : row.pId}</td>
+                        <td class="px-4 py-4 font-mono text-slate-500">${row.pDob || '-'}</td>
+                        <td class="px-4 py-4 font-bold text-slate-500">${pAge.y} سنة</td>
                         <td class="px-4 py-4">${row.wifeName || '-'}</td>
                         <td class="px-4 py-4 font-mono text-slate-500">${isRestricted ? '*****' : (row.wifeId || '-')}</td>
                         <td class="px-4 py-4 font-mono text-slate-500">${isRestricted ? '*****' : `0${row.pPhone}`}</td>
@@ -2527,6 +2533,10 @@
                 dataForExcel = dataToExport.map(d => ({ "اسم المريض": d.patientName, "هوية المريض": d.patientId, "تاريخ الميلاد": d.patientDob, "عمر المريض": d.patientAge, "نوع المرض": d.diseaseType, "تفاصيل المرض": d.diseaseDesc, "اسم الأب": d.pName, "هوية الأب": d.pId, "عمر الأب": d.pAge, "الحالة الاجتماعية": d.pSocial, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone }));
             } else {
                 dataForExcel = dataToExport.map(d => ({ "اسم الأب": d.pName, "هوية الأب": d.pId, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone, "المندوب": d.pDelegate, "الحالة الاجتماعية": d.pSocial, "إجمالي الأفراد": d.totalCount }));
+                dataForExcel = dataToExport.map(d => {
+                    const age = getAge(d.pDob);
+                    return { "اسم الأب": d.pName, "هوية الأب": d.pId, "تاريخ الميلاد": d.pDob, "العمر": `${age.y} سنة`, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone, "المندوب": d.pDelegate, "الحالة الاجتماعية": d.pSocial, "إجمالي الأفراد": d.totalCount };
+                });
             }
             const ws = XLSX.utils.json_to_sheet(dataForExcel);
             const wb = XLSX.utils.book_new();
