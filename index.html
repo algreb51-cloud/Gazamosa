@@ -21,8 +21,17 @@
         /* Multi-select Styles */
         .multiselect-container { position: relative; width: 100%; }
         .multiselect-btn { text-align: right; display: flex; justify-content: space-between; align-items: center; }
-        .multiselect-options { display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); z-index: 50; max-height: 250px; overflow-y: auto; padding: 0.5rem; margin-top: 5px; }
-        .multiselect-options.show { display: block; }
+        .multiselect-options { 
+            position: absolute; top: 100%; left: 0; right: 0; 
+            background: white; border: 1px solid #e2e8f0; border-radius: 1rem; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); z-index: 50; 
+            max-height: 250px; overflow-y: auto; padding: 0.5rem; margin-top: 5px;
+            opacity: 0; visibility: hidden; transform: translateY(-10px);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .multiselect-options.show { 
+            opacity: 1; visibility: visible; transform: translateY(0);
+        }
         .multiselect-option { display: flex; items-center; gap: 8px; padding: 8px; cursor: pointer; border-radius: 0.5rem; transition: background 0.2s; }
         .multiselect-option:hover { background-color: #f1f5f9; }
         .multiselect-option input[type="checkbox"] { width: 16px; height: 16px; accent-color: #4f46e5; cursor: pointer; }
@@ -395,7 +404,7 @@
                     تسجيل الدخول
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
                 </button>
-                <a href="https://chat.whatsapp.com/KMdH5zPM3JQBTpWuXUhazt" target="_blank" class="block w-full bg-emerald-50 text-emerald-600 py-4 rounded-2xl font-bold hover:bg-emerald-100 transition-all flex items-center justify-center gap-2 mt-4 text-sm shadow-sm">
+                <a href="https://chat.whatsapp.com/ITZe08oQilu3oVFILRNkNI" target="_blank" class="block w-full bg-emerald-50 text-emerald-600 py-4 rounded-2xl font-bold hover:bg-emerald-100 transition-all flex items-center justify-center gap-2 mt-4 text-sm shadow-sm">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                     انضم لمجموعة الواتس بالمخيم
                 </a>
@@ -482,7 +491,13 @@
                 </div>
 
                 <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm mb-8">
-                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
+                    <div class="flex gap-2 mb-6 border-b border-slate-100 pb-6 overflow-x-auto">
+                        <button onclick="setViewMode('family')" id="viewBtn-family" class="px-6 py-3 rounded-xl text-sm font-bold bg-slate-800 text-white shadow-lg transition-all">عرض العائلات</button>
+                        <button onclick="setViewMode('individual')" id="viewBtn-individual" class="px-6 py-3 rounded-xl text-sm font-bold bg-white text-slate-500 hover:bg-slate-100 transition-all">عرض الأفراد (تفصيلي)</button>
+                        <button onclick="setViewMode('health')" id="viewBtn-health" class="px-6 py-3 rounded-xl text-sm font-bold bg-white text-slate-500 hover:bg-slate-100 transition-all">عرض الحالات الصحية</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-end">
                         <div class="lg:col-span-1 relative">
                             <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">بحث ذكي (اسم، هوية، مندوب)</label>
                             <input type="text" id="searchInput" oninput="runFilters()" class="w-full bg-slate-50 border-none rounded-2xl p-4 pr-12 text-sm input-focus" placeholder="بحث...">
@@ -552,6 +567,20 @@
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعاقة حركية"> إعاقة حركية</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعاقة بصرية"> إعاقة بصرية</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اخرى"> اخرى</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">حالة الزوجة (استخراج)</label>
+                                <div class="multiselect-container" id="filterWifeStatus-container">
+                                    <button onclick="toggleMultiSelect('filterWifeStatus')" class="multiselect-btn w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all">
+                                        <span id="filterWifeStatus-label">اختيار الحالة...</span>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
+                                    <div id="filterWifeStatus-options" class="multiselect-options custom-scroll">
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="حامل"> حامل</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="مرضعة"> مرضعة</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="لا يوجد"> لا يوجد</label>
                                     </div>
                                 </div>
                             </div>
@@ -859,10 +888,16 @@
                         <svg class="w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM6 8a2 2 0 11-4 0 2 2 0 014 0zM11 18a6 6 0 00-12 0c0 .099.01.196.03.291A5.985 5.985 0 014 13.06V11a2 2 0 10-4 0v2.06A8 8 0 0015 18z"></path></svg>
                         بيانات الزوجة
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <input type="text" id="wifeName" oninput="calculateFamilyCounts()" placeholder="اسم الزوجة" class="bg-white border-none rounded-2xl p-5 text-sm font-bold shadow-sm">
                         <input type="text" id="wifeId" maxlength="9" oninput="only9Numbers(this)" placeholder="هوية الزوجة" class="bg-white border-none rounded-2xl p-5 text-sm font-mono shadow-sm">
                         <input type="date" id="wifeDob" class="bg-white border-none rounded-2xl p-5 text-sm shadow-sm">
+                        <select id="wifeStatus" class="bg-white border-none rounded-2xl p-5 text-sm font-bold shadow-sm text-slate-600">
+                            <option value="">حالة الزوجة (اختياري)</option>
+                            <option value="لا يوجد">لا يوجد</option>
+                            <option value="حامل">حامل</option>
+                            <option value="مرضعة">مرضعة</option>
+                        </select>
                     </div>
                 </div>
 
@@ -1159,6 +1194,18 @@
         </div>
     </div>
 
+    <div id="columnSelectionMenu" class="hidden absolute bg-white border border-slate-100 shadow-2xl rounded-2xl z-[3000] w-80 max-h-[600px] overflow-hidden flex flex-col text-right transition-all duration-200 origin-top-right">
+        <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+            <h4 class="font-bold text-slate-800 text-sm">تخصيص الأعمدة</h4>
+            <button onclick="document.getElementById('columnSelectionMenu').classList.add('hidden')" class="text-slate-400 hover:text-red-500 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <div id="columnOptionsList" class="p-4 overflow-y-auto custom-scroll space-y-4 flex-1"></div>
+        <div class="p-3 border-t border-slate-100 bg-slate-50 flex gap-2">
+            <button onclick="selectAllColumns(true)" class="flex-1 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-100 transition-colors">تحديد الكل</button>
+            <button onclick="selectAllColumns(false)" class="flex-1 py-2 bg-slate-100 text-slate-500 rounded-xl text-xs font-bold hover:bg-slate-200 transition-colors">إلغاء الكل</button>
+        </div>
+    </div>
+
     <div id="undoToast" class="fixed bottom-10 left-10 right-10 md:left-1/2 md:-translate-x-1/2 md:w-fit bg-slate-900 text-white px-8 py-6 rounded-[2rem] shadow-2xl flex items-center justify-between gap-12 z-[2000] hidden transform transition-all duration-500">
         <div class="flex items-center gap-4">
             <div class="w-12 h-12 bg-red-500/20 text-red-400 rounded-2xl flex items-center justify-center animate-pulse">
@@ -1174,12 +1221,115 @@
 
     <script>
         window.families = [];
+        let activeViewTab = 'family'; // 'family', 'individual', 'health'
         let deleteTimer = null;
         let pendingDeleteId = null;
         let showDupsOnly = false;
         let currentViewData = []; 
         let currentViewMode = 'family'; 
         let matchedIdsForArchive = []; // To store IDs from match import
+        
+        let visibleColumnsMap = {
+            family: ['pName', 'pId', 'pDob', 'age', 'wifeName', 'wifeId', 'pPhone', 'pDelegate', 'pSocial', 'totalCount'],
+            individual: ['targetName', 'targetId', 'targetAge', 'relation', 'pName', 'pId', 'pPhone'],
+            health: ['patientName', 'patientId', 'patientAge', 'diseaseType', 'diseaseDesc', 'pName', 'pId', 'pPhone']
+        };
+
+        // تعريف الأعمدة المتاحة للجدول الرئيسي
+        const columnDefinitions = [
+            { id: 'pName', label: 'اسم رب الأسرة', group: 'بيانات رب الأسرة' },
+            { id: 'pId', label: 'هوية رب الأسرة', group: 'بيانات رب الأسرة' },
+            { id: 'pIdIssue', label: 'اصدار الهوية', group: 'بيانات رب الأسرة' },
+            { id: 'pDob', label: 'تاريخ الميلاد', group: 'بيانات رب الأسرة' },
+            { id: 'age', label: 'عمر رب الأسرة', group: 'بيانات رب الأسرة' },
+            { id: 'pSocial', label: 'الحالة الاجتماعية', group: 'بيانات رب الأسرة' },
+            { id: 'wifeName', label: 'اسم الزوجة', group: 'بيانات الزوجة' },
+            { id: 'wifeId', label: 'هوية الزوجة', group: 'بيانات الزوجة' },
+            { id: 'wifeDob', label: 'تاريخ ميلاد الزوجة', group: 'بيانات الزوجة' },
+            { id: 'wifeStatus', label: 'حالة الزوجة', group: 'بيانات الزوجة' },
+            { id: 'pPhone', label: 'رقم الجوال', group: 'بيانات الاتصال' },
+            { id: 'pAltPhone', label: 'جوال بديل', group: 'بيانات الاتصال' },
+            { id: 'pDelegate', label: 'المندوب', group: 'بيانات الاتصال' },
+            { id: 'originArea', label: 'السكن الأصلي', group: 'بيانات الاتصال' },
+            { id: 'displaceArea', label: 'منطقة النزوح', group: 'بيانات الاتصال' },
+            { id: 'totalCount', label: 'العدد الكلي', group: 'الإحصائيات' },
+            { id: 'maleCount', label: 'عدد الذكور', group: 'الإحصائيات' },
+            { id: 'femaleCount', label: 'عدد الإناث', group: 'الإحصائيات' },
+            { id: 'walletOwner', label: 'مالك المحفظة', group: 'المحفظة الإلكترونية' },
+            { id: 'walletId', label: 'هوية المحفظة', group: 'المحفظة الإلكترونية' },
+            { id: 'walletPhone', label: 'جوال المحفظة', group: 'المحفظة الإلكترونية' },
+            
+            // Individual Specific
+            { id: 'targetName', label: 'اسم الفرد', group: 'بيانات الفرد (للفرز)' },
+            { id: 'targetId', label: 'هوية الفرد', group: 'بيانات الفرد (للفرز)' },
+            { id: 'targetDob', label: 'تاريخ ميلاد الفرد', group: 'بيانات الفرد (للفرز)' },
+            { id: 'targetAge', label: 'عمر الفرد', group: 'بيانات الفرد (للفرز)' },
+            { id: 'relation', label: 'الصلة', group: 'بيانات الفرد (للفرز)' },
+
+            // Health Specific
+            { id: 'patientName', label: 'اسم المريض', group: 'بيانات صحية (للفرز)' },
+            { id: 'patientId', label: 'هوية المريض', group: 'بيانات صحية (للفرز)' },
+            { id: 'patientDob', label: 'تاريخ ميلاد المريض', group: 'بيانات صحية (للفرز)' },
+            { id: 'patientAge', label: 'عمر المريض', group: 'بيانات صحية (للفرز)' },
+            { id: 'diseaseType', label: 'نوع المرض', group: 'بيانات صحية (للفرز)' },
+            { id: 'diseaseDesc', label: 'تفاصيل المرض', group: 'بيانات صحية (للفرز)' }
+        ];
+
+        // تعريف المجموعات (Macros) للقائمة المنسدلة
+        const macroDefinitions = [
+            { id: 'macro_mNames', label: 'أسماء الأفراد (الكل)', group: 'بيانات الأفراد (مجمع)', targets: [] },
+            { id: 'macro_mRels', label: 'صلات القرابة (الكل)', group: 'بيانات الأفراد (مجمع)', targets: [] },
+            { id: 'macro_mDobs', label: 'تواريخ ميلاد الأفراد (الكل)', group: 'بيانات الأفراد (مجمع)', targets: [] },
+            { id: 'macro_mIds', label: 'هويات الأفراد (الكل)', group: 'بيانات الأفراد (مجمع)', targets: [] },
+            { id: 'macro_hNames', label: 'أسماء المرضى (الكل)', group: 'بيانات المرضى (مجمع)', targets: [] },
+            { id: 'macro_hTypes', label: 'أنواع الأمراض (الكل)', group: 'بيانات المرضى (مجمع)', targets: [] },
+            { id: 'macro_hIds', label: 'هويات المرضى (الكل)', group: 'بيانات المرضى (مجمع)', targets: [] }
+        ];
+        
+        // إضافة المجموعات لتعريفات الأعمدة (ستظهر في القائمة)
+        columnDefinitions.push(...macroDefinitions);
+
+        // إضافة أعمدة الأفراد (1-10) ديناميكياً
+        for (let i = 1; i <= 10; i++) {
+            columnDefinitions.push(
+                { id: `m${i}Name`, label: `اسم الفرد ${i}`, group: 'بيانات الأفراد (تفصيلي)', hidden: true },
+                { id: `m${i}Rel`, label: `صلة القرابة ${i}`, group: 'بيانات الأفراد (تفصيلي)', hidden: true },
+                { id: `m${i}Dob`, label: `تاريخ ميلاد الفرد ${i}`, group: 'بيانات الأفراد (تفصيلي)', hidden: true },
+                { id: `m${i}Id`, label: `هوية الفرد ${i}`, group: 'بيانات الأفراد (تفصيلي)', hidden: true }
+            );
+            macroDefinitions[0].targets.push(`m${i}Name`);
+            macroDefinitions[1].targets.push(`m${i}Rel`);
+            macroDefinitions[2].targets.push(`m${i}Dob`);
+            macroDefinitions[3].targets.push(`m${i}Id`);
+        }
+
+        // إضافة أعمدة الحالات الصحية (1-5) ديناميكياً
+        for (let i = 1; i <= 5; i++) {
+            columnDefinitions.push(
+                { id: `h${i}Name`, label: `اسم المريض ${i}`, group: 'بيانات المرضى (تفصيلي)', hidden: true },
+                { id: `h${i}Type`, label: `نوع المرض ${i}`, group: 'بيانات المرضى (تفصيلي)', hidden: true },
+                { id: `h${i}Id`, label: `هوية المريض ${i}`, group: 'بيانات المرضى (تفصيلي)', hidden: true }
+            );
+            macroDefinitions[4].targets.push(`h${i}Name`);
+            macroDefinitions[5].targets.push(`h${i}Type`);
+            macroDefinitions[6].targets.push(`h${i}Id`);
+        }
+
+        window.setViewMode = function(mode) {
+            activeViewTab = mode;
+            
+            // Update UI Buttons
+            ['family', 'individual', 'health'].forEach(m => {
+                const btn = document.getElementById('viewBtn-' + m);
+                if(m === mode) {
+                    btn.className = "px-6 py-3 rounded-xl text-sm font-bold bg-slate-800 text-white shadow-lg transition-all";
+                } else {
+                    btn.className = "px-6 py-3 rounded-xl text-sm font-bold bg-white text-slate-500 hover:bg-slate-100 transition-all";
+                }
+            });
+
+            runFilters();
+        };
 
         const FIELD_MAP = {
             pName: "اسم رب الأسرة",
@@ -1190,6 +1340,7 @@
             wifeName: "اسم الزوجة",
             wifeId: "هوية الزوجة",
             wifeDob: "تاريخ ميلاد الزوجة",
+            wifeStatus: "حالة الزوجة",
             pSocial: "الحالة الاجتماعية",
             pDelegate: "اسم المندوب",
             pAltPhone: "جوال بديل",
@@ -1215,6 +1366,112 @@
             if (m < 0) { y--; m += 12; }
             return { y, m };
         }
+
+        // ===========================================
+        //       Column Selection Logic
+        // ===========================================
+
+        window.toggleColumnMenu = function(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('columnSelectionMenu');
+            const btn = event.currentTarget;
+            const rect = btn.getBoundingClientRect();
+            
+            if (menu.classList.contains('hidden')) {
+                renderColumnOptions();
+                menu.style.top = `${window.scrollY + rect.bottom + 5}px`;
+                menu.style.left = 'auto';
+                menu.style.right = `${document.documentElement.clientWidth - rect.right}px`;
+                menu.classList.remove('hidden');
+            } else {
+                menu.classList.add('hidden');
+            }
+        };
+
+        function renderColumnOptions() {
+            const container = document.getElementById('columnOptionsList');
+            container.innerHTML = '';
+            const currentCols = visibleColumnsMap[currentViewMode];
+            
+            const groups = {};
+            columnDefinitions.forEach(col => {
+                if (col.hidden) return; // إخفاء الأعمدة التفصيلية من القائمة
+                if(!groups[col.group]) groups[col.group] = [];
+                groups[col.group].push(col);
+            });
+
+            for (const [groupName, cols] of Object.entries(groups)) {
+                let groupHTML = `<div class="mb-2"><h5 class="text-xs font-black text-slate-400 mb-2 sticky top-0 bg-white py-1">${groupName}</h5><div class="space-y-1">`;
+                cols.forEach(col => {
+                    let isChecked = '';
+                    if (col.targets) {
+                        // Check if all targets are selected
+                        const allSelected = col.targets.every(t => currentCols.includes(t));
+                        isChecked = allSelected ? 'checked' : '';
+                    } else {
+                        isChecked = currentCols.includes(col.id) ? 'checked' : '';
+                    }
+                    
+                    groupHTML += `
+                        <label class="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors border border-transparent hover:border-slate-100">
+                            <div class="relative flex items-center"><input type="checkbox" value="${col.id}" ${isChecked} onchange="toggleColumn('${col.id}')" class="peer w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"></div>
+                            <span class="text-xs font-bold text-slate-700 select-none">${col.label}</span>
+                        </label>`;
+                });
+                groupHTML += `</div></div>`;
+                container.innerHTML += groupHTML;
+            }
+        }
+
+        window.toggleColumn = function(colId) {
+            let cols = visibleColumnsMap[currentViewMode];
+            const colDef = columnDefinitions.find(c => c.id === colId);
+            
+            if (colDef && colDef.targets) {
+                // Handle Macro Toggle
+                const allSelected = colDef.targets.every(t => cols.includes(t));
+                if (allSelected) {
+                    // Deselect all
+                    visibleColumnsMap[currentViewMode] = cols.filter(c => !colDef.targets.includes(c));
+                } else {
+                    // Select all missing
+                    const toAdd = colDef.targets.filter(t => !cols.includes(t));
+                    visibleColumnsMap[currentViewMode] = [...cols, ...toAdd];
+                }
+            } else {
+                // Handle Single Column Toggle
+                if (cols.includes(colId)) {
+                    visibleColumnsMap[currentViewMode] = cols.filter(c => c !== colId);
+                } else {
+                    visibleColumnsMap[currentViewMode].push(colId);
+                }
+            }
+            
+            // Sort columns to maintain interleaved order (Name, Rel, Dob, Id...)
+            const orderMap = columnDefinitions.reduce((acc, col, idx) => { acc[col.id] = idx; return acc; }, {});
+            visibleColumnsMap[currentViewMode].sort((a, b) => (orderMap[a] || 9999) - (orderMap[b] || 9999));
+
+            runFilters(); // إعادة رسم الجدول
+        };
+
+        window.selectAllColumns = function(select) {
+            if(select) {
+                // Select all non-macro columns
+                visibleColumnsMap[currentViewMode] = columnDefinitions.filter(c => !c.targets).map(c => c.id);
+            } else {
+                visibleColumnsMap[currentViewMode] = [];
+            }
+            renderColumnOptions();
+            runFilters();
+        };
+
+        // إغلاق القائمة عند النقر خارجها
+        window.addEventListener('click', function(e) {
+            const menu = document.getElementById('columnSelectionMenu');
+            if (!menu.classList.contains('hidden') && !e.target.closest('#columnSelectionMenu') && !e.target.closest('button[onclick="toggleColumnMenu(event)"]')) {
+                menu.classList.add('hidden');
+            }
+        });
 
         // ===========================================
         //       Multi-select Dropdown Logic
@@ -1500,6 +1757,7 @@
             const delegateFilters = getCheckedValues('filterDelegate');
             const socialFilters = getCheckedValues('filterSocial');
             const countFilters = getCheckedValues('filterCount');
+            const wifeStatusFilters = getCheckedValues('filterWifeStatus');
 
             // Update Labels (Optional UX improvement)
             document.getElementById('filterAge-label').innerText = ageFilters.length > 0 ? `تم اختيار ${ageFilters.length}` : 'اختيار الفئات العمرية...';
@@ -1507,10 +1765,16 @@
             document.getElementById('filterDelegate-label').innerText = delegateFilters.length > 0 ? `تم اختيار ${delegateFilters.length}` : 'كل المناديب';
             document.getElementById('filterSocial-label').innerText = socialFilters.length > 0 ? `تم اختيار ${socialFilters.length}` : 'كل الحالات';
             document.getElementById('filterCount-label').innerText = countFilters.length > 0 ? `تم اختيار ${countFilters.length}` : 'اختيار العدد...';
+            document.getElementById('filterWifeStatus-label').innerText = wifeStatusFilters.length > 0 ? `تم اختيار ${wifeStatusFilters.length}` : 'اختيار الحالة...';
 
 
             let resultData = [];
-            currentViewMode = 'family';
+            
+            // Determine View Mode based on Filters OR Active Tab
+            if (ageFilters.length > 0 && !ageFilters.includes('all')) currentViewMode = 'individual';
+            else if (wifeStatusFilters.length > 0 && !wifeStatusFilters.includes('all')) currentViewMode = 'individual';
+            else if (diseaseFilters.length > 0 && !diseaseFilters.includes('all')) currentViewMode = 'health';
+            else currentViewMode = activeViewTab;
 
             const matchesSearch = (f) => (f.pName || "").toLowerCase().includes(search) || 
                                          (f.pId || "").includes(search) || 
@@ -1520,25 +1784,33 @@
             const isRestricted = window.currentUserData?.role === 'viewer' && !hasPerm('view_all');
 
             // Logic adapted for multiple selections
-            if (ageFilters.length > 0 && !ageFilters.includes('all')) {
-                    currentViewMode = 'individual';
+            if (currentViewMode === 'individual') {
                     window.families.forEach(f => {
                         if (!matchesSearch(f)) return;
+                        
+                        // Check if we are filtering or showing all
+                        const hasAgeFilter = ageFilters.length > 0 && !ageFilters.includes('all');
+                        const hasWifeFilter = wifeStatusFilters.length > 0 && !wifeStatusFilters.includes('all');
+                        const showAll = !hasAgeFilter && !hasWifeFilter;
+
                         (f.members || []).forEach(m => {
                             if (!m.dob || m.dob.trim() === '') return;
                             const age = getAge(m.dob);
                             let match = false;
                             
-                            ageFilters.forEach(ageF => {
-                                if (ageF === '0-1' && age.y === 0) match = true;
-                                if (ageF === '1-2' && age.y === 1) match = true;
-                                if (ageF === '2-5' && age.y >= 2 && age.y <= 5) match = true;
-                                if (ageF === '5-10' && age.y > 5 && age.y <= 10) match = true;
-                                if (ageF === '10-17' && age.y > 10 && age.y <= 17) match = true;
-                                if (ageF === '18-25' && age.y > 17 && age.y <= 25) match = true;
-                                if (ageF === '26-40' && age.y > 25 && age.y <= 40) match = true;
-                                if (ageF === '41-100' && age.y > 40 && age.y <= 100) match = true;
-                            });
+                            if (showAll) match = true;
+                            else if (hasAgeFilter) {
+                                ageFilters.forEach(ageF => {
+                                    if (ageF === '0-1' && age.y === 0) match = true;
+                                    if (ageF === '1-2' && age.y === 1) match = true;
+                                    if (ageF === '2-5' && age.y >= 2 && age.y <= 5) match = true;
+                                    if (ageF === '5-10' && age.y > 5 && age.y <= 10) match = true;
+                                    if (ageF === '10-17' && age.y > 10 && age.y <= 17) match = true;
+                                    if (ageF === '18-25' && age.y > 17 && age.y <= 25) match = true;
+                                    if (ageF === '26-40' && age.y > 25 && age.y <= 40) match = true;
+                                    if (ageF === '41-80' && age.y > 40 && age.y <= 80) match = true;
+                                });
+                            }
 
                             if (match) {
                                 resultData.push({
@@ -1565,16 +1837,20 @@
                             const age = getAge(p.dob);
                             let match = false;
                             
-                            ageFilters.forEach(ageF => {
-                                if (ageF === '0-1' && age.y === 0) match = true;
-                                if (ageF === '1-2' && age.y === 1) match = true;
-                                if (ageF === '2-5' && age.y >= 2 && age.y <= 5) match = true;
-                                if (ageF === '5-10' && age.y > 5 && age.y <= 10) match = true;
-                                if (ageF === '10-17' && age.y > 10 && age.y <= 17) match = true;
-                                if (ageF === '18-25' && age.y > 17 && age.y <= 25) match = true;
-                                if (ageF === '26-40' && age.y > 25 && age.y <= 40) match = true;
-                                if (ageF === '41-80' && age.y > 40 && age.y <= 80) match = true;
-                            });
+                            if (showAll) match = true;
+                            else if (hasWifeFilter && p.role === 'زوجة' && wifeStatusFilters.includes(f.wifeStatus)) match = true;
+                            else if (hasAgeFilter) {
+                                ageFilters.forEach(ageF => {
+                                    if (ageF === '0-1' && age.y === 0) match = true;
+                                    if (ageF === '1-2' && age.y === 1) match = true;
+                                    if (ageF === '2-5' && age.y >= 2 && age.y <= 5) match = true;
+                                    if (ageF === '5-10' && age.y > 5 && age.y <= 10) match = true;
+                                    if (ageF === '10-17' && age.y > 10 && age.y <= 17) match = true;
+                                    if (ageF === '18-25' && age.y > 17 && age.y <= 25) match = true;
+                                    if (ageF === '26-40' && age.y > 25 && age.y <= 40) match = true;
+                                    if (ageF === '41-80' && age.y > 40 && age.y <= 80) match = true;
+                                });
+                            }
 
                             if (match) {
                                 resultData.push({
@@ -1596,12 +1872,15 @@
                             }
                         });
                     });
-            } else if (diseaseFilters.length > 0 && !diseaseFilters.includes('all')) {
-                currentViewMode = 'health';
+            } else if (currentViewMode === 'health') {
                 window.families.forEach(f => {
                     if (!matchesSearch(f)) return;
+                    
+                    const hasDiseaseFilter = diseaseFilters.length > 0 && !diseaseFilters.includes('all');
+                    const showAll = !hasDiseaseFilter;
+
                     (f.health || []).forEach(h => {
-                        if (diseaseFilters.includes(h.type)) {
+                        if (showAll || diseaseFilters.includes(h.type)) {
                             const patientAge = getAge(h.dob);
                             const pAge = getAge(f.pDob);
                             resultData.push({
@@ -1625,7 +1904,6 @@
                     });
                 });
             } else {
-                currentViewMode = 'family';
                 let filtered = window.families.filter(f => {
                     const mSearch = matchesSearch(f);
                     const mDelegate = delegateFilters.length === 0 || delegateFilters.includes('all') || delegateFilters.includes((f.pDelegate || "").trim());
@@ -1651,14 +1929,7 @@
                     return {
                         type: 'family',
                         familyId: f.id,
-                        pName: f.pName,
-                        pId: f.pId,
-                        pDob: f.pDob,
-                        wifeName: f.wifeName,
-                        wifeId: f.wifeId,
-                        pPhone: f.pPhone,
-                        pDelegate: f.pDelegate,
-                        pSocial: f.pSocial,
+                        ...f,
                         totalCount: count,
                         raw: f 
                     };
@@ -1727,6 +1998,192 @@
             }
         };
 
+        function getCellContent(row, colId, isRestricted) {
+            const mask = (val) => isRestricted ? '*****' : (val || "-");
+            
+            // معالجة الأعمدة الديناميكية للأفراد (m1Name, m1Id...)
+            if (colId.startsWith('m') && /\d/.test(colId)) {
+                const match = colId.match(/^m(\d+)(.+)$/);
+                if (match) {
+                    const idx = parseInt(match[1]) - 1;
+                    const field = match[2];
+                    const member = row.members && row.members[idx];
+                    if (!member) return '-';
+                    if (field === 'Name') return member.name || '-';
+                    if (field === 'Rel') return member.relation || '-';
+                    if (field === 'Dob') return member.dob || '-';
+                    if (field === 'Id') return `<span class="font-mono">${mask(member.idNum)}</span>`;
+                }
+            }
+
+            // معالجة الأعمدة الديناميكية للمرضى (h1Name, h1Type...)
+            if (colId.startsWith('h') && /\d/.test(colId)) {
+                const match = colId.match(/^h(\d+)(.+)$/);
+                if (match) {
+                    const idx = parseInt(match[1]) - 1;
+                    const field = match[2];
+                    const health = row.health && row.health[idx];
+                    if (!health) return '-';
+                    if (field === 'Name') return `<span class="text-red-600 font-bold">${health.name || '-'}</span>`;
+                    if (field === 'Type') return `<span class="bg-red-50 text-red-600 px-1 rounded text-xs">${health.type || '-'}</span>`;
+                    if (field === 'Id') return `<span class="font-mono">${mask(health.idNum)}</span>`;
+                }
+            }
+
+            // معالجة بيانات الأفراد والحالات الصحية في العرض الرئيسي (تجميع البيانات)
+            if (colId === 'targetName') {
+                if (row.targetName) return `<span class="font-bold text-indigo-700">${row.targetName}</span>`;
+                if (row.members && row.members.length) return row.members.map(m => `<div class="text-xs h-6 flex items-center border-b border-slate-100 last:border-0 truncate">${m.name}</div>`).join('');
+                return '-';
+            }
+            if (colId === 'targetId') {
+                if (row.targetId) return `<span class="font-mono">${mask(row.targetId)}</span>`;
+                if (row.members && row.members.length) return row.members.map(m => `<div class="text-xs font-mono h-6 flex items-center border-b border-slate-100 last:border-0">${mask(m.idNum)}</div>`).join('');
+                return '-';
+            }
+            if (colId === 'targetDob') {
+                if (row.targetDob) return `<span class="font-mono">${row.targetDob}</span>`;
+                if (row.members && row.members.length) return row.members.map(m => `<div class="text-xs font-mono h-6 flex items-center border-b border-slate-100 last:border-0">${m.dob || '-'}</div>`).join('');
+                return '-';
+            }
+            if (colId === 'targetAge') {
+                if (row.targetAge) return `<span class="text-xs font-bold text-slate-500">${row.targetAge}</span>`;
+                if (row.members && row.members.length) return row.members.map(m => { const age = getAge(m.dob); return `<div class="text-xs h-6 flex items-center border-b border-slate-100 last:border-0">${age.y} سنة</div>`; }).join('');
+                return '-';
+            }
+            if (colId === 'relation') {
+                if (row.relation) return `<span class="text-xs font-bold text-slate-500">${row.relation}</span>`;
+                if (row.members && row.members.length) return row.members.map(m => `<div class="text-xs h-6 flex items-center border-b border-slate-100 last:border-0">${m.relation || '-'}</div>`).join('');
+                return '-';
+            }
+
+            if (colId === 'patientName') {
+                if (row.patientName) return `<span class="font-bold text-red-600">${row.patientName}</span>`;
+                if (row.health && row.health.length) return row.health.map(h => `<div class="text-xs h-6 flex items-center border-b border-slate-100 last:border-0 text-red-600 truncate">${h.name}</div>`).join('');
+                return '-';
+            }
+            if (colId === 'patientId') {
+                if (row.patientId) return `<span class="font-mono">${mask(row.patientId)}</span>`;
+                if (row.health && row.health.length) return row.health.map(h => `<div class="text-xs font-mono h-6 flex items-center border-b border-slate-100 last:border-0">${mask(h.idNum)}</div>`).join('');
+                return '-';
+            }
+            if (colId === 'patientDob') {
+                if (row.patientDob) return `<span class="font-mono">${row.patientDob}</span>`;
+                if (row.health && row.health.length) return row.health.map(h => `<div class="text-xs font-mono h-6 flex items-center border-b border-slate-100 last:border-0">${h.dob || '-'}</div>`).join('');
+                return '-';
+            }
+            if (colId === 'patientAge') {
+                if (row.patientAge) return `<span class="text-xs font-bold text-slate-500">${row.patientAge}</span>`;
+                if (row.health && row.health.length) return row.health.map(h => { const age = getAge(h.dob); return `<div class="text-xs h-6 flex items-center border-b border-slate-100 last:border-0">${age.y} سنة</div>`; }).join('');
+                return '-';
+            }
+            if (colId === 'diseaseType') {
+                if (row.diseaseType) return `<span class="text-xs font-bold bg-red-50 text-red-600 rounded-lg px-2 py-1">${row.diseaseType}</span>`;
+                if (row.health && row.health.length) return row.health.map(h => `<div class="text-xs h-6 flex items-center border-b border-slate-100 last:border-0"><span class="bg-red-50 text-red-600 rounded px-1">${h.type || '-'}</span></div>`).join('');
+                return '-';
+            }
+            if (colId === 'diseaseDesc') {
+                if (row.diseaseDesc) return `<span class="text-xs max-w-[200px] truncate block" title="${row.diseaseDesc || ''}">${row.diseaseDesc || '-'}</span>`;
+                if (row.health && row.health.length) return row.health.map(h => `<div class="text-xs h-6 flex items-center border-b border-slate-100 last:border-0 max-w-[150px] truncate" title="${h.desc || ''}">${h.desc || '-'}</div>`).join('');
+                return '-';
+            }
+
+            switch(colId) {
+                case 'pName': return `<span class="font-bold text-slate-700">${row.pName || '-'}</span>`;
+                case 'pId': return `<span class="font-mono text-slate-500">${mask(row.pId)}</span>`;
+                case 'pIdIssue': return row.pIdIssue || '-';
+                case 'pDob': return `<span class="font-mono text-slate-500">${row.pDob || '-'}</span>`;
+                case 'age': return `<span class="font-bold text-slate-500">${getAge(row.pDob).y} سنة</span>`;
+                case 'wifeName': return row.wifeName || '-';
+                case 'wifeId': return `<span class="font-mono text-slate-500">${mask(row.wifeId)}</span>`;
+                case 'wifeDob': return row.wifeDob || '-';
+                case 'wifeStatus': return row.wifeStatus || '-';
+                case 'pPhone': return `<span class="font-mono text-slate-500">${mask(row.pPhone ? '0' + row.pPhone : '')}</span>`;
+                case 'pAltPhone': return `<span class="font-mono text-slate-500">${mask(row.pAltPhone ? '0' + row.pAltPhone : '')}</span>`;
+                case 'pDelegate': return `<span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold">${row.pDelegate || '-'}</span>`;
+                case 'pSocial': return `<span class="text-xs font-bold">${row.pSocial || '-'}</span>`;
+                case 'originArea': return row.originArea || '-';
+                case 'displaceArea': return row.displaceArea || '-';
+                case 'totalCount': return `<span class="font-bold">${row.totalCount || 0}</span>`;
+                case 'maleCount': return row.maleCount || 0;
+                case 'femaleCount': return row.femaleCount || 0;
+                case 'walletOwner': return row.walletOwner || '-';
+                case 'walletId': return `<span class="font-mono">${mask(row.walletId)}</span>`;
+                case 'walletPhone': return `<span class="font-mono">${mask(row.walletPhone)}</span>`;
+                default: return '-';
+            }
+        }
+
+        function getRawCellContentForExport(row, colId) {
+            // معالجة الأعمدة الديناميكية للأفراد للتصدير
+            if (colId.startsWith('m') && /\d/.test(colId)) {
+                const match = colId.match(/^m(\d+)(.+)$/);
+                if (match) {
+                    const idx = parseInt(match[1]) - 1;
+                    const field = match[2];
+                    const member = row.members && row.members[idx];
+                    if (!member) return '-';
+                    if (field === 'Name') return member.name || '-';
+                    if (field === 'Rel') return member.relation || '-';
+                    if (field === 'Dob') return member.dob || '-';
+                    if (field === 'Id') return member.idNum || '-';
+                }
+            }
+
+            // معالجة الأعمدة الديناميكية للمرضى للتصدير
+            if (colId.startsWith('h') && /\d/.test(colId)) {
+                const match = colId.match(/^h(\d+)(.+)$/);
+                if (match) {
+                    const idx = parseInt(match[1]) - 1;
+                    const field = match[2];
+                    const health = row.health && row.health[idx];
+                    if (!health) return '-';
+                    if (field === 'Name') return health.name || '-';
+                    if (field === 'Type') return health.type || '-';
+                    if (field === 'Id') return health.idNum || '-';
+                }
+            }
+
+            // معالجة بيانات الأفراد والحالات الصحية للتصدير (تجميع البيانات)
+            if (colId === 'targetName') return row.targetName || (row.members ? row.members.map(m => m.name).join(', ') : '-');
+            if (colId === 'targetId') return row.targetId || (row.members ? row.members.map(m => m.idNum).join(', ') : '-');
+            if (colId === 'targetDob') return row.targetDob || (row.members ? row.members.map(m => m.dob).join(', ') : '-');
+            if (colId === 'targetAge') return row.targetAge || (row.members ? row.members.map(m => getAge(m.dob).y).join(', ') : '-');
+            if (colId === 'relation') return row.relation || (row.members ? row.members.map(m => m.relation).join(', ') : '-');
+
+            if (colId === 'patientName') return row.patientName || (row.health ? row.health.map(h => h.name).join(', ') : '-');
+            if (colId === 'patientId') return row.patientId || (row.health ? row.health.map(h => h.idNum).join(', ') : '-');
+            if (colId === 'patientDob') return row.patientDob || (row.health ? row.health.map(h => h.dob).join(', ') : '-');
+            if (colId === 'patientAge') return row.patientAge || (row.health ? row.health.map(h => getAge(h.dob).y).join(', ') : '-');
+            if (colId === 'diseaseType') return row.diseaseType || (row.health ? row.health.map(h => h.type).join(', ') : '-');
+            if (colId === 'diseaseDesc') return row.diseaseDesc || (row.health ? row.health.map(h => h.desc).join(', ') : '-');
+
+            switch(colId) {
+                case 'pName': return row.pName || '-';
+                case 'pId': return row.pId || '-';
+                case 'pIdIssue': return row.pIdIssue || '-';
+                case 'pDob': return row.pDob || '-';
+                case 'age': return getAge(row.pDob).y;
+                case 'wifeName': return row.wifeName || '-';
+                case 'wifeId': return row.wifeId || '-';
+                case 'wifeDob': return row.wifeDob || '-';
+                case 'wifeStatus': return row.wifeStatus || '-';
+                case 'pPhone': return row.pPhone ? '0' + row.pPhone : '-';
+                case 'pAltPhone': return row.pAltPhone ? '0' + row.pAltPhone : '-';
+                case 'pDelegate': return row.pDelegate || '-';
+                case 'pSocial': return row.pSocial || '-';
+                case 'originArea': return row.originArea || '-';
+                case 'displaceArea': return row.displaceArea || '-';
+                case 'totalCount': return row.totalCount || 0;
+                case 'maleCount': return row.maleCount || 0;
+                case 'femaleCount': return row.femaleCount || 0;
+                case 'walletOwner': return row.walletOwner || '-';
+                case 'walletId': return row.walletId || '-';
+                case 'walletPhone': return row.walletPhone || '-';
+                default: return row[colId] || '-';
+            }
+        }
+
         function renderTable(data, isRestricted = false) {
             const thead = document.getElementById('tableHeader');
             const tbody = document.getElementById('tableBody');
@@ -1764,57 +2221,20 @@
                 return;
             }
 
-            let headersHTML = '';
-            if (currentViewMode === 'individual') {
-                headersHTML = `
-                    <th class="px-4 py-4 w-10"><input type="checkbox" onchange="toggleMainSelectAll(this)" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"></th>
-                    <th class="px-4 py-4">اسم الفرد</th>
-                    <th class="px-4 py-4">هوية الفرد</th>
-                    <th class="px-4 py-4">تاريخ الميلاد</th>
-                    <th class="px-4 py-4">العمر/الصلة</th>
-                    <th class="px-4 py-4 bg-indigo-50/50">اسم الأب</th>
-                    <th class="px-4 py-4 bg-indigo-50/50">هوية الأب</th>
-                    <th class="px-4 py-4 bg-indigo-50/50">تاريخ ميلاد الأب</th>
-                    <th class="px-4 py-4 bg-indigo-50/50">الحالة الاجتماعية</th>
-                    <th class="px-4 py-4 bg-indigo-50/50">اسم الزوجة</th>
-                    <th class="px-4 py-4 bg-indigo-50/50">هوية الزوجة</th>
-                    <th class="px-4 py-4 bg-indigo-50/50">رقم الجوال</th>
-                    <th class="px-4 py-4 text-center">إجراءات</th>
-                `;
-            } else if (currentViewMode === 'health') {
-                headersHTML = `
-                    <th class="px-4 py-4 w-10"><input type="checkbox" onchange="toggleMainSelectAll(this)" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"></th>
-                    <th class="px-4 py-4">اسم المريض</th>
-                    <th class="px-4 py-4">هوية المريض</th>
-                    <th class="px-4 py-4">تاريخ الميلاد</th>
-                    <th class="px-4 py-4">عمر المريض</th>
-                    <th class="px-4 py-4">نوع المرض</th>
-                    <th class="px-4 py-4">تفاصيل المرض</th>
-                    <th class="px-4 py-4 bg-indigo-50/50">اسم الأب</th>
-                    <th class="px-4 py-4 bg-indigo-50/50">هوية الأب</th>
-                    <th class="px-4 py-4 bg-indigo-50/50">عمر الأب</th>
-                    <th class="px-4 py-4 bg-indigo-50/50">الحالة الاجتماعية</th>
-                    <th class="px-4 py-4 bg-indigo-50/50">اسم الزوجة</th>
-                    <th class="px-4 py-4 bg-indigo-50/50">هوية الزوجة</th>
-                    <th class="px-4 py-4 bg-indigo-50/50">رقم الجوال</th>
-                    <th class="px-4 py-4 text-center">إجراءات</th>
-                `;
-            } else {
-                headersHTML = `
-                    <th class="px-4 py-4 w-10"><input type="checkbox" onchange="toggleMainSelectAll(this)" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"></th>
-                    <th class="px-4 py-4">اسم الأب</th>
-                    <th class="px-4 py-4">هوية الأب</th>
-                    <th class="px-4 py-4">تاريخ الميلاد</th>
-                    <th class="px-4 py-4">العمر</th>
-                    <th class="px-4 py-4">اسم الزوجة</th>
-                    <th class="px-4 py-4">هوية الزوجة</th>
-                    <th class="px-4 py-4">الجوال</th>
-                    <th class="px-4 py-4">المندوب</th>
-                    <th class="px-4 py-4">الحالة الاجتماعية</th>
-                    <th class="px-4 py-4">العدد</th>
-                    <th class="px-4 py-4 text-center">الإجراءات</th>
-                `;
-            }
+            // بناء رأس الجدول ديناميكياً بناءً على الأعمدة المختارة للوضع الحالي
+            let dynamicHeaders = '';
+            const currentCols = visibleColumnsMap[currentViewMode];
+            currentCols.forEach(colId => {
+                const def = columnDefinitions.find(d => d.id === colId);
+                if(def) dynamicHeaders += `<th class="px-4 py-4">${def.label}</th>`;
+            });
+
+            const headersHTML = `
+                <th class="px-4 py-4 w-10 flex items-center gap-1"><input type="checkbox" onchange="toggleMainSelectAll(this)" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"><button onclick="toggleColumnMenu(event)" class="p-1 hover:bg-slate-200 rounded-full transition-all" title="تخصيص الأعمدة"><svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></th>
+                ${dynamicHeaders}
+                <th class="px-4 py-4 text-center">الإجراءات</th>
+            `;
+
             thead.innerHTML = `<tr class="bg-slate-50/50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b">${headersHTML}</tr>`;
 
             data.forEach((row, index) => {
@@ -1837,57 +2257,16 @@
 
                 const actions = `<div class="flex items-center justify-center gap-2">${actionButtons}</div>`;
 
-                if (currentViewMode === 'individual') {
-                     rowHTML = `
-                        ${checkboxHTML}
-                        <td class="px-4 py-4 font-bold text-indigo-700">${row.targetName || '-'}</td>
-                        <td class="px-4 py-4 font-mono">${isRestricted ? '*****' : (row.targetId || '-')}</td>
-                        <td class="px-4 py-4 font-mono">${row.targetDob || '-'}</td>
-                        <td class="px-4 py-4 text-xs font-bold text-slate-500">${row.targetAge} (${row.relation})</td>
-                        <td class="px-4 py-4 bg-indigo-50/10">${row.pName}</td>
-                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : row.pId}</td>
-                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${row.pDob || '-'}</td>
-                        <td class="px-4 py-4 bg-indigo-50/10">${row.pSocial || '-'}</td>
-                        <td class="px-4 py-4 bg-indigo-50/10">${row.wifeName || '-'}</td>
-                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : (row.wifeId || '-')}</td>
-                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : row.pPhone}</td>
-                        <td class="px-4 py-4">${actions}</td>
-                    `;
-                } else if (currentViewMode === 'health') {
-                     rowHTML = `
-                        ${checkboxHTML}
-                        <td class="px-4 py-4 font-bold text-red-600">${row.patientName || '-'}</td>
-                        <td class="px-4 py-4 font-mono">${isRestricted ? '*****' : (row.patientId || '-')}</td>
-                        <td class="px-4 py-4 font-mono">${row.patientDob || '-'}</td>
-                        <td class="px-4 py-4 text-xs font-bold text-slate-500">${row.patientAge || '-'}</td>
-                        <td class="px-4 py-4 text-xs font-bold bg-red-50 text-red-600 rounded-lg">${row.diseaseType}</td>
-                        <td class="px-4 py-4 text-xs max-w-[200px] truncate" title="${row.diseaseDesc || ''}">${row.diseaseDesc || '-'}</td>
-                        <td class="px-4 py-4 bg-indigo-50/10">${row.pName}</td>
-                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : row.pId}</td>
-                        <td class="px-4 py-4 bg-indigo-50/10">${row.pAge || '-'}</td>
-                        <td class="px-4 py-4 bg-indigo-50/10">${row.pSocial || '-'}</td>
-                        <td class="px-4 py-4 bg-indigo-50/10">${row.wifeName || '-'}</td>
-                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : (row.wifeId || '-')}</td>
-                        <td class="px-4 py-4 font-mono bg-indigo-50/10">${isRestricted ? '*****' : row.pPhone}</td>
-                        <td class="px-4 py-4">${actions}</td>
-                    `;
-                } else {
-                    const pAge = getAge(row.pDob);
-                     rowHTML = `
-                        ${checkboxHTML}
-                        <td class="px-4 py-4 font-bold text-slate-700">${row.pName}</td>
-                        <td class="px-4 py-4 font-mono text-slate-500">${isRestricted ? '*****' : row.pId}</td>
-                        <td class="px-4 py-4 font-mono text-slate-500">${row.pDob || '-'}</td>
-                        <td class="px-4 py-4 font-bold text-slate-500">${pAge.y} سنة</td>
-                        <td class="px-4 py-4">${row.wifeName || '-'}</td>
-                        <td class="px-4 py-4 font-mono text-slate-500">${isRestricted ? '*****' : (row.wifeId || '-')}</td>
-                        <td class="px-4 py-4 font-mono text-slate-500">${isRestricted ? '*****' : `0${row.pPhone}`}</td>
-                        <td class="px-4 py-4"><span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold">${row.pDelegate || '-'}</span></td>
-                        <td class="px-4 py-4 text-xs font-bold">${row.pSocial || '-'}</td>
-                        <td class="px-4 py-4 font-bold">${row.totalCount || 0}</td>
-                        <td class="px-4 py-4">${actions}</td>
-                    `;
-                }
+                // بناء الصفوف ديناميكياً
+                let dynamicCells = '';
+                currentCols.forEach(colId => {
+                    dynamicCells += `<td class="px-4 py-4">${getCellContent(row, colId, isRestricted)}</td>`;
+                });
+                rowHTML = `
+                    ${checkboxHTML}
+                    ${dynamicCells}
+                    <td class="px-4 py-4">${actions}</td>
+                `;
 
                 tr.innerHTML = rowHTML;
                 tbody.appendChild(tr);
@@ -2027,6 +2406,7 @@
                 wifeName: document.getElementById('wifeName').value,
                 wifeId: document.getElementById('wifeId').value,
                 wifeDob: document.getElementById('wifeDob').value,
+                wifeStatus: document.getElementById('wifeStatus').value,
                 pDelegate: document.getElementById('pDelegate').value,
                 pAltPhone: document.getElementById('pAltPhone').value,
                 originArea: document.getElementById('originArea').value,
@@ -2173,6 +2553,7 @@
                                 <span class="text-slate-400">الاسم:</span> <span class="font-bold">${f.wifeName || "غير محدد"}</span>
                                 <span class="text-slate-400">الهوية:</span> <span class="font-mono font-bold">${mask(f.wifeId)}</span>
                                 <span class="text-slate-400">تاريخ الميلاد:</span> <span class="font-bold">${f.wifeDob || "-"}</span>
+                                <span class="text-slate-400">حالة الزوجة:</span> <span class="font-bold text-indigo-600">${f.wifeStatus || "-"}</span>
                             </div>
                         </div>
                     </div>
@@ -2299,7 +2680,7 @@
         }
 
         function downloadTemplate() { 
-            const headers = ["اسم رب الأسرة", "تاريخ ميلاد رب الأسرة", "هوية رب الأسرة", "اصدار الهوية", "رقم الجوال", "اسم الزوجة", "هوية الزوجة", "تاريخ ميلاد الزوجة", "الحالة الاجتماعية", "عدد الأفراد الكلي", "عدد الذكور", "عدد الإناث"];
+            const headers = ["اسم رب الأسرة", "تاريخ ميلاد رب الأسرة", "هوية رب الأسرة", "اصدار الهوية", "رقم الجوال", "اسم الزوجة", "هوية الزوجة", "تاريخ ميلاد الزوجة", "حالة الزوجة", "الحالة الاجتماعية", "عدد الأفراد الكلي", "عدد الذكور", "عدد الإناث"];
             for(let i=1; i<=10; i++) headers.push(`اسم الفرد ${i}`, `صلة القرابة ${i}`, `تاريخ الميلاد الفرد ${i}`, `رقم الهوية الفرد ${i}`);
             headers.push("منطقة السكن الأصلية", "منطقة النزوح", "المندوب", "جوال بديل");
             for(let i=1; i<=5; i++) headers.push(`الاسم الحالة ${i}`, `رقم الهوية الحالة ${i}`, `رقم الجوال الحالة ${i}`, `نوع المرض ${i}`);
@@ -2357,6 +2738,7 @@
                         wifeName: row["اسم الزوجة"] || "",
                         wifeId: String(row["هوية الزوجة"] || ""),
                         wifeDob: row["تاريخ ميلاد الزوجة"] || "",
+                        wifeStatus: row["حالة الزوجة"] || "",
                         pSocial: row["الحالة الاجتماعية"] || "",
                         totalCount: row["عدد الأفراد الكلي"] || "",
                         maleCount: row["عدد الذكور"] || "",
@@ -2423,7 +2805,7 @@
             data.push(["اسم رب الأسرة", f.pName || "", "رقم الهوية", f.pId || ""]);
             data.push(["تاريخ الميلاد", f.pDob || "", "رقم الجوال", f.pPhone || "", "اصدار الهوية", f.pIdIssue || ""]);
             data.push(["الحالة الاجتماعية", f.pSocial || "", "المندوب", f.pDelegate || ""]);
-            data.push(["اسم الزوجة", f.wifeName || "", "هوية الزوجة", f.wifeId || ""]);
+            data.push(["اسم الزوجة", f.wifeName || "", "هوية الزوجة", f.wifeId || "", "حالة الزوجة", f.wifeStatus || ""]);
             data.push(["تاريخ ميلاد الزوجة", f.wifeDob || "", "جوال بديل", f.pAltPhone || ""]);
             data.push(["السكن الأصلي", f.originArea || "", "منطقة النزوح", f.displaceArea || ""]);
             data.push(["إجمالي الأفراد", f.totalCount || 0, "عدد الذكور", f.maleCount || 0, "عدد الإناث", f.femaleCount || 0]);
@@ -2456,7 +2838,7 @@
                     <div class="section-title">1. البيانات الأساسية</div>
                     <div class="info-grid">
                         <table class="print-table"><tr><th>رب الأسرة</th><td>${f.pName || '-'}</td></tr><tr><th>رقم الهوية</th><td>${f.pId || '-'}</td></tr><tr><th>اصدار الهوية</th><td>${f.pIdIssue || '-'}</td></tr><tr><th>رقم الجوال</th><td>${f.pPhone || '-'}</td></tr><tr><th>تاريخ الميلاد</th><td>${f.pDob || '-'} (${pAge.y} سنة)</td></tr></table>
-                        <table class="print-table"><tr><th>الزوجة</th><td>${f.wifeName || '-'}</td></tr><tr><th>هوية الزوجة</th><td>${f.wifeId || '-'}</td></tr><tr><th>السكن الأصلي</th><td>${f.originArea || '-'}</td></tr><tr><th>منطقة النزوح</th><td>${f.displaceArea || '-'}</td></tr></table>
+                        <table class="print-table"><tr><th>الزوجة</th><td>${f.wifeName || '-'}</td></tr><tr><th>هوية الزوجة</th><td>${f.wifeId || '-'}</td></tr><tr><th>حالة الزوجة</th><td>${f.wifeStatus || '-'}</td></tr><tr><th>السكن الأصلي</th><td>${f.originArea || '-'}</td></tr><tr><th>منطقة النزوح</th><td>${f.displaceArea || '-'}</td></tr></table>
                     </div>
                     <table class="print-table" style="margin-top: 10px;"><tr><th>المندوب</th><td>${f.pDelegate || '-'}</td><th>الحالة الاجتماعية</th><td>${f.pSocial || '-'}</td><th>عدد الأفراد</th><td>${f.totalCount || '0'}</td></tr></table>
                     <div class="section-title">2. أفراد العائلة (${f.members ? f.members.length : 0})</div>
@@ -2526,18 +2908,19 @@
                 console.error("Archiving failed", e);
             }
 
-            let dataForExcel = [];
-            if (currentViewMode === 'individual') {
-                dataForExcel = dataToExport.map(d => ({ "اسم الفرد": d.targetName, "هوية الفرد": d.targetId, "تاريخ ميلاد الفرد": d.targetDob, "العمر/الصلة": `${d.targetAge} (${d.relation})`, "اسم الأب": d.pName, "هوية الأب": d.pId, "تاريخ ميلاد الأب": d.pDob, "الحالة الاجتماعية": d.pSocial, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone }));
-            } else if (currentViewMode === 'health') {
-                dataForExcel = dataToExport.map(d => ({ "اسم المريض": d.patientName, "هوية المريض": d.patientId, "تاريخ الميلاد": d.patientDob, "عمر المريض": d.patientAge, "نوع المرض": d.diseaseType, "تفاصيل المرض": d.diseaseDesc, "اسم الأب": d.pName, "هوية الأب": d.pId, "عمر الأب": d.pAge, "الحالة الاجتماعية": d.pSocial, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone }));
-            } else {
-                dataForExcel = dataToExport.map(d => ({ "اسم الأب": d.pName, "هوية الأب": d.pId, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone, "المندوب": d.pDelegate, "الحالة الاجتماعية": d.pSocial, "إجمالي الأفراد": d.totalCount }));
-                dataForExcel = dataToExport.map(d => {
-                    const age = getAge(d.pDob);
-                    return { "اسم الأب": d.pName, "هوية الأب": d.pId, "تاريخ الميلاد": d.pDob, "العمر": `${age.y} سنة`, "اسم الزوجة": d.wifeName, "هوية الزوجة": d.wifeId, "رقم الجوال": d.pPhone, "المندوب": d.pDelegate, "الحالة الاجتماعية": d.pSocial, "إجمالي الأفراد": d.totalCount };
+            // Dynamic export based on visible columns
+            const visibleCols = visibleColumnsMap[currentViewMode];
+            const dataForExcel = dataToExport.map(row => {
+                const excelRow = {};
+                visibleCols.forEach(colId => {
+                    const def = columnDefinitions.find(c => c.id === colId);
+                    if (def) {
+                        excelRow[def.label] = getRawCellContentForExport(row, colId);
+                    }
                 });
-            }
+                return excelRow;
+            });
+
             const ws = XLSX.utils.json_to_sheet(dataForExcel);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Export");
@@ -2908,6 +3291,7 @@
                             <h3 class="font-bold text-slate-800 mb-4">البيانات الإضافية</h3>
                             <div class="space-y-3 text-sm">
                                 <div class="flex justify-between"><span>الزوجة:</span> <span class="font-bold">${f.wifeName || '-'}</span></div>
+                                <div class="flex justify-between"><span>حالة الزوجة:</span> <span class="font-bold">${f.wifeStatus || '-'}</span></div>
                                 <div class="flex justify-between"><span>السكن:</span> <span class="font-bold">${f.originArea || '-'}</span></div>
                                 <div class="flex justify-between"><span>النزوح:</span> <span class="font-bold">${f.displaceArea || '-'}</span></div>
                             </div>
