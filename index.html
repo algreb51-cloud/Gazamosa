@@ -56,8 +56,18 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, where, getDocs, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+
+        // ===========================================
+        //       نظام الحماية (Security Layer)
+        // ===========================================
+        const allowedDomains = ["algreb51-cloud.github.io", "mosadata-18521.firebaseapp.com", "mosadata-18521.web.app", "localhost", "127.0.0.1"];
+        if (!allowedDomains.includes(window.location.hostname)) {
+            document.documentElement.innerHTML = "<div style='height:100vh;background:#000;color:red;display:flex;justify-content:center;align-items:center;font-family:sans-serif;font-weight:bold;font-size:24px;direction:rtl;'>غير مصرح بتشغيل النظام خارج النطاق الرسمي<br><span style='font-size:16px;color:#ccc;margin-top:10px;'>Unauthorized Domain Access</span></div>";
+            // إيقاف التنفيذ فوراً
+            throw new Error("Security Alert: Unauthorized Domain Access");
+        }
 
         const firebaseConfig = {
             apiKey: "AIzaSyCxI5hPvlddgn9aZUrewesDbg8YSD7bEnk",
@@ -69,13 +79,14 @@
             measurementId: "G-C00LHCKEG7"
         };
 
+        Object.freeze(firebaseConfig); // حماية الإعدادات من التعديل
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const appId = "mosadata-18521";
 
         window.db = db;
-        window.fs = { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, where, getDocs, setDoc };
+        window.fs = { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, where, getDocs, setDoc, getDoc };
         window.appId = appId;
         window.auth = auth;
 
@@ -124,6 +135,7 @@
                     permissions: userData.permissions || [],
                     type: "db_user"
                 };
+                Object.freeze(window.currentUserData); // حماية بيانات المستخدم
                 handleLoginSuccess();
                 return true;
             } catch (e) {
@@ -142,6 +154,7 @@
                     permissions: ["add", "edit", "remove", "view", "manage_users", "export", "view_all"],
                     type: "google_auth"
                 };
+                Object.freeze(window.currentUserData); // حماية بيانات المستخدم
                 handleLoginSuccess();
             } else {
                 // If no Google user, check for our custom persistent session
@@ -210,6 +223,7 @@
                     permissions: userData.permissions || [],
                     type: "db_user"
                 };
+                Object.freeze(window.currentUserData); // حماية بيانات المستخدم
 
                 // حفظ الجلسة في localStorage لمدة ساعة
                 const session = {
@@ -247,6 +261,7 @@
                         permissions: ["edit_self"],
                         type: "beneficiary_auth"
                     };
+                    Object.freeze(window.currentUserData); // حماية بيانات المستخدم
                     handleLoginSuccess();
 
                 } catch (benError) {
@@ -378,6 +393,14 @@
 <body class="custom-scroll">
 
     <div id="printArea" class="hidden"></div>
+
+    <div id="offlineOverlay" class="fixed inset-0 bg-slate-900 z-[9999] flex flex-col items-center justify-center text-white hidden">
+        <div class="bg-red-500/20 p-6 rounded-full mb-6 animate-pulse">
+            <svg class="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"></path></svg>
+        </div>
+        <h2 class="text-4xl font-black mb-4">انقطع الاتصال بالإنترنت</h2>
+        <p class="text-slate-400 text-lg max-w-md text-center">تم إخفاء جميع حقول الإدخال لحماية البيانات وضمان عدم فقدانها. ستعود الواجهة تلقائياً عند عودة الاتصال.</p>
+    </div>
 
     <div id="authOverlay" class="fixed inset-0 bg-slate-900 z-[1000] flex items-center justify-center p-4">
         <div class="bg-white rounded-[2.5rem] shadow-2xl p-10 w-full max-w-md text-center modal-anim">
@@ -909,6 +932,24 @@
                     <input type="number" id="totalCount" placeholder="إجمالي الأفراد" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
                     <input type="number" id="maleCount" placeholder="عدد الذكور" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
                     <input type="number" id="femaleCount" placeholder="عدد الإناث" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
+                    <select id="shelterType" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold text-slate-600">
+                        <option value="">طبيعة المأوى</option>
+                        <option value="خيمة">خيمة</option>
+                        <option value="عريشة">عريشة</option>
+                        <option value="منزل">منزل</option>
+                        <option value="زينقو">زينقو</option>
+                        <option value="أخرى">أخرى</option>
+                    </select>
+                    <select id="displacementPeriod" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold text-slate-600">
+                        <option value="">فترة النزوح</option>
+                        <option value="قديم">قديم</option>
+                        <option value="جديد">جديد</option>
+                    </select>
+                    <select id="citizenStatus" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold text-slate-600">
+                        <option value="">طبيعة المواطن</option>
+                        <option value="نازح">نازح</option>
+                        <option value="مقيم">مقيم</option>
+                    </select>
                 </div>
 
                 <div class="pt-8">
@@ -1220,6 +1261,16 @@
     </div>
 
     <script>
+        // منع القائمة المنبثقة (Right Click)
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        // منع اختصارات المطورين (F12, Ctrl+Shift+I, etc)
+        document.addEventListener('keydown', function(e) {
+            if(e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u')) {
+                e.preventDefault();
+            }
+        });
+
         window.families = [];
         let activeViewTab = 'family'; // 'family', 'individual', 'health'
         let deleteTimer = null;
@@ -1231,12 +1282,27 @@
         
         let visibleColumnsMap = {
             family: ['pName', 'pId', 'pDob', 'age', 'wifeName', 'wifeId', 'pPhone', 'pDelegate', 'pSocial', 'totalCount'],
-            individual: ['targetName', 'targetId', 'targetAge', 'relation', 'pName', 'pId', 'pPhone'],
-            health: ['patientName', 'patientId', 'patientAge', 'diseaseType', 'diseaseDesc', 'pName', 'pId', 'pPhone']
+            individual: ['targetName', 'targetId', 'targetAge', 'targetDob', 'relation', 'pName', 'pId', 'pPhone'],
+            health: ['patientName', 'patientId', 'patientAge', 'patientDob', 'diseaseType', 'diseaseDesc', 'pName', 'pId', 'pPhone']
         };
 
         // تعريف الأعمدة المتاحة للجدول الرئيسي
         const columnDefinitions = [
+            // Individual Specific
+            { id: 'targetName', label: 'اسم الفرد', group: 'بيانات الفرد (للفرز)' },
+            { id: 'targetId', label: 'هوية الفرد', group: 'بيانات الفرد (للفرز)' },
+            { id: 'targetDob', label: 'تاريخ ميلاد الفرد', group: 'بيانات الفرد (للفرز)' },
+            { id: 'targetAge', label: 'عمر الفرد', group: 'بيانات الفرد (للفرز)' },
+            { id: 'relation', label: 'الصلة', group: 'بيانات الفرد (للفرز)' },
+
+            // Health Specific
+            { id: 'patientName', label: 'اسم المريض', group: 'بيانات صحية (للفرز)' },
+            { id: 'patientId', label: 'هوية المريض', group: 'بيانات صحية (للفرز)' },
+            { id: 'patientDob', label: 'تاريخ ميلاد المريض', group: 'بيانات صحية (للفرز)' },
+            { id: 'patientAge', label: 'عمر المريض', group: 'بيانات صحية (للفرز)' },
+            { id: 'diseaseType', label: 'نوع المرض', group: 'بيانات صحية (للفرز)' },
+            { id: 'diseaseDesc', label: 'تفاصيل المرض', group: 'بيانات صحية (للفرز)' },
+
             { id: 'pName', label: 'اسم رب الأسرة', group: 'بيانات رب الأسرة' },
             { id: 'pId', label: 'هوية رب الأسرة', group: 'بيانات رب الأسرة' },
             { id: 'pIdIssue', label: 'اصدار الهوية', group: 'بيانات رب الأسرة' },
@@ -1258,21 +1324,9 @@
             { id: 'walletOwner', label: 'مالك المحفظة', group: 'المحفظة الإلكترونية' },
             { id: 'walletId', label: 'هوية المحفظة', group: 'المحفظة الإلكترونية' },
             { id: 'walletPhone', label: 'جوال المحفظة', group: 'المحفظة الإلكترونية' },
-            
-            // Individual Specific
-            { id: 'targetName', label: 'اسم الفرد', group: 'بيانات الفرد (للفرز)' },
-            { id: 'targetId', label: 'هوية الفرد', group: 'بيانات الفرد (للفرز)' },
-            { id: 'targetDob', label: 'تاريخ ميلاد الفرد', group: 'بيانات الفرد (للفرز)' },
-            { id: 'targetAge', label: 'عمر الفرد', group: 'بيانات الفرد (للفرز)' },
-            { id: 'relation', label: 'الصلة', group: 'بيانات الفرد (للفرز)' },
-
-            // Health Specific
-            { id: 'patientName', label: 'اسم المريض', group: 'بيانات صحية (للفرز)' },
-            { id: 'patientId', label: 'هوية المريض', group: 'بيانات صحية (للفرز)' },
-            { id: 'patientDob', label: 'تاريخ ميلاد المريض', group: 'بيانات صحية (للفرز)' },
-            { id: 'patientAge', label: 'عمر المريض', group: 'بيانات صحية (للفرز)' },
-            { id: 'diseaseType', label: 'نوع المرض', group: 'بيانات صحية (للفرز)' },
-            { id: 'diseaseDesc', label: 'تفاصيل المرض', group: 'بيانات صحية (للفرز)' }
+            { id: 'shelterType', label: 'طبيعة المأوى', group: 'بيانات السكن' },
+            { id: 'displacementPeriod', label: 'فترة النزوح', group: 'بيانات السكن' },
+            { id: 'citizenStatus', label: 'طبيعة المواطن', group: 'بيانات السكن' }
         ];
 
         // تعريف المجموعات (Macros) للقائمة المنسدلة
@@ -1351,7 +1405,10 @@
             maleCount: "عدد الذكور",
             walletOwner: "مالك المحفظة",
             walletId: "هوية المحفظة",
-            walletPhone: "جوال المحفظة"
+            walletPhone: "جوال المحفظة",
+            shelterType: "طبيعة المأوى",
+            displacementPeriod: "فترة النزوح",
+            citizenStatus: "طبيعة المواطن"
         };
 
         function only9Numbers(input) { input.value = input.value.replace(/\D/g, '').substring(0, 9); }
@@ -1366,6 +1423,30 @@
             if (m < 0) { y--; m += 12; }
             return { y, m };
         }
+
+        // ===========================================
+        //       Network & Security Logic
+        // ===========================================
+
+        function updateNetworkStatus() {
+            const offlineOverlay = document.getElementById('offlineOverlay');
+            const authOverlay = document.getElementById('authOverlay');
+            const mainUI = document.getElementById('mainUI');
+            
+            if (!navigator.onLine) {
+                offlineOverlay.classList.remove('hidden');
+                authOverlay.classList.add('hidden');
+                mainUI.classList.add('hidden');
+                document.querySelectorAll('[id$="Modal"]').forEach(el => el.classList.add('hidden'));
+            } else {
+                offlineOverlay.classList.add('hidden');
+                if (!window.currentUserData) authOverlay.classList.remove('hidden');
+                else mainUI.classList.remove('hidden');
+            }
+        }
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+        setTimeout(updateNetworkStatus, 500);
 
         // ===========================================
         //       Column Selection Logic
@@ -1532,6 +1613,26 @@
             
             const perms = Array.from(document.querySelectorAll('input[name="perms"]:checked')).map(cb => cb.value);
             if(!perms.includes('view')) perms.push('view');
+
+            // التحقق الأمني: طلب كلمة المرور
+            if (window.currentUserData.type === 'db_user') {
+                const confirmPass = prompt("لأغراض أمنية، يرجى إدخال كلمة المرور الخاصة بك لتأكيد إنشاء المستخدم:");
+                if (confirmPass === null) return;
+
+                try {
+                    const myDoc = await window.fs.getDoc(window.fs.doc(window.db, "app_users", window.currentUserData.id));
+                    if (!myDoc.exists() || myDoc.data().password !== confirmPass) {
+                        alert("كلمة المرور غير صحيحة. تم إلغاء العملية.");
+                        return;
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("حدث خطأ أثناء التحقق الأمني.");
+                    return;
+                }
+            } else if (window.currentUserData.type === 'google_auth') {
+                if(!confirm("هل أنت متأكد من إنشاء هذا المستخدم؟")) return;
+            }
 
             try {
                 const q = window.fs.query(window.fs.collection(window.db, "app_users"), window.fs.where("username", "==", user));
@@ -1814,20 +1915,14 @@
 
                             if (match) {
                                 resultData.push({
+                                    ...f,
                                     type: 'individual',
                                     familyId: f.id,
                                     targetName: m.name,
                                     targetId: m.idNum,
                                     targetAge: `${age.y} سنة`,
                                     targetDob: m.dob,
-                                    relation: m.relation,
-                                    pName: f.pName,
-                                    pId: f.pId,
-                                    pDob: f.pDob,
-                                    pSocial: f.pSocial,
-                                    wifeName: f.wifeName,
-                                    wifeId: f.wifeId,
-                                    pPhone: f.pPhone
+                                    relation: m.relation
                                 });
                             }
                         });
@@ -1854,20 +1949,14 @@
 
                             if (match) {
                                 resultData.push({
+                                    ...f,
                                     type: 'individual',
                                     familyId: f.id,
                                     targetName: p.name,
                                     targetId: p.id,
                                     targetAge: `${age.y} سنة`,
                                     targetDob: p.dob,
-                                    relation: p.role,
-                                    pName: f.pName,
-                                    pId: f.pId,
-                                    pDob: f.pDob,
-                                    pSocial: f.pSocial,
-                                    wifeName: f.wifeName,
-                                    wifeId: f.wifeId,
-                                    pPhone: f.pPhone
+                                    relation: p.role
                                 });
                             }
                         });
@@ -1884,6 +1973,7 @@
                             const patientAge = getAge(h.dob);
                             const pAge = getAge(f.pDob);
                             resultData.push({
+                                ...f,
                                 type: 'health',
                                 familyId: f.id,
                                 patientName: h.name,
@@ -1891,14 +1981,7 @@
                                 patientDob: h.dob,
                                 patientAge: `${patientAge.y} سنة`,
                                 diseaseType: h.type,
-                                diseaseDesc: h.desc,
-                                pName: f.pName,
-                                pId: f.pId,
-                                pAge: `${pAge.y} سنة`,
-                                pSocial: f.pSocial,
-                                wifeName: f.wifeName,
-                                wifeId: f.wifeId,
-                                pPhone: f.pPhone
+                                diseaseDesc: h.desc
                             });
                         }
                     });
@@ -2110,7 +2193,10 @@
                 case 'walletOwner': return row.walletOwner || '-';
                 case 'walletId': return `<span class="font-mono">${mask(row.walletId)}</span>`;
                 case 'walletPhone': return `<span class="font-mono">${mask(row.walletPhone)}</span>`;
-                default: return '-';
+                case 'shelterType': return row.shelterType || '-';
+                case 'displacementPeriod': return row.displacementPeriod || '-';
+                case 'citizenStatus': return row.citizenStatus || '-';
+                default: return row[colId] || '';
             }
         }
 
@@ -2180,6 +2266,9 @@
                 case 'walletOwner': return row.walletOwner || '-';
                 case 'walletId': return row.walletId || '-';
                 case 'walletPhone': return row.walletPhone || '-';
+                case 'shelterType': return row.shelterType || '-';
+                case 'displacementPeriod': return row.displacementPeriod || '-';
+                case 'citizenStatus': return row.citizenStatus || '-';
                 default: return row[colId] || '-';
             }
         }
@@ -2362,13 +2451,26 @@
 
         async function handleSave(e) {
             e.preventDefault();
+            
+            if (!navigator.onLine) {
+                alert("عذراً، لا يوجد اتصال بالإنترنت. لا يمكن حفظ البيانات.");
+                return;
+            }
+
+            if (!window.currentUserData) {
+                alert("جلسة العمل غير صالحة. يرجى إعادة تسجيل الدخول.");
+                window.location.reload();
+                return;
+            }
+
             const editId = document.getElementById('editId').value;
             
-            // التحقق من الصلاحيات
-            if(window.currentUserData.role === 'beneficiary' && editId !== window.currentUserData.id) return alert("غير مصرح لك");
-            if(window.currentUserData.role !== 'beneficiary') {
-                if(editId && !hasPerm('edit')) return alert("ليس لديك صلاحية تعديل");
-                if(!editId && !hasPerm('add')) return alert("ليس لديك صلاحية إضافة");
+            // التحقق الأمني المشدد من الصلاحيات
+            if(window.currentUserData.role === 'beneficiary') {
+                if (editId !== window.currentUserData.id) return alert("تنبيه أمني: غير مصرح لك بتعديل بيانات مستفيد آخر.");
+            } else {
+                if(editId && !hasPerm('edit')) return alert("عذراً، ليس لديك صلاحية 'تعديل' البيانات.");
+                if(!editId && !hasPerm('add')) return alert("عذراً، ليس لديك صلاحية 'إضافة' بيانات جديدة.");
             }
 
             // التحقق من إجبارية تواريخ الميلاد للمستفيد
@@ -2417,6 +2519,9 @@
                 walletOwner: document.getElementById('walletOwner').value,
                 walletId: document.getElementById('walletId').value,
                 walletPhone: document.getElementById('walletPhone').value,
+                shelterType: document.getElementById('shelterType').value,
+                displacementPeriod: document.getElementById('displacementPeriod').value,
+                citizenStatus: document.getElementById('citizenStatus').value,
                 members: Array.from(document.querySelectorAll('.member-row')).map(r => ({
                     name: r.querySelector('.m-name').value,
                     relation: r.querySelector('.m-rel').value,
@@ -2545,6 +2650,9 @@
                                 <span class="text-slate-400">الحالة الاجتماعية:</span> <span class="font-bold">${f.pSocial || "-"}</span>
                                 <span class="text-slate-400">السكن الأصلي:</span> <span class="font-bold">${f.originArea || "-"}</span>
                                 <span class="text-slate-400">منطقة النزوح:</span> <span class="font-bold">${f.displaceArea || "-"}</span>
+                                <span class="text-slate-400">طبيعة المأوى:</span> <span class="font-bold">${f.shelterType || "-"}</span>
+                                <span class="text-slate-400">فترة النزوح:</span> <span class="font-bold">${f.displacementPeriod || "-"}</span>
+                                <span class="text-slate-400">طبيعة المواطن:</span> <span class="font-bold">${f.citizenStatus || "-"}</span>
                             </div>
                         </div>
                         <div class="space-y-8">
@@ -2682,7 +2790,7 @@
         function downloadTemplate() { 
             const headers = ["اسم رب الأسرة", "تاريخ ميلاد رب الأسرة", "هوية رب الأسرة", "اصدار الهوية", "رقم الجوال", "اسم الزوجة", "هوية الزوجة", "تاريخ ميلاد الزوجة", "حالة الزوجة", "الحالة الاجتماعية", "عدد الأفراد الكلي", "عدد الذكور", "عدد الإناث"];
             for(let i=1; i<=10; i++) headers.push(`اسم الفرد ${i}`, `صلة القرابة ${i}`, `تاريخ الميلاد الفرد ${i}`, `رقم الهوية الفرد ${i}`);
-            headers.push("منطقة السكن الأصلية", "منطقة النزوح", "المندوب", "جوال بديل");
+            headers.push("منطقة السكن الأصلية", "منطقة النزوح", "طبيعة المأوى", "فترة النزوح", "طبيعة المواطن", "المندوب", "جوال بديل");
             for(let i=1; i<=5; i++) headers.push(`الاسم الحالة ${i}`, `رقم الهوية الحالة ${i}`, `رقم الجوال الحالة ${i}`, `نوع المرض ${i}`);
             headers.push("اسم المالك المحفظة", "رقم الهوية المحفظة", "رقم الجوال المحفظة");
             const ws = XLSX.utils.aoa_to_sheet([headers]);
@@ -2745,6 +2853,9 @@
                         femaleCount: row["عدد الإناث"] || "",
                         originArea: row["منطقة السكن الأصلية"] || "",
                         displaceArea: row["منطقة النزوح"] || "",
+                        shelterType: row["طبيعة المأوى"] || "",
+                        displacementPeriod: row["فترة النزوح"] || "",
+                        citizenStatus: row["طبيعة المواطن"] || "",
                         pDelegate: row["المندوب"] || "",
                         pAltPhone: String(row["جوال بديل"] || ""),
                         walletOwner: row["اسم المالك المحفظة"] || "",
@@ -2808,6 +2919,7 @@
             data.push(["اسم الزوجة", f.wifeName || "", "هوية الزوجة", f.wifeId || "", "حالة الزوجة", f.wifeStatus || ""]);
             data.push(["تاريخ ميلاد الزوجة", f.wifeDob || "", "جوال بديل", f.pAltPhone || ""]);
             data.push(["السكن الأصلي", f.originArea || "", "منطقة النزوح", f.displaceArea || ""]);
+            data.push(["طبيعة المأوى", f.shelterType || "", "فترة النزوح", f.displacementPeriod || "", "طبيعة المواطن", f.citizenStatus || ""]);
             data.push(["إجمالي الأفراد", f.totalCount || 0, "عدد الذكور", f.maleCount || 0, "عدد الإناث", f.femaleCount || 0]);
             data.push([]); 
             data.push(["أفراد العائلة المضافين"]);
@@ -2840,6 +2952,7 @@
                         <table class="print-table"><tr><th>رب الأسرة</th><td>${f.pName || '-'}</td></tr><tr><th>رقم الهوية</th><td>${f.pId || '-'}</td></tr><tr><th>اصدار الهوية</th><td>${f.pIdIssue || '-'}</td></tr><tr><th>رقم الجوال</th><td>${f.pPhone || '-'}</td></tr><tr><th>تاريخ الميلاد</th><td>${f.pDob || '-'} (${pAge.y} سنة)</td></tr></table>
                         <table class="print-table"><tr><th>الزوجة</th><td>${f.wifeName || '-'}</td></tr><tr><th>هوية الزوجة</th><td>${f.wifeId || '-'}</td></tr><tr><th>حالة الزوجة</th><td>${f.wifeStatus || '-'}</td></tr><tr><th>السكن الأصلي</th><td>${f.originArea || '-'}</td></tr><tr><th>منطقة النزوح</th><td>${f.displaceArea || '-'}</td></tr></table>
                     </div>
+                    <table class="print-table" style="margin-top: 10px;"><tr><th>طبيعة المأوى</th><td>${f.shelterType || '-'}</td><th>فترة النزوح</th><td>${f.displacementPeriod || '-'}</td><th>طبيعة المواطن</th><td>${f.citizenStatus || '-'}</td></tr></table>
                     <table class="print-table" style="margin-top: 10px;"><tr><th>المندوب</th><td>${f.pDelegate || '-'}</td><th>الحالة الاجتماعية</th><td>${f.pSocial || '-'}</td><th>عدد الأفراد</th><td>${f.totalCount || '0'}</td></tr></table>
                     <div class="section-title">2. أفراد العائلة (${f.members ? f.members.length : 0})</div>
                     <table class="print-table"><thead><tr><th style="width: 30%">الاسم</th><th style="width: 15%">الصلة</th><th style="width: 15%">تاريخ الميلاد</th><th style="width: 15%">العمر</th><th style="width: 25%">رقم الهوية</th></tr></thead><tbody>
