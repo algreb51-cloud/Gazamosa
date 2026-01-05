@@ -2441,7 +2441,7 @@
                 <div class="grid grid-cols-3 gap-2">
                     <input type="text" placeholder="الهوية" maxlength="9" class="h-id border-none bg-white rounded-xl p-4 text-xs font-mono" value="${data.idNum || ''}">
                     <input type="text" placeholder="الجوال" maxlength="9" class="h-phone border-none bg-white rounded-xl p-4 text-xs font-mono" value="${data.phone || ''}">
-                    <input type="text" placeholder="تاريخ الميلاد" maxlength="9" "date" class="h-dob border-none bg-white rounded-xl p-4 text-xs" value="${data.dob || ''}">
+                    <input type="text" "تاريخ الميلاد""date" class="h-dob border-none bg-white rounded-xl p-4 text-xs" value="${data.dob || ''}">
                 </div>
                 <textarea placeholder="تفاصيل المرض" class="h-desc w-full border-none bg-white rounded-xl p-4 text-xs" rows="2">${data.desc || ''}</textarea>
                 <button type="button" onclick="this.parentElement.remove()" class="absolute -left-2 -top-2 bg-white text-red-500 w-8 h-8 rounded-full shadow-md border flex items-center justify-center font-black">×</button>
@@ -3477,6 +3477,7 @@
 </body>
 
 </html>  
+
 
 
 
