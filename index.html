@@ -2436,7 +2436,7 @@
                     <select class="h-type border-none bg-white rounded-xl p-4 text-xs font-bold">
                         ${['مرض مزمن', 'اعاقة سمعية', 'اعاقة حركية', 'اعاقة بصرية', 'اخرى'].map(t => `<option ${data.type === t ? 'selected' : ''}>${t}</option>`).join('')}
                     </select>
-                    <input type="text" placeholder="الاسم" class="h-name border-none bg-white rounded-xl p-4 text-xs font-bold" value="${data.name || ''}">
+                    <input type="text" placeholder=" الاسم رباعي" class="h-name border-none bg-white rounded-xl p-4 text-xs font-bold" value="${data.name || ''}">
                 </div>
                 <div class="grid grid-cols-3 gap-2">
                     <input type="text" placeholder="الهوية" maxlength="9" class="h-id border-none bg-white rounded-xl p-4 text-xs font-mono" value="${data.idNum || ''}">
@@ -3477,4 +3477,5 @@
 </body>
 
 </html>  
+
 
