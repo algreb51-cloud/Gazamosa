@@ -1613,6 +1613,12 @@
         function only9Numbers(input) { input.value = input.value.replace(/\D/g, '').substring(0, 9); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         
+        function isQuadrupleName(name) {
+            if (!name) return false;
+            const parts = name.trim().split(/\s+/);
+            return parts.length >= 4;
+        }
+
         function getAge(dob) {
             if (!dob) return { y: 0, m: 0 };
             const birth = new Date(dob);
@@ -2120,12 +2126,24 @@
                                          (f.pDelegate || "").toLowerCase().includes(search) ||
                                          (f.totalCount || "").toString().includes(search);
             
+            const matchesFamilyFilters = (f) => {
+                const mDelegate = delegateFilters.length === 0 || delegateFilters.includes('all') || delegateFilters.includes((f.pDelegate || "").trim());
+                const mSocial = socialFilters.length === 0 || socialFilters.includes('all') || socialFilters.includes((f.pSocial || "").trim());
+                
+                let calculatedCount = 1;
+                if(f.wifeName && f.wifeName.trim()) calculatedCount++;
+                if(f.members && Array.isArray(f.members)) calculatedCount += f.members.length;
+
+                const mCount = countFilters.length === 0 || countFilters.includes('all') || countFilters.includes(calculatedCount.toString());
+                return mDelegate && mSocial && mCount;
+            };
+
             const isRestricted = window.currentUserData?.role === 'viewer' && !hasPerm('view_all');
 
             // Logic adapted for multiple selections
             if (currentViewMode === 'individual') {
                     window.families.forEach(f => {
-                        if (!matchesSearch(f)) return;
+                        if (!matchesSearch(f) || !matchesFamilyFilters(f)) return;
                         
                         // Check if we are filtering or showing all
                         const hasAgeFilter = ageFilters.length > 0 && !ageFilters.includes('all');
@@ -2201,7 +2219,7 @@
                     });
             } else if (currentViewMode === 'health') {
                 window.families.forEach(f => {
-                    if (!matchesSearch(f)) return;
+                    if (!matchesSearch(f) || !matchesFamilyFilters(f)) return;
                     
                     const hasDiseaseFilter = diseaseFilters.length > 0 && !diseaseFilters.includes('all');
                     const showAll = !hasDiseaseFilter;
@@ -2226,16 +2244,7 @@
                 });
             } else {
                 let filtered = window.families.filter(f => {
-                    const mSearch = matchesSearch(f);
-                    const mDelegate = delegateFilters.length === 0 || delegateFilters.includes('all') || delegateFilters.includes((f.pDelegate || "").trim());
-                    const mSocial = socialFilters.length === 0 || socialFilters.includes('all') || socialFilters.includes((f.pSocial || "").trim());
-                    
-                    let calculatedCount = 1;
-                    if(f.wifeName && f.wifeName.trim()) calculatedCount++;
-                    if(f.members && Array.isArray(f.members)) calculatedCount += f.members.length;
-
-                    const mCount = countFilters.length === 0 || countFilters.includes('all') || countFilters.includes(calculatedCount.toString());
-                    return mSearch && mDelegate && mSocial && mCount;
+                    return matchesSearch(f) && matchesFamilyFilters(f);
                 });
                 if (showDupsOnly) {
                     const idCounts = {};
@@ -2674,7 +2683,9 @@
                     <select class="h-type border-none bg-white rounded-xl p-4 text-xs font-bold">
                         ${['مرض مزمن', 'اعاقة سمعية', 'اعاقة حركية', 'اعاقة بصرية', 'اخرى'].map(t => `<option ${data.type === t ? 'selected' : ''}>${t}</option>`).join('')}
                     </select>
-                    <input type="text" placeholder=" الاسم رباعي" class="h-name border-none bg-white rounded-xl p-4 text-xs font-bold" value="${data.name || ''}">
+                    <select class="h-name border-none bg-white rounded-xl p-4 text-xs font-bold" onfocus="updateHealthNameOptions(this)" onchange="fillHealthFields(this)">
+                        <option value="${data.name || ''}">${data.name || 'اختر الاسم...'}</option>
+                    </select>
                 </div>
                 <div class="grid grid-cols-3 gap-2">
                     <input type="text" placeholder="الهوية" maxlength="9" class="h-id border-none bg-white rounded-xl p-4 text-xs font-mono" value="${data.idNum || ''}">
@@ -2686,6 +2697,47 @@
             `;
             document.getElementById('healthList').appendChild(div);
         }
+
+        window.updateHealthNameOptions = function(select) {
+            const currentVal = select.value;
+            const pName = document.getElementById('pName').value.trim();
+            const pId = document.getElementById('pId').value;
+            const pDob = document.getElementById('pDob').value;
+            const pPhone = document.getElementById('pPhone').value;
+            const wifeName = document.getElementById('wifeName').value.trim();
+            const wifeId = document.getElementById('wifeId').value;
+            const wifeDob = document.getElementById('wifeDob').value;
+            
+            let optionsHTML = '<option value="">اختر الاسم...</option>';
+            if(pName) optionsHTML += `<option value="${pName}" data-id="${pId}" data-dob="${pDob}" data-phone="${pPhone}">رب الأسرة: ${pName}</option>`;
+            if(wifeName) optionsHTML += `<option value="${wifeName}" data-id="${wifeId}" data-dob="${wifeDob}" data-phone="">الزوجة: ${wifeName}</option>`;
+            
+            document.querySelectorAll('.member-row').forEach(row => {
+                const mName = row.querySelector('.m-name').value.trim();
+                const mId = row.querySelector('.m-id').value;
+                const mDob = row.querySelector('.m-dob').value;
+                if(mName) optionsHTML += `<option value="${mName}" data-id="${mId}" data-dob="${mDob}" data-phone="">${mName}</option>`;
+            });
+
+            select.innerHTML = optionsHTML;
+            select.value = currentVal;
+            if (currentVal && select.value === "") {
+                const opt = document.createElement('option');
+                opt.value = currentVal;
+                opt.text = currentVal;
+                opt.selected = true;
+                select.add(opt);
+            }
+        };
+
+        window.fillHealthFields = function(select) {
+            const option = select.options[select.selectedIndex];
+            if(!option) return;
+            const row = select.closest('.health-row');
+            if(option.dataset.id) row.querySelector('.h-id').value = option.dataset.id;
+            if(option.dataset.dob) row.querySelector('.h-dob').value = option.dataset.dob;
+            if(option.dataset.phone) row.querySelector('.h-phone').value = option.dataset.phone;
+        };
 
         async function handleSave(e) {
             e.preventDefault();
@@ -2711,6 +2763,32 @@
                 if(!editId && !hasPerm('add')) return alert("عذراً، ليس لديك صلاحية 'إضافة' بيانات جديدة.");
             }
 
+            // التحقق من الأسماء الرباعية وإجبارية الحقول للأفراد
+            const memberRows = document.querySelectorAll('.member-row');
+            for (const row of memberRows) {
+                const mName = row.querySelector('.m-name').value.trim();
+                const mRel = row.querySelector('.m-rel').value.trim();
+                const mDob = row.querySelector('.m-dob').value.trim();
+                const mId = row.querySelector('.m-id').value.trim();
+
+                if (!mName || !mRel || !mDob || !mId) return alert("عذراً، جميع حقول بيانات الأفراد (الاسم، الصلة، الميلاد، الهوية) مطلوبة.");
+                if (!isQuadrupleName(mName)) return alert(`عذراً، الاسم "${mName}" في قائمة الأفراد يجب أن يكون رباعياً.`);
+            }
+
+            // التحقق من الأسماء الرباعية وإجبارية الحقول للحالات الصحية
+            const healthRows = document.querySelectorAll('.health-row');
+            for (const row of healthRows) {
+                const hType = row.querySelector('.h-type').value.trim();
+                const hName = row.querySelector('.h-name').value.trim();
+                const hId = row.querySelector('.h-id').value.trim();
+                const hPhone = row.querySelector('.h-phone').value.trim();
+                const hDob = row.querySelector('.h-dob').value.trim();
+                const hDesc = row.querySelector('.h-desc').value.trim();
+
+                if (!hType || !hName || !hId || !hPhone || !hDob || !hDesc) return alert("عذراً، جميع حقول الحالات الصحية (النوع، الاسم، الهوية، الجوال، الميلاد، التفاصيل) مطلوبة.");
+                if (!isQuadrupleName(hName)) return alert(`عذراً، الاسم "${hName}" في الحالات الصحية يجب أن يكون رباعياً.`);
+            }
+
     // التحقق من إجبارية كافة الحقول للمستفيد
     if (window.currentUserData.role === 'beneficiary') {
         if (!document.getElementById('pDob').value) {
@@ -2721,29 +2799,20 @@
         if (wifeName && wifeName.trim() !== '' && !document.getElementById('wifeDob').value) {
             return alert("يرجى تعبئة تاريخ ميلاد الزوجة، فهو حقل إجباري.");
         }
-
-        const memberRows = document.querySelectorAll('.member-row');
-        for (const row of memberRows) {
-            const mName = row.querySelector('.m-name').value.trim();
-            const mDob = row.querySelector('.m-dob').value.trim();
-            const mId = row.querySelector('.m-id').value.trim();
-            if (!mName || !mDob || !mId) {
-                return alert("عذراً، يجب تعبئة جميع حقول الأفراد (الاسم، الميلاد، الهوية) لإتمام الحفظ.");
-            }
-        }
-
-        const healthRows = document.querySelectorAll('.health-row');
-        for (const row of healthRows) {
-            const hName = row.querySelector('.h-name').value.trim();
-            const hId = row.querySelector('.h-id').value.trim();
-            const hPhone = row.querySelector('.h-phone').value.trim();
-            const hDob = row.querySelector('.h-dob').value.trim();
-            const hDesc = row.querySelector('.h-desc').value.trim();
-            if (!hName || !hId || !hPhone || !hDob || !hDesc) {
-                return alert("عذراً، يجب تعبئة جميع حقول الحالات الصحية (الاسم، الهوية، الجوال، الميلاد، التفاصيل) لإتمام الحفظ.");
-            }
-        }
     }
+
+            // التحقق من عدم تكرار هوية رب الأسرة أو الزوجة في الأفراد
+            const pIdVal = document.getElementById('pId').value.trim();
+            const wifeIdVal = document.getElementById('wifeId').value.trim();
+            const memberRowsList = document.querySelectorAll('.member-row');
+            
+            for(const row of memberRowsList) {
+                const mIdVal = row.querySelector('.m-id').value.trim();
+                if(mIdVal) {
+                    if(mIdVal === pIdVal) return alert("تنبيه: لا يمكن إضافة هوية رب الأسرة ضمن قائمة الأفراد.");
+                    if(wifeIdVal && mIdVal === wifeIdVal) return alert("تنبيه: لا يمكن إضافة هوية الزوجة ضمن قائمة الأفراد.");
+                }
+            }
 
             // حساب الأعداد تلقائياً بناءً على المدخلات
             const counts = calculateFamilyCounts();
@@ -3852,4 +3921,3 @@
     </script>
 </body>
 </html>  
-
