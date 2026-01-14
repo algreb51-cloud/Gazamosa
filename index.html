@@ -510,6 +510,10 @@
                     <button id="navBeneficiariesBtn" onclick="openBeneficiaries()" class="hidden p-3 rounded-xl text-slate-400 hover:bg-white hover:text-emerald-600 hover:shadow-sm transition-all" title="المستفيدين والأرشفة">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                     </button>
+
+                    <button id="navSelectedListBtn" onclick="showSelectedBeneficiaries()" class="p-3 rounded-xl text-slate-400 hover:bg-white hover:text-purple-600 hover:shadow-sm transition-all" title="المستفيدين المختارين">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    </button>
                 </div>
 
                 <div id="navActionsGroup" class="flex md:flex-col gap-2 bg-indigo-50/50 p-2 rounded-[1.5rem] border border-indigo-100 hidden">
@@ -582,6 +586,7 @@
                         <div class="lg:col-span-1 relative">
                             <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">بحث ذكي (اسم، هوية، مندوب)</label>
                             <input type="text" id="searchInput" oninput="runFilters()" class="w-full bg-slate-50 border-none rounded-2xl p-4 pr-12 text-sm input-focus" placeholder="بحث...">
+                            <input type="text" id="searchInput" oninput="runFilters(event)" class="w-full bg-slate-50 border-none rounded-2xl p-4 pr-12 text-sm input-focus" placeholder="بحث...">
                             <svg class="w-6 h-6 text-slate-300 absolute right-4 top-11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </div>
                         
@@ -613,6 +618,25 @@
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="17"> 17</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="18"> 18</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="19"> 19</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="1"> 1</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="2"> 2</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="3"> 3</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="4"> 4</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="5"> 5</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="6"> 6</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="7"> 7</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="8"> 8</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="9"> 9</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="10"> 10</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="11"> 11</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="12"> 12</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="13"> 13</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="14"> 14</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="15"> 15</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="16"> 16</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="17"> 17</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="18"> 18</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="19"> 19</label>
                                     </div>
                                 </div>
                             </div>
@@ -624,6 +648,14 @@
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                     </button>
                                     <div id="filterAge-options" class="multiselect-options custom-scroll">
+                                        <div class="p-3 border-b border-slate-100 mb-2 bg-slate-50 rounded-lg">
+                                            <label class="block text-[10px] font-bold text-slate-400 mb-1">من تاريخ ميلاد</label>
+                                            <input type="date" id="filterDobStart" onchange="runFilters()" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-bold mb-2 focus:outline-none focus:border-indigo-500">
+                                            <input type="date" id="filterDobStart" onchange="runFilters(event)" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-bold mb-2 focus:outline-none focus:border-indigo-500">
+                                            <label class="block text-[10px] font-bold text-slate-400 mb-1">إلى تاريخ ميلاد</label>
+                                            <input type="date" id="filterDobEnd" onchange="runFilters()" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-bold focus:outline-none focus:border-indigo-500">
+                                            <input type="date" id="filterDobEnd" onchange="runFilters(event)" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-bold focus:outline-none focus:border-indigo-500">
+                                        </div>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="0-1"> 0 - 1 سنة</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="1-2"> 1 - 2 سنة</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="2-5"> 2 - 5 سنوات</label>
@@ -632,6 +664,14 @@
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="18-25"> 18 - 25 سنة</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="26-40"> 26 - 40 سنة</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="41-80"> 41 - 80 سنة</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="0-1"> 0 - 1 سنة</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="1-2"> 1 - 2 سنة</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="2-5"> 2 - 5 سنوات</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="5-10"> 5 - 10 سنوات</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="10-17"> 10 - 17 سنة</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="18-25"> 18 - 25 سنة</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="26-40"> 26 - 40 سنة</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="41-80"> 41 - 80 سنة</label>
                                     </div>
                                 </div>
                             </div>
@@ -648,6 +688,11 @@
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعاقة حركية"> إعاقة حركية</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعاقة بصرية"> إعاقة بصرية</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اخرى"> اخرى</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="مرض مزمن"> مرض مزمن</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="اعاقة سمعية"> إعاقة سمعية</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="اعاقة حركية"> إعاقة حركية</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="اعاقة بصرية"> إعاقة بصرية</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="اخرى"> اخرى</label>
                                     </div>
                                 </div>
                             </div>
@@ -662,6 +707,9 @@
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="حامل"> حامل</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="مرضعة"> مرضعة</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="لا يوجد"> لا يوجد</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="حامل"> حامل</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="مرضعة"> مرضعة</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="لا يوجد"> لا يوجد</label>
                                     </div>
                                 </div>
                             </div>
@@ -681,6 +729,10 @@
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="نبيل"> نبيل</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="عبدالحميد"> عبدالحميد</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="محمد عادل"> محمد عادل</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="موسى"> موسى</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="نبيل"> نبيل</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="عبدالحميد"> عبدالحميد</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="محمد عادل"> محمد عادل</label>
                                 </div>
                             </div>
                         </div>
@@ -698,6 +750,12 @@
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="مهجورة"> مهجورة</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعزب"> اعزب</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="أيتام"> أيتام</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="متزوج"> متزوج</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="ارمله"> ارمله</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="مطلقة"> مطلقة</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="مهجورة"> مهجورة</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="اعزب"> اعزب</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="أيتام"> أيتام</label>
                                 </div>
                             </div>
                         </div>
@@ -717,12 +775,23 @@
                 </div>
 
                 <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl overflow-hidden">
-                    <div id="bulkActionsBar" class="hidden bg-red-50 p-4 flex justify-between items-center border-b border-red-100">
-                        <span class="text-red-600 font-bold text-sm">تم تحديد <span id="selectedMainCount">0</span> عنصر</span>
-                        <button onclick="deleteSelectedRows()" class="bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-700 transition-all flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            إزالة الأسماء المحددة
+                    <div id="selectedViewBar" class="hidden bg-purple-50 p-4 flex justify-between items-center border-b border-purple-100">
+                        <span class="text-purple-800 font-bold text-sm">أنت في وضع عرض المستفيدين المختارين (<span id="selectedViewCount">0</span>)</span>
+                        <button onclick="exitSelectedView()" class="bg-purple-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-purple-700 transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7"/></svg>
+                            الخروج والعودة للجدول الرئيسي
                         </button>
+                    </div>
+                    <div id="bulkActionsBar" class="hidden bg-red-50 p-4 flex justify-between items-center border-b border-red-100">
+                        <span class="text-slate-700 font-bold text-sm">تم تحديد <span id="selectedMainCount">0</span> عنصر</span>
+                        <div class="flex gap-2">
+                            <button onclick="addToSelectedList()" id="btnAddToSelected" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-700 transition-all flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg> إضافة للمستفيدين المختارين
+                            </button>
+                            <button onclick="deleteSelectedRows()" id="btnDeleteSelected" class="bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-700 transition-all flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> إزالة
+                            </button>
+                        </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-right border-collapse">
@@ -1478,6 +1547,8 @@
         let currentViewData = []; 
         let currentViewMode = 'family'; 
         let matchedIdsForArchive = []; // To store IDs from match import
+        window.selectedBeneficiariesList = []; // القائمة الجديدة
+        let isSelectedViewActive = false; // حالة العرض
         
         let visibleColumnsMap = {
             family: ['pName', 'pId', 'pDob', 'age', 'wifeName', 'wifeId', 'pPhone', 'pDelegate', 'pSocial', 'totalCount'],
@@ -2094,10 +2165,19 @@
         }
 
         function runFilters() {
+            // إذا قام المستخدم بالبحث أو الفلترة، نعود للوضع الطبيعي ونلغي وضع "المستفيدين المختارين"
+            if(isSelectedViewActive && event && (event.type === 'input' || event.type === 'change')) {
+                isSelectedViewActive = false;
+                document.getElementById('selectedViewBar').classList.add('hidden');
+                document.getElementById('navSelectedListBtn').classList.remove('bg-purple-50', 'text-purple-600');
+            }
+
             const search = document.getElementById('searchInput').value.toLowerCase();
             
             // Collect multi-select values
             const ageFilters = getCheckedValues('filterAge');
+            const dobStart = document.getElementById('filterDobStart').value;
+            const dobEnd = document.getElementById('filterDobEnd').value;
             const diseaseFilters = getCheckedValues('filterDisease');
             const delegateFilters = getCheckedValues('filterDelegate');
             const socialFilters = getCheckedValues('filterSocial');
@@ -2105,18 +2185,28 @@
             const wifeStatusFilters = getCheckedValues('filterWifeStatus');
 
             // Update Labels (Optional UX improvement)
-            document.getElementById('filterAge-label').innerText = ageFilters.length > 0 ? `تم اختيار ${ageFilters.length}` : 'اختيار الفئات العمرية...';
+            let ageLabel = ageFilters.length > 0 ? `تم اختيار ${ageFilters.length}` : 'اختيار الفئات العمرية...';
+            if (dobStart || dobEnd) ageLabel = ageFilters.length > 0 ? `فئات + تاريخ` : 'تم تحديد التاريخ';
+            document.getElementById('filterAge-label').innerText = ageLabel;
             document.getElementById('filterDisease-label').innerText = diseaseFilters.length > 0 ? `تم اختيار ${diseaseFilters.length}` : 'اختيار الحالات...';
             document.getElementById('filterDelegate-label').innerText = delegateFilters.length > 0 ? `تم اختيار ${delegateFilters.length}` : 'كل المناديب';
             document.getElementById('filterSocial-label').innerText = socialFilters.length > 0 ? `تم اختيار ${socialFilters.length}` : 'كل الحالات';
             document.getElementById('filterCount-label').innerText = countFilters.length > 0 ? `تم اختيار ${countFilters.length}` : 'اختيار العدد...';
             document.getElementById('filterWifeStatus-label').innerText = wifeStatusFilters.length > 0 ? `تم اختيار ${wifeStatusFilters.length}` : 'اختيار الحالة...';
 
+            // إذا كنا في وضع عرض المستفيدين المختارين، لا نطبق الفلاتر العادية، فقط نعرض القائمة
+            if (isSelectedViewActive) {
+                currentViewData = window.selectedBeneficiariesList;
+                renderTable(currentViewData, false);
+                document.getElementById('totalFamilies').innerText = currentViewData.length;
+                document.getElementById('roleTitle').innerText = "قائمة المستفيدين المختارين";
+                return;
+            }
 
             let resultData = [];
             
             // Determine View Mode based on Filters OR Active Tab
-            if (ageFilters.length > 0 && !ageFilters.includes('all')) currentViewMode = 'individual';
+            if ((ageFilters.length > 0 && !ageFilters.includes('all')) || dobStart || dobEnd) currentViewMode = 'individual';
             else if (wifeStatusFilters.length > 0 && !wifeStatusFilters.includes('all')) currentViewMode = 'individual';
             else if (diseaseFilters.length > 0 && !diseaseFilters.includes('all')) currentViewMode = 'health';
             else currentViewMode = activeViewTab;
@@ -2147,8 +2237,16 @@
                         
                         // Check if we are filtering or showing all
                         const hasAgeFilter = ageFilters.length > 0 && !ageFilters.includes('all');
+                        const hasDateFilter = dobStart || dobEnd;
                         const hasWifeFilter = wifeStatusFilters.length > 0 && !wifeStatusFilters.includes('all');
-                        const showAll = !hasAgeFilter && !hasWifeFilter;
+                        const showAll = !hasAgeFilter && !hasWifeFilter && !hasDateFilter;
+
+                        const checkDate = (dob) => {
+                            if (!dob) return false;
+                            if (dobStart && dob < dobStart) return false;
+                            if (dobEnd && dob > dobEnd) return false;
+                            return true;
+                        };
 
                         (f.members || []).forEach(m => {
                             if (!m.dob || m.dob.trim() === '') return;
@@ -2168,6 +2266,8 @@
                                     if (ageF === '41-80' && age.y > 40 && age.y <= 80) match = true;
                                 });
                             }
+                            
+                            if (hasDateFilter && checkDate(m.dob)) match = true;
 
                             if (match) {
                                 resultData.push({
@@ -2202,6 +2302,8 @@
                                     if (ageF === '41-80' && age.y > 40 && age.y <= 80) match = true;
                                 });
                             }
+                            
+                            if (hasDateFilter && checkDate(p.dob)) match = true;
 
                             if (match) {
                                 resultData.push({
@@ -2269,6 +2371,7 @@
             currentViewData = resultData;
             renderTable(resultData, isRestricted);
             updateStats(window.families);
+            document.getElementById('roleTitle').innerText = `أهلاً بك، ${window.currentUserData?.name || ''}`;
         }
         window.runFilters = runFilters;
 
@@ -2301,14 +2404,54 @@
             const count = document.querySelectorAll('.main-row-check:checked').length;
             document.getElementById('selectedMainCount').innerText = count;
             const bar = document.getElementById('bulkActionsBar');
+            
+            // تحديث نصوص وأزرار الشريط بناءً على الوضع الحالي
+            const btnAdd = document.getElementById('btnAddToSelected');
+            const btnDel = document.getElementById('btnDeleteSelected');
+            
+            if (isSelectedViewActive) {
+                btnAdd.classList.add('hidden');
+                btnDel.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> إزالة من القائمة`;
+                btnDel.classList.remove('bg-red-600', 'hover:bg-red-700');
+                btnDel.classList.add('bg-slate-600', 'hover:bg-slate-700');
+            } else {
+                btnAdd.classList.remove('hidden');
+                btnDel.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> إزالة الأسماء المحددة`;
+                btnDel.classList.add('bg-red-600', 'hover:bg-red-700');
+                btnDel.classList.remove('bg-slate-600', 'hover:bg-slate-700');
+            }
+
             if(count > 0) bar.classList.remove('hidden');
             else bar.classList.add('hidden');
         };
 
         window.deleteSelectedRows = async function() {
-            if(!hasPerm('remove')) return alert("ليس لديك صلاحية الحذف");
             const checks = document.querySelectorAll('.main-row-check:checked');
             if(checks.length === 0) return;
+
+            // إذا كنا في وضع "المستفيدين المختارين"، الحذف يكون من القائمة المحلية فقط
+            if (isSelectedViewActive) {
+                const idsToRemove = Array.from(checks).map(cb => cb.value);
+                // نستخدم familyId كمعرف فريد (أو targetId للأفراد)
+                // هنا سنعتمد على أن value في الـ checkbox هو familyId
+                // لكن في وضع الأفراد قد نحتاج لمنطق أدق، للتبسيط سنحذف بناءً على المطابقة
+                
+                // سنقوم بإعادة بناء القائمة باستثناء العناصر المحددة
+                // ملاحظة: الـ checkbox value هو familyId. في وضع الأفراد قد يكون هناك تكرار للـ familyId
+                // لذلك سنستخدم الـ index المخزن في data-index للحذف الدقيق
+                const indexesToRemove = Array.from(checks).map(cb => parseInt(cb.getAttribute('data-index')));
+                
+                // تصفية القائمة
+                window.selectedBeneficiariesList = window.selectedBeneficiariesList.filter((_, index) => !indexesToRemove.includes(index));
+                
+                alert("تمت إزالة العناصر من القائمة");
+                showSelectedBeneficiaries(); // إعادة رسم
+                document.getElementById('bulkActionsBar').classList.add('hidden');
+                return;
+            }
+
+            // الحذف العادي من قاعدة البيانات
+            if(!hasPerm('remove')) return alert("ليس لديك صلاحية الحذف");
             
             if(!confirm(`هل أنت متأكد من حذف ${checks.length} سجلات؟ (سيتم حذف العائلة بالكامل)`)) return;
 
@@ -2326,6 +2469,62 @@
             } catch(e) {
                 alert("حدث خطأ أثناء الحذف: " + e.message);
             }
+        };
+
+        // دالة إضافة العناصر للقائمة المختارة
+        window.addToSelectedList = function() {
+            const checks = document.querySelectorAll('.main-row-check:checked');
+            if(checks.length === 0) return;
+            
+            let addedCount = 0;
+            checks.forEach(cb => {
+                const idx = parseInt(cb.getAttribute('data-index'));
+                const item = currentViewData[idx];
+                
+                // التحقق من التكرار (بسيط)
+                // نقارن الكائن بالكامل أو معرف فريد. لتجنب التعقيد سنضيفه ونعتمد على المستخدم
+                // أو نتحقق من familyId + targetId (للأفراد)
+                const exists = window.selectedBeneficiariesList.some(x => 
+                    x.familyId === item.familyId && 
+                    (item.type === 'individual' ? x.targetId === item.targetId : true) &&
+                    (item.type === 'health' ? x.patientId === item.patientId : true)
+                );
+                
+                if(!exists) {
+                    window.selectedBeneficiariesList.push(item);
+                    addedCount++;
+                }
+            });
+            
+            alert(`تم إضافة ${addedCount} عنصر إلى قائمة المستفيدين المختارين`);
+            
+            // إلغاء التحديد
+            checks.forEach(cb => cb.checked = false);
+            updateMainSelection();
+        };
+
+        // دالة عرض القائمة المختارة
+        window.showSelectedBeneficiaries = function() {
+            isSelectedViewActive = true;
+            // إخفاء شريط الإجراءات بالجملة العادي أولاً
+            document.getElementById('bulkActionsBar').classList.add('hidden');
+
+            // تحديث واجهة الأزرار
+            document.getElementById('navSelectedListBtn').classList.add('bg-purple-50', 'text-purple-600');
+            
+            // إظهار شريط الخروج المخصص
+            document.getElementById('selectedViewBar').classList.remove('hidden');
+            document.getElementById('selectedViewCount').innerText = window.selectedBeneficiariesList.length;
+
+            // استدعاء الفلتر الذي سيتعامل مع الوضع الجديد
+            runFilters();
+        };
+
+        window.exitSelectedView = function() {
+            isSelectedViewActive = false;
+            document.getElementById('navSelectedListBtn').classList.remove('bg-purple-50', 'text-purple-600');
+            document.getElementById('selectedViewBar').classList.add('hidden');
+            runFilters();
         };
 
         function getCellContent(row, colId, isRestricted) {
@@ -3918,6 +4117,9 @@
         window.switchBenTab = switchBenTab;
         window.fetchArchiveData = fetchArchiveData;
         window.deleteArchive = deleteArchive;
+        window.closeModal = closeModal;
+        window.runFilters = runFilters;
+        window.exitSelectedView = exitSelectedView;
     </script>
 </body>
-</html>  
+</html>
