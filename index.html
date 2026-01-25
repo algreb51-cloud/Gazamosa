@@ -38,7 +38,7 @@
         .multiselect-options.show { 
             opacity: 1; visibility: visible; transform: translateY(0);
         }
-        .multiselect-option { display: flex; items-center; gap: 8px; padding: 8px; cursor: pointer; border-radius: 0.5rem; transition: background 0.2s; }
+        .multiselect-option { display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; border-radius: 0.5rem; transition: background 0.2s; }
         .multiselect-option:hover { background-color: #f1f5f9; }
         .multiselect-option input[type="checkbox"] { width: 16px; height: 16px; accent-color: #4f46e5; cursor: pointer; }
 
@@ -617,25 +617,7 @@
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="17"> 17</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="18"> 18</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="19"> 19</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="1"> 1</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="2"> 2</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="3"> 3</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="4"> 4</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="5"> 5</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="6"> 6</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="7"> 7</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="8"> 8</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="9"> 9</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="10"> 10</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="11"> 11</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="12"> 12</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="13"> 13</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="14"> 14</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="15"> 15</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="16"> 16</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="17"> 17</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="18"> 18</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="19"> 19</label>
+                                       
                                     </div>
                                 </div>
                             </div>
@@ -661,14 +643,21 @@
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="18-25"> 18 - 25 سنة</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="26-40"> 26 - 40 سنة</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="41-80"> 41 - 80 سنة</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="0-1"> 0 - 1 سنة</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="1-2"> 1 - 2 سنة</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="2-5"> 2 - 5 سنوات</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="5-10"> 5 - 10 سنوات</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="10-17"> 10 - 17 سنة</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="18-25"> 18 - 25 سنة</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="26-40"> 26 - 40 سنة</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="41-80"> 41 - 80 سنة</label>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">حسب الجنس (استخراج أفراد)</label>
+                                <div class="multiselect-container" id="filterGender-container">
+                                    <button onclick="toggleMultiSelect('filterGender')" class="multiselect-btn w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all">
+                                        <span id="filterGender-label">اختيار الجنس...</span>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
+                                    <div id="filterGender-options" class="multiselect-options custom-scroll">
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="ذكر"> ذكر</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="أنثى"> أنثى</label>
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -684,12 +673,8 @@
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعاقة سمعية"> إعاقة سمعية</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعاقة حركية"> إعاقة حركية</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعاقة بصرية"> إعاقة بصرية</label>
+                                       
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اخرى"> اخرى</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="مرض مزمن"> مرض مزمن</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="اعاقة سمعية"> إعاقة سمعية</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="اعاقة حركية"> إعاقة حركية</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="اعاقة بصرية"> إعاقة بصرية</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="اخرى"> اخرى</label>
                                     </div>
                                 </div>
                             </div>
@@ -704,9 +689,7 @@
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="حامل"> حامل</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="مرضعة"> مرضعة</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="لا يوجد"> لا يوجد</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="حامل"> حامل</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="مرضعة"> مرضعة</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="لا يوجد"> لا يوجد</label>
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -726,10 +709,7 @@
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="نبيل"> نبيل</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="عبدالحميد"> عبدالحميد</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="محمد عادل"> محمد عادل</label>
-                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="موسى"> موسى</label>
-                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="نبيل"> نبيل</label>
-                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="عبدالحميد"> عبدالحميد</label>
-                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="محمد عادل"> محمد عادل</label>
+                                   
                                 </div>
                             </div>
                         </div>
@@ -747,12 +727,7 @@
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="مهجورة"> مهجورة</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعزب"> اعزب</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="أيتام"> أيتام</label>
-                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="متزوج"> متزوج</label>
-                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="ارمله"> ارمله</label>
-                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="مطلقة"> مطلقة</label>
-                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="مهجورة"> مهجورة</label>
-                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="اعزب"> اعزب</label>
-                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters(event)" value="أيتام"> أيتام</label>
+                                    
                                 </div>
                             </div>
                         </div>
@@ -1071,8 +1046,14 @@
                         <input type="date" id="pDob" required class="w-full bg-slate-50 border-none rounded-2xl p-5 input-focus text-sm font-bold">
                     </div>
                     <div>
+                        <label class="block text-xs font-bold text-slate-400 mb-2">الجنس</label>
+                        <select id="pGender" onchange="calculateFamilyCounts()" class="w-full bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
+                            <option value="">اختر...</option><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-xs font-bold text-slate-400 mb-2">الحالة الاجتماعية</label>
-                        <select id="pSocial" onchange="calculateFamilyCounts()" class="w-full bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
+                        <select id="pSocial" onchange="updateParentGender(); calculateFamilyCounts()" class="w-full bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
                             <option>متزوج</option><option>ارمله</option><option>مطلقة</option><option>مهجورة</option><option>اعزب</option><option>أيتام</option>
                         </select>
                     </div>
@@ -1083,16 +1064,36 @@
                         <svg class="w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM6 8a2 2 0 11-4 0 2 2 0 014 0zM11 18a6 6 0 00-12 0c0 .099.01.196.03.291A5.985 5.985 0 014 13.06V11a2 2 0 10-4 0v2.06A8 8 0 0015 18z"></path></svg>
                         بيانات الزوجة
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <input type="text" id="wifeName" oninput="calculateFamilyCounts()" placeholder="اسم الزوجة" class="bg-white border-none rounded-2xl p-5 text-sm font-bold shadow-sm">
-                        <input type="text" id="wifeId" maxlength="9" oninput="only9Numbers(this)" placeholder="هوية الزوجة" class="bg-white border-none rounded-2xl p-5 text-sm font-mono shadow-sm">
-                        <input type="date" id="wifeDob" class="bg-white border-none rounded-2xl p-5 text-sm shadow-sm">
-                        <select id="wifeStatus" class="bg-white border-none rounded-2xl p-5 text-sm font-bold shadow-sm text-slate-600">
-                            <option value="">حالة الزوجة (اختياري)</option>
-                            <option value="لا يوجد">لا يوجد</option>
-                            <option value="حامل">حامل</option>
-                            <option value="مرضعة">مرضعة</option>
-                        </select>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-2">اسم الزوجة</label>
+                            <input type="text" id="wifeName" oninput="calculateFamilyCounts()" class="w-full bg-white border-none rounded-2xl p-5 text-sm font-bold shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-2">هوية الزوجة</label>
+                            <input type="text" id="wifeId" maxlength="9" oninput="only9Numbers(this)" class="w-full bg-white border-none rounded-2xl p-5 text-sm font-mono shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-2">تاريخ الميلاد</label>
+                            <input type="date" id="wifeDob" class="w-full bg-white border-none rounded-2xl p-5 text-sm shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-2">حالة الزوجة</label>
+                            <select id="wifeStatus" class="w-full bg-white border-none rounded-2xl p-5 text-sm font-bold shadow-sm text-slate-600">
+                                <option value="">(اختياري)</option>
+                                <option value="لا يوجد">لا يوجد</option>
+                                <option value="حامل">حامل</option>
+                                <option value="مرضعة">مرضعة</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-2">الجنس</label>
+                            <select id="wifeGender" onchange="calculateFamilyCounts()" class="w-full bg-white border-none rounded-2xl p-5 text-sm font-bold shadow-sm text-slate-600">
+                                <option value="">الجنس</option>
+                                <option value="أنثى" selected>أنثى</option>
+                                <option value="ذكر">ذكر</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -1550,6 +1551,7 @@
         let visibleColumnsMap = {
             family: ['pName', 'pId', 'pDob', 'age', 'wifeName', 'wifeId', 'pPhone', 'pDelegate', 'pSocial', 'totalCount'],
             individual: ['targetName', 'targetId', 'targetAge', 'targetDob', 'relation', 'pName', 'pId', 'pPhone'],
+            individual: ['targetName', 'targetGender', 'targetId', 'targetAge', 'targetDob', 'relation', 'pName', 'pId', 'pPhone'],
             health: ['patientName', 'patientId', 'patientAge', 'patientDob', 'diseaseType', 'diseaseDesc', 'pName', 'pId', 'pPhone']
         };
 
@@ -1557,6 +1559,7 @@
         const columnDefinitions = [
             // Individual Specific
             { id: 'targetName', label: 'اسم الفرد', group: 'بيانات الفرد (للفرز)' },
+            { id: 'targetGender', label: 'جنس الفرد', group: 'بيانات الفرد (للفرز)' },
             { id: 'targetId', label: 'هوية الفرد', group: 'بيانات الفرد (للفرز)' },
             { id: 'targetDob', label: 'تاريخ ميلاد الفرد', group: 'بيانات الفرد (للفرز)' },
             { id: 'targetAge', label: 'عمر الفرد', group: 'بيانات الفرد (للفرز)' },
@@ -1564,6 +1567,7 @@
 
             // Health Specific
             { id: 'patientName', label: 'اسم المريض', group: 'بيانات صحية (للفرز)' },
+            { id: 'patientGender', label: 'جنس المريض', group: 'بيانات صحية (للفرز)' },
             { id: 'patientId', label: 'هوية المريض', group: 'بيانات صحية (للفرز)' },
             { id: 'patientDob', label: 'تاريخ ميلاد المريض', group: 'بيانات صحية (للفرز)' },
             { id: 'patientAge', label: 'عمر المريض', group: 'بيانات صحية (للفرز)' },
@@ -1571,12 +1575,14 @@
             { id: 'diseaseDesc', label: 'تفاصيل المرض', group: 'بيانات صحية (للفرز)' },
 
             { id: 'pName', label: 'اسم رب الأسرة', group: 'بيانات رب الأسرة' },
+            { id: 'pGender', label: 'جنس رب الأسرة', group: 'بيانات رب الأسرة' },
             { id: 'pId', label: 'هوية رب الأسرة', group: 'بيانات رب الأسرة' },
             { id: 'pIdIssue', label: 'اصدار الهوية', group: 'بيانات رب الأسرة' },
             { id: 'pDob', label: 'تاريخ الميلاد', group: 'بيانات رب الأسرة' },
             { id: 'age', label: 'عمر رب الأسرة', group: 'بيانات رب الأسرة' },
             { id: 'pSocial', label: 'الحالة الاجتماعية', group: 'بيانات رب الأسرة' },
             { id: 'wifeName', label: 'اسم الزوجة', group: 'بيانات الزوجة' },
+            { id: 'wifeGender', label: 'جنس الزوجة', group: 'بيانات الزوجة' },
             { id: 'wifeId', label: 'هوية الزوجة', group: 'بيانات الزوجة' },
             { id: 'wifeDob', label: 'تاريخ ميلاد الزوجة', group: 'بيانات الزوجة' },
             { id: 'wifeStatus', label: 'حالة الزوجة', group: 'بيانات الزوجة' },
@@ -1599,10 +1605,12 @@
         // تعريف المجموعات (Macros) للقائمة المنسدلة
         const macroDefinitions = [
             { id: 'macro_mNames', label: 'أسماء الأفراد (الكل)', group: 'بيانات الأفراد (مجمع)', targets: [] },
+            { id: 'macro_mGenders', label: 'جنس الأفراد (الكل)', group: 'بيانات الأفراد (مجمع)', targets: [] },
             { id: 'macro_mRels', label: 'صلات القرابة (الكل)', group: 'بيانات الأفراد (مجمع)', targets: [] },
             { id: 'macro_mDobs', label: 'تواريخ ميلاد الأفراد (الكل)', group: 'بيانات الأفراد (مجمع)', targets: [] },
             { id: 'macro_mIds', label: 'هويات الأفراد (الكل)', group: 'بيانات الأفراد (مجمع)', targets: [] },
             { id: 'macro_hNames', label: 'أسماء المرضى (الكل)', group: 'بيانات المرضى (مجمع)', targets: [] },
+            { id: 'macro_hGenders', label: 'جنس المرضى (الكل)', group: 'بيانات المرضى (مجمع)', targets: [] },
             { id: 'macro_hTypes', label: 'أنواع الأمراض (الكل)', group: 'بيانات المرضى (مجمع)', targets: [] },
             { id: 'macro_hIds', label: 'هويات المرضى (الكل)', group: 'بيانات المرضى (مجمع)', targets: [] }
         ];
@@ -1614,26 +1622,30 @@
         for (let i = 1; i <= 10; i++) {
             columnDefinitions.push(
                 { id: `m${i}Name`, label: `اسم الفرد ${i}`, group: 'بيانات الأفراد (تفصيلي)', hidden: true },
+                { id: `m${i}Gender`, label: `جنس الفرد ${i}`, group: 'بيانات الأفراد (تفصيلي)', hidden: true },
                 { id: `m${i}Rel`, label: `صلة القرابة ${i}`, group: 'بيانات الأفراد (تفصيلي)', hidden: true },
                 { id: `m${i}Dob`, label: `تاريخ ميلاد الفرد ${i}`, group: 'بيانات الأفراد (تفصيلي)', hidden: true },
                 { id: `m${i}Id`, label: `هوية الفرد ${i}`, group: 'بيانات الأفراد (تفصيلي)', hidden: true }
             );
             macroDefinitions[0].targets.push(`m${i}Name`);
-            macroDefinitions[1].targets.push(`m${i}Rel`);
-            macroDefinitions[2].targets.push(`m${i}Dob`);
-            macroDefinitions[3].targets.push(`m${i}Id`);
+            macroDefinitions[1].targets.push(`m${i}Gender`);
+            macroDefinitions[2].targets.push(`m${i}Rel`);
+            macroDefinitions[3].targets.push(`m${i}Dob`);
+            macroDefinitions[4].targets.push(`m${i}Id`);
         }
 
         // إضافة أعمدة الحالات الصحية (1-5) ديناميكياً
         for (let i = 1; i <= 5; i++) {
             columnDefinitions.push(
                 { id: `h${i}Name`, label: `اسم المريض ${i}`, group: 'بيانات المرضى (تفصيلي)', hidden: true },
+                { id: `h${i}Gender`, label: `جنس المريض ${i}`, group: 'بيانات المرضى (تفصيلي)', hidden: true },
                 { id: `h${i}Type`, label: `نوع المرض ${i}`, group: 'بيانات المرضى (تفصيلي)', hidden: true },
                 { id: `h${i}Id`, label: `هوية المريض ${i}`, group: 'بيانات المرضى (تفصيلي)', hidden: true }
             );
-            macroDefinitions[4].targets.push(`h${i}Name`);
-            macroDefinitions[5].targets.push(`h${i}Type`);
-            macroDefinitions[6].targets.push(`h${i}Id`);
+            macroDefinitions[5].targets.push(`h${i}Name`);
+            macroDefinitions[6].targets.push(`h${i}Gender`);
+            macroDefinitions[7].targets.push(`h${i}Type`);
+            macroDefinitions[8].targets.push(`h${i}Id`);
         }
 
         window.setViewMode = function(mode) {
@@ -1655,11 +1667,13 @@
         const FIELD_MAP = {
             pName: "اسم رب الأسرة",
             pId: "هوية رب الأسرة",
+            pGender: "جنس رب الأسرة",
             pIdIssue: "اصدار الهوية",
             pDob: "تاريخ ميلاد رب الأسرة",
             pPhone: "رقم الجوال",
             wifeName: "اسم الزوجة",
             wifeId: "هوية الزوجة",
+            wifeGender: "جنس الزوجة",
             wifeDob: "تاريخ ميلاد الزوجة",
             wifeStatus: "حالة الزوجة",
             pSocial: "الحالة الاجتماعية",
@@ -2180,6 +2194,7 @@
             const socialFilters = getCheckedValues('filterSocial');
             const countFilters = getCheckedValues('filterCount');
             const wifeStatusFilters = getCheckedValues('filterWifeStatus');
+            const genderFilters = getCheckedValues('filterGender');
 
             // Update Labels (Optional UX improvement)
             let ageLabel = ageFilters.length > 0 ? `تم اختيار ${ageFilters.length}` : 'اختيار الفئات العمرية...';
@@ -2190,6 +2205,7 @@
             document.getElementById('filterSocial-label').innerText = socialFilters.length > 0 ? `تم اختيار ${socialFilters.length}` : 'كل الحالات';
             document.getElementById('filterCount-label').innerText = countFilters.length > 0 ? `تم اختيار ${countFilters.length}` : 'اختيار العدد...';
             document.getElementById('filterWifeStatus-label').innerText = wifeStatusFilters.length > 0 ? `تم اختيار ${wifeStatusFilters.length}` : 'اختيار الحالة...';
+            document.getElementById('filterGender-label').innerText = genderFilters.length > 0 ? `تم اختيار ${genderFilters.length}` : 'اختيار الجنس...';
 
             // إذا كنا في وضع عرض المستفيدين المختارين، لا نطبق الفلاتر العادية، فقط نعرض القائمة
             if (isSelectedViewActive) {
@@ -2204,6 +2220,7 @@
             
             // Determine View Mode based on Filters OR Active Tab
             if ((ageFilters.length > 0 && !ageFilters.includes('all')) || dobStart || dobEnd) currentViewMode = 'individual';
+            else if (genderFilters.length > 0 && !genderFilters.includes('all')) currentViewMode = 'individual';
             else if (wifeStatusFilters.length > 0 && !wifeStatusFilters.includes('all')) currentViewMode = 'individual';
             else if (diseaseFilters.length > 0 && !diseaseFilters.includes('all')) currentViewMode = 'health';
             else currentViewMode = activeViewTab;
@@ -2236,6 +2253,7 @@
                         const hasAgeFilter = ageFilters.length > 0 && !ageFilters.includes('all');
                         const hasDateFilter = dobStart || dobEnd;
                         const hasWifeFilter = wifeStatusFilters.length > 0 && !wifeStatusFilters.includes('all');
+                        const hasGenderFilter = genderFilters.length > 0 && !genderFilters.includes('all');
                         const showAll = !hasAgeFilter && !hasWifeFilter && !hasDateFilter;
 
                         const checkDate = (dob) => {
@@ -2266,12 +2284,23 @@
                             
                             if (hasDateFilter && checkDate(m.dob)) match = true;
 
+                            let effectiveGender = m.gender;
+                            if (!effectiveGender) {
+                                if (['اخ', 'ابن', 'اب', 'جد', 'عم', 'خال'].includes(m.relation)) effectiveGender = 'ذكر';
+                                else if (['اخت', 'زوجة', 'ابنه', 'ام', 'خاله', 'عمه', 'جده', 'محتضنه'].includes(m.relation)) effectiveGender = 'أنثى';
+                            }
+
+                            if (hasGenderFilter && match) {
+                                if (!genderFilters.includes(effectiveGender)) match = false;
+                            }
+
                             if (match) {
                                 resultData.push({
                                     ...f,
                                     type: 'individual',
                                     familyId: f.id,
                                     targetName: m.name,
+                                    targetGender: effectiveGender,
                                     targetId: m.idNum,
                                     targetAge: `${age.y} سنة`,
                                     targetDob: m.dob,
@@ -2279,7 +2308,7 @@
                                 });
                             }
                         });
-                        [ {name: f.pName, dob: f.pDob, id: f.pId, role: 'أب'}, {name: f.wifeName, dob: f.wifeDob, id: f.wifeId, role: 'زوجة'} ]
+                        [ {name: f.pName, dob: f.pDob, id: f.pId, role: 'أب', gender: f.pGender}, {name: f.wifeName, dob: f.wifeDob, id: f.wifeId, role: 'زوجة', gender: f.wifeGender} ]
                         .filter(p => p.name && p.dob && p.dob.trim() !== '')
                         .forEach(p => {
                             const age = getAge(p.dob);
@@ -2302,12 +2331,27 @@
                             
                             if (hasDateFilter && checkDate(p.dob)) match = true;
 
+                            let effectiveGender = p.gender;
+                            if (!effectiveGender) {
+                                if (p.role === 'زوجة') effectiveGender = 'أنثى';
+                                else if (p.role === 'أب') {
+                                    if (f.pSocial === 'متزوج') effectiveGender = 'ذكر';
+                                    else if (['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(f.pSocial)) effectiveGender = 'أنثى';
+                                    else effectiveGender = 'ذكر';
+                                }
+                            }
+
+                            if (hasGenderFilter && match) {
+                                if (!genderFilters.includes(effectiveGender)) match = false;
+                            }
+
                             if (match) {
                                 resultData.push({
                                     ...f,
                                     type: 'individual',
                                     familyId: f.id,
                                     targetName: p.name,
+                                    targetGender: effectiveGender,
                                     targetId: p.id,
                                     targetAge: `${age.y} سنة`,
                                     targetDob: p.dob,
@@ -2327,11 +2371,38 @@
                         if (showAll || diseaseFilters.includes(h.type)) {
                             const patientAge = getAge(h.dob);
                             const pAge = getAge(f.pDob);
+                            
+                            // --- Logic to deduce patient gender ---
+                            let effectiveGender = h.gender;
+                            if (!effectiveGender && h.name) {
+                                const patientName = h.name.trim();
+                                if (f.pName && patientName === f.pName.trim()) {
+                                    if(f.pGender) effectiveGender = f.pGender;
+                                    else if(['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(f.pSocial)) effectiveGender = 'أنثى';
+                                    else effectiveGender = 'ذكر';
+                                } else if (f.wifeName && patientName === f.wifeName.trim()) {
+                                    effectiveGender = f.wifeGender || 'أنثى';
+                                } else if (f.members) {
+                                    const member = f.members.find(m => m.name && m.name.trim() === patientName);
+                                    if (member) {
+                                        if (member.gender) {
+                                            effectiveGender = member.gender;
+                                        } else if (member.relation) {
+                                            if (['اخ', 'ابن', 'اب', 'جد', 'عم', 'خال'].includes(member.relation)) effectiveGender = 'ذكر';
+                                            else if (['اخت', 'زوجة', 'ابنه', 'ام', 'خاله', 'عمه', 'جده', 'محتضنه'].includes(member.relation)) effectiveGender = 'أنثى';
+                                        }
+                                    }
+                                }
+                            }
+                            // --- End gender logic ---
+
                             resultData.push({
                                 ...f,
                                 type: 'health',
                                 familyId: f.id,
                                 patientName: h.name,
+                                patientGender: h.gender,
+                                patientGender: effectiveGender,
                                 patientId: h.idNum,
                                 patientDob: h.dob,
                                 patientAge: `${patientAge.y} سنة`,
@@ -2536,6 +2607,14 @@
                     const member = row.members && row.members[idx];
                     if (!member) return '-';
                     if (field === 'Name') return member.name || '-';
+                    if (field === 'Gender') {
+                        let g = member.gender;
+                        if (!g) {
+                            if (['اخ', 'ابن', 'اب', 'جد', 'عم', 'خال'].includes(member.relation)) g = 'ذكر';
+                            else if (['اخت', 'زوجة', 'ابنه', 'ام', 'خاله', 'عمه', 'جده', 'محتضنه'].includes(member.relation)) g = 'أنثى';
+                        }
+                        return g || '-';
+                    }
                     if (field === 'Rel') return member.relation || '-';
                     if (field === 'Dob') return member.dob || '-';
                     if (field === 'Id') return `<span class="font-mono">${mask(member.idNum)}</span>`;
@@ -2551,6 +2630,7 @@
                     const health = row.health && row.health[idx];
                     if (!health) return '-';
                     if (field === 'Name') return `<span class="text-red-600 font-bold">${health.name || '-'}</span>`;
+                    if (field === 'Gender') return health.gender || '-';
                     if (field === 'Type') return `<span class="bg-red-50 text-red-600 px-1 rounded text-xs">${health.type || '-'}</span>`;
                     if (field === 'Id') return `<span class="font-mono">${mask(health.idNum)}</span>`;
                 }
@@ -2560,6 +2640,19 @@
             if (colId === 'targetName') {
                 if (row.targetName) return `<span class="font-bold text-indigo-700">${row.targetName}</span>`;
                 if (row.members && row.members.length) return row.members.map(m => `<div class="text-xs h-6 flex items-center border-b border-slate-100 last:border-0 truncate">${m.name}</div>`).join('');
+                return '-';
+            }
+            if (colId === 'targetGender') {
+                if (row.targetGender) return row.targetGender;
+                if (row.members && row.members.length) return row.members.map(m => `<div class="text-xs h-6 flex items-center border-b border-slate-100 last:border-0">${m.gender || '-'}</div>`).join('');
+                if (row.members && row.members.length) return row.members.map(m => {
+                    let g = m.gender;
+                    if (!g) {
+                        if (['اخ', 'ابن', 'اب', 'جد', 'عم', 'خال'].includes(m.relation)) g = 'ذكر';
+                        else if (['اخت', 'زوجة', 'ابنه', 'ام', 'خاله', 'عمه', 'جده', 'محتضنه'].includes(m.relation)) g = 'أنثى';
+                    }
+                    return `<div class="text-xs h-6 flex items-center border-b border-slate-100 last:border-0">${g || '-'}</div>`;
+                }).join('');
                 return '-';
             }
             if (colId === 'targetId') {
@@ -2586,6 +2679,11 @@
             if (colId === 'patientName') {
                 if (row.patientName) return `<span class="font-bold text-red-600">${row.patientName}</span>`;
                 if (row.health && row.health.length) return row.health.map(h => `<div class="text-xs h-6 flex items-center border-b border-slate-100 last:border-0 text-red-600 truncate">${h.name}</div>`).join('');
+                return '-';
+            }
+            if (colId === 'patientGender') {
+                if (row.patientGender) return row.patientGender;
+                if (row.health && row.health.length) return row.health.map(h => `<div class="text-xs h-6 flex items-center border-b border-slate-100 last:border-0">${h.gender || '-'}</div>`).join('');
                 return '-';
             }
             if (colId === 'patientId') {
@@ -2617,10 +2715,15 @@
             switch(colId) {
                 case 'pName': return `<span class="font-bold text-slate-700">${row.pName || '-'}</span>`;
                 case 'pId': return `<span class="font-mono text-slate-500">${mask(row.pId)}</span>`;
+                case 'pGender': 
+                    if(row.pGender) return row.pGender;
+                    if(['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(row.pSocial)) return 'أنثى';
+                    return 'ذكر';
                 case 'pIdIssue': return row.pIdIssue || '-';
                 case 'pDob': return `<span class="font-mono text-slate-500">${row.pDob || '-'}</span>`;
                 case 'age': return `<span class="font-bold text-slate-500">${getAge(row.pDob).y} سنة</span>`;
                 case 'wifeName': return row.wifeName || '-';
+                case 'wifeGender': return row.wifeGender || (row.wifeName ? 'أنثى' : '-');
                 case 'wifeId': return `<span class="font-mono text-slate-500">${mask(row.wifeId)}</span>`;
                 case 'wifeDob': return row.wifeDob || '-';
                 case 'wifeStatus': return row.wifeStatus || '-';
@@ -2653,6 +2756,12 @@
                     const member = row.members && row.members[idx];
                     if (!member) return '-';
                     if (field === 'Name') return member.name || '-';
+                    if (field === 'Gender') {
+                        if (member.gender) return member.gender;
+                        if (['اخ', 'ابن', 'اب', 'جد', 'عم', 'خال'].includes(member.relation)) return 'ذكر';
+                        if (['اخت', 'زوجة', 'ابنه', 'ام', 'خاله', 'عمه', 'جده', 'محتضنه'].includes(member.relation)) return 'أنثى';
+                        return '-';
+                    }
                     if (field === 'Rel') return member.relation || '-';
                     if (field === 'Dob') return member.dob || '-';
                     if (field === 'Id') return member.idNum || '-';
@@ -2668,6 +2777,7 @@
                     const health = row.health && row.health[idx];
                     if (!health) return '-';
                     if (field === 'Name') return health.name || '-';
+                    if (field === 'Gender') return health.gender || '-';
                     if (field === 'Type') return health.type || '-';
                     if (field === 'Id') return health.idNum || '-';
                 }
@@ -2675,12 +2785,22 @@
 
             // معالجة بيانات الأفراد والحالات الصحية للتصدير (تجميع البيانات)
             if (colId === 'targetName') return row.targetName || (row.members ? row.members.map(m => m.name).join(', ') : '-');
+            if (colId === 'targetGender') return row.targetGender || (row.members ? row.members.map(m => m.gender).join(', ') : '-');
+            if (colId === 'targetGender') return row.targetGender || (row.members ? row.members.map(m => {
+                let g = m.gender;
+                if (!g) {
+                    if (['اخ', 'ابن', 'اب', 'جد', 'عم', 'خال'].includes(m.relation)) g = 'ذكر';
+                    else if (['اخت', 'زوجة', 'ابنه', 'ام', 'خاله', 'عمه', 'جده', 'محتضنه'].includes(m.relation)) g = 'أنثى';
+                }
+                return g || '-';
+            }).join(', ') : '-');
             if (colId === 'targetId') return row.targetId || (row.members ? row.members.map(m => m.idNum).join(', ') : '-');
             if (colId === 'targetDob') return row.targetDob || (row.members ? row.members.map(m => m.dob).join(', ') : '-');
             if (colId === 'targetAge') return row.targetAge || (row.members ? row.members.map(m => getAge(m.dob).y).join(', ') : '-');
             if (colId === 'relation') return row.relation || (row.members ? row.members.map(m => m.relation).join(', ') : '-');
 
             if (colId === 'patientName') return row.patientName || (row.health ? row.health.map(h => h.name).join(', ') : '-');
+            if (colId === 'patientGender') return row.patientGender || (row.health ? row.health.map(h => h.gender).join(', ') : '-');
             if (colId === 'patientId') return row.patientId || (row.health ? row.health.map(h => h.idNum).join(', ') : '-');
             if (colId === 'patientDob') return row.patientDob || (row.health ? row.health.map(h => h.dob).join(', ') : '-');
             if (colId === 'patientAge') return row.patientAge || (row.health ? row.health.map(h => getAge(h.dob).y).join(', ') : '-');
@@ -2690,10 +2810,15 @@
             switch(colId) {
                 case 'pName': return row.pName || '-';
                 case 'pId': return row.pId || '-';
+                case 'pGender': 
+                    if(row.pGender) return row.pGender;
+                    if(['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(row.pSocial)) return 'أنثى';
+                    return 'ذكر';
                 case 'pIdIssue': return row.pIdIssue || '-';
                 case 'pDob': return row.pDob || '-';
                 case 'age': return getAge(row.pDob).y;
                 case 'wifeName': return row.wifeName || '-';
+                case 'wifeGender': return row.wifeGender || (row.wifeName ? 'أنثى' : '-');
                 case 'wifeId': return row.wifeId || '-';
                 case 'wifeDob': return row.wifeDob || '-';
                 case 'wifeStatus': return row.wifeStatus || '-';
@@ -2823,29 +2948,61 @@
             delInput.classList.add('bg-slate-50');
 
             document.getElementById('formModal').classList.remove('hidden');
+            updateParentGender();
         }
 
+        window.updateParentGender = function() {
+            const pSocial = document.getElementById('pSocial').value;
+            const pGender = document.getElementById('pGender');
+            const wifeGender = document.getElementById('wifeGender');
+            
+            if(pSocial === 'متزوج') {
+                pGender.value = 'ذكر';
+                if(wifeGender) wifeGender.value = 'أنثى';
+            } else if(['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(pSocial)) {
+                pGender.value = 'أنثى';
+            }
+        };
+
+        window.updateMemberGender = function(select) {
+            const row = select.closest('.member-row');
+            const genderSelect = row.querySelector('.m-gender');
+            const val = select.value;
+            
+            if(['ابن', 'اخ', 'اب', 'جد', 'عم', 'خال'].includes(val)) {
+                genderSelect.value = 'ذكر';
+            } else if(['ابنه', 'اخت', 'ام', 'جده', 'عمه', 'خاله', 'محتضنه', 'زوجة'].includes(val)) {
+                genderSelect.value = 'أنثى';
+            }
+        };
+
         window.calculateFamilyCounts = function() {
+            const pSocial = document.getElementById('pSocial').value;
+            const pGender = document.getElementById('pGender');
+
             let calcTotal = 1; // رب الأسرة
             let calcMale = 0;
             let calcFemale = 0;
 
-            const pSocial = document.getElementById('pSocial').value;
-            if(['ارمله', 'مطلقة', 'مهجورة'].includes(pSocial)) calcFemale++;
+            // حساب رب الأسرة بناءً على الجنس المختار
+            if(pGender.value === 'أنثى') calcFemale++;
             else calcMale++;
 
             const wifeName = document.getElementById('wifeName').value;
             if(wifeName && wifeName.trim()) {
                 calcTotal++;
                 calcFemale++;
+                // التأكد من أن جنس الزوجة أنثى
+                const wGender = document.getElementById('wifeGender');
+                if(!wGender.value) wGender.value = 'أنثى';
             }
 
             const members = document.querySelectorAll('.member-row');
             members.forEach(row => {
-                const relation = row.querySelector('.m-rel').value;
+                const gender = row.querySelector('.m-gender').value;
                 calcTotal++;
-                if(['اخ', 'ابن', 'اب', 'جد'].includes(relation)) calcMale++;
-                else calcFemale++;
+                if(gender === 'أنثى') calcFemale++;
+                else calcMale++;
             });
 
             document.getElementById('totalCount').value = calcTotal;
@@ -2857,10 +3014,15 @@
 
         function addMemberRow(data = {}) {
             const div = document.createElement('div');
-            div.className = "grid grid-cols-1 md:grid-cols-4 gap-3 bg-white p-6 rounded-3xl shadow-sm border border-slate-100 relative member-row";
+            div.className = "grid grid-cols-1 md:grid-cols-5 gap-3 bg-white p-6 rounded-3xl shadow-sm border border-slate-100 relative member-row";
             div.innerHTML = `
                 <input type="text" placeholder="اسم الفرد رباعي" class="m-name border-none bg-slate-50 rounded-xl p-4 text-xs font-bold" value="${data.name || ''}">
-                <select class="m-rel border-none bg-slate-50 rounded-xl p-4 text-xs font-bold" onchange="calculateFamilyCounts()">
+                <select class="m-gender border-none bg-slate-50 rounded-xl p-4 text-xs font-bold">
+                    <option value="">الجنس</option>
+                    <option value="ذكر" ${data.gender === 'ذكر' ? 'selected' : ''}>ذكر</option>
+                    <option value="أنثى" ${data.gender === 'أنثى' ? 'selected' : ''}>أنثى</option>
+                </select>
+                <select class="m-rel border-none bg-slate-50 rounded-xl p-4 text-xs font-bold" onchange="updateMemberGender(this); calculateFamilyCounts()">
                     ${['اخ', 'اخت', 'زوجة', 'ابن', 'ابنه', 'ام', 'اب', 'خاله', 'عمه', 'جد', 'جده', 'محتضنه'].map(r => `<option ${data.relation === r ? 'selected' : ''}>${r}</option>`).join('')}
                 </select>
                 <input type="date" placeholder="تاريخ الميلاد" class="m-dob border-none bg-slate-50 rounded-xl p-4 text-xs font-bold" value="${data.dob || ''}">
@@ -2868,30 +3030,67 @@
                 <button type="button" onclick="this.parentElement.remove(); calculateFamilyCounts()" class="absolute -left-2 -top-2 bg-white text-red-500 w-8 h-8 rounded-full shadow-md border flex items-center justify-center font-black">×</button>
             `;
             document.getElementById('membersList').appendChild(div);
+            if (!data.gender) updateMemberGender(div.querySelector('.m-rel'));
             calculateFamilyCounts();
         }
 
         function addHealthRow(data = {}) {
             const div = document.createElement('div');
-            div.className = "bg-red-50/20 p-6 rounded-3xl border border-red-100 relative health-row space-y-3";
+            div.className = "bg-red-50/20 p-6 rounded-3xl border border-red-100 relative health-row space-y-4";
             div.innerHTML = `
-                <div class="grid grid-cols-2 gap-2">
-                    <select class="h-type border-none bg-white rounded-xl p-4 text-xs font-bold">
-                        ${['مرض مزمن', 'اعاقة سمعية', 'اعاقة حركية', 'اعاقة بصرية', 'اخرى'].map(t => `<option ${data.type === t ? 'selected' : ''}>${t}</option>`).join('')}
-                    </select>
-                    <select class="h-name border-none bg-white rounded-xl p-4 text-xs font-bold" onfocus="updateHealthNameOptions(this)" onchange="fillHealthFields(this)">
-                        <option value="${data.name || ''}">${data.name || 'اختر الاسم...'}</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <input type="text" placeholder="الهوية" maxlength="9" class="h-id border-none bg-white rounded-xl p-4 text-xs font-mono" value="${data.idNum || ''}">
-                    <input type="text" placeholder="الجوال" maxlength="9" class="h-phone border-none bg-white rounded-xl p-4 text-xs font-mono" value="${data.phone || ''}">
-                    <input type="date" placeholder="تاريخ الميلاد" class="h-dob border-none bg-white rounded-xl p-4 text-xs" value="${data.dob || ''}">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">نوع الحالة</label>
+                        <select class="h-type w-full border-none bg-white rounded-xl p-3 text-xs font-bold text-slate-600 shadow-sm">
+                            ${['مرض مزمن', 'اعاقة سمعية', 'اعاقة حركية', 'اعاقة بصرية', 'اخرى'].map(t => `<option ${data.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+                        </select>
                     </div>
-                <textarea placeholder="تفاصيل المرض" class="h-desc w-full border-none bg-white rounded-xl p-4 text-xs" rows="2">${data.desc || ''}</textarea>
-                <button type="button" onclick="this.parentElement.remove()" class="absolute -left-2 -top-2 bg-white text-red-500 w-8 h-8 rounded-full shadow-md border flex items-center justify-center font-black">×</button>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">الاسم</label>
+                        <select class="h-name w-full border-none bg-white rounded-xl p-3 text-xs font-bold text-slate-600 shadow-sm" onfocus="updateHealthNameOptions(this)" onchange="fillHealthFields(this)">
+                            <option value="${data.name || ''}">${data.name || 'اختر الاسم...'}</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">الجنس</label>
+                        <select class="h-gender w-full border-none bg-white rounded-xl p-3 text-xs font-bold text-slate-600 shadow-sm">
+                            <option value="">اختر...</option>
+                            <option value="ذكر" ${data.gender === 'ذكر' ? 'selected' : ''}>ذكر</option>
+                            <option value="أنثى" ${data.gender === 'أنثى' ? 'selected' : ''}>أنثى</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">رقم الهوية</label>
+                        <input type="text" placeholder="9 أرقام" maxlength="9" class="h-id w-full border-none bg-white rounded-xl p-3 text-xs font-mono shadow-sm" value="${data.idNum || ''}">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">رقم الجوال</label>
+                        <input type="text" placeholder="059..." maxlength="10" class="h-phone w-full border-none bg-white rounded-xl p-3 text-xs font-mono shadow-sm" value="${data.phone || ''}">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">تاريخ الميلاد</label>
+                        <input type="date" class="h-dob w-full border-none bg-white rounded-xl p-3 text-xs shadow-sm" value="${data.dob || ''}">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1">تفاصيل الحالة</label>
+                    <textarea placeholder="وصف مختصر للحالة الصحية..." class="h-desc w-full border-none bg-white rounded-xl p-3 text-xs shadow-sm min-h-[60px] resize-none">${data.desc || ''}</textarea>
+                </div>
+
+                <button type="button" onclick="this.parentElement.remove()" class="absolute -left-2 -top-2 bg-white text-red-500 w-8 h-8 rounded-full shadow-md border border-red-100 flex items-center justify-center font-black hover:bg-red-50 transition-colors">×</button>
             `;
             document.getElementById('healthList').appendChild(div);
+
+            // تعبئة البيانات المسبقة للحقول الأخرى (مثل الجنس) بناءً على الاسم المختار عند تحميل النموذج
+            const nameSelect = div.querySelector('.h-name');
+            if (data.name && !data.gender) { // يعمل فقط إذا كان الاسم موجوداً والجنس غير مسجل في بيانات الحالة الصحية
+                updateHealthNameOptions(nameSelect);
+                fillHealthFields(nameSelect);
+            }
         }
 
         window.updateHealthNameOptions = function(select) {
@@ -2900,19 +3099,22 @@
             const pId = document.getElementById('pId').value;
             const pDob = document.getElementById('pDob').value;
             const pPhone = document.getElementById('pPhone').value;
+            const pGender = document.getElementById('pGender').value;
             const wifeName = document.getElementById('wifeName').value.trim();
             const wifeId = document.getElementById('wifeId').value;
             const wifeDob = document.getElementById('wifeDob').value;
+            const wifeGender = document.getElementById('wifeGender').value;
             
             let optionsHTML = '<option value="">اختر الاسم...</option>';
-            if(pName) optionsHTML += `<option value="${pName}" data-id="${pId}" data-dob="${pDob}" data-phone="${pPhone}">رب الأسرة: ${pName}</option>`;
-            if(wifeName) optionsHTML += `<option value="${wifeName}" data-id="${wifeId}" data-dob="${wifeDob}" data-phone="">الزوجة: ${wifeName}</option>`;
+            if(pName) optionsHTML += `<option value="${pName}" data-id="${pId}" data-dob="${pDob}" data-phone="${pPhone}" data-gender="${pGender}">رب الأسرة: ${pName}</option>`;
+            if(wifeName) optionsHTML += `<option value="${wifeName}" data-id="${wifeId}" data-dob="${wifeDob}" data-phone="${pPhone}" data-gender="${wifeGender}">الزوجة: ${wifeName}</option>`;
             
             document.querySelectorAll('.member-row').forEach(row => {
                 const mName = row.querySelector('.m-name').value.trim();
                 const mId = row.querySelector('.m-id').value;
                 const mDob = row.querySelector('.m-dob').value;
-                if(mName) optionsHTML += `<option value="${mName}" data-id="${mId}" data-dob="${mDob}" data-phone="">${mName}</option>`;
+                const mGender = row.querySelector('.m-gender').value;
+                if(mName) optionsHTML += `<option value="${mName}" data-id="${mId}" data-dob="${mDob}" data-phone="${pPhone}" data-gender="${mGender}">${mName}</option>`;
             });
 
             select.innerHTML = optionsHTML;
@@ -2933,6 +3135,7 @@
             if(option.dataset.id) row.querySelector('.h-id').value = option.dataset.id;
             if(option.dataset.dob) row.querySelector('.h-dob').value = option.dataset.dob;
             if(option.dataset.phone) row.querySelector('.h-phone').value = option.dataset.phone;
+            if(option.dataset.gender) row.querySelector('.h-gender').value = option.dataset.gender;
         };
 
         async function handleSave(e) {
@@ -3016,6 +3219,7 @@
             const payload = {
                 pName: document.getElementById('pName').value,
                 pId: document.getElementById('pId').value,
+                pGender: document.getElementById('pGender').value,
                 pIdIssue: document.getElementById('pIdIssue').value,
                 pDob: document.getElementById('pDob').value,
                 pPhone: document.getElementById('pPhone').value,
@@ -3024,6 +3228,7 @@
                 wifeId: document.getElementById('wifeId').value,
                 wifeDob: document.getElementById('wifeDob').value,
                 wifeStatus: document.getElementById('wifeStatus').value,
+                wifeGender: document.getElementById('wifeGender').value,
                 pDelegate: document.getElementById('pDelegate').value,
                 pAltPhone: document.getElementById('pAltPhone').value,
                 originArea: document.getElementById('originArea').value,
@@ -3039,6 +3244,7 @@
                 citizenStatus: document.getElementById('citizenStatus').value,
                 members: Array.from(document.querySelectorAll('.member-row')).map(r => ({
                     name: r.querySelector('.m-name').value,
+                    gender: r.querySelector('.m-gender').value,
                     relation: r.querySelector('.m-rel').value,
                     dob: r.querySelector('.m-dob').value,
                     idNum: r.querySelector('.m-id').value
@@ -3046,6 +3252,7 @@
                 health: Array.from(document.querySelectorAll('.health-row')).map(r => ({
                     type: r.querySelector('.h-type').value,
                     name: r.querySelector('.h-name').value,
+                    gender: r.querySelector('.h-gender').value,
                     idNum: r.querySelector('.h-id').value,
                     phone: r.querySelector('.h-phone').value,
                     dob: r.querySelector('.h-dob').value,
@@ -3083,6 +3290,18 @@
                 const el = document.getElementById(key);
                 if(el && key !== 'members' && key !== 'health') el.value = f[key] || '';
             });
+            
+            // تطبيق منطق الجنس تلقائياً للبيانات القديمة التي لا تحتوي على حقل الجنس
+            if(!f.pGender) {
+                const social = document.getElementById('pSocial').value;
+                if(['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(social)) {
+                    document.getElementById('pGender').value = 'أنثى';
+                } else {
+                    document.getElementById('pGender').value = 'ذكر';
+                }
+            }
+            
+            if(!f.wifeGender) document.getElementById('wifeGender').value = 'أنثى';
 
             if(f.members) f.members.forEach(m => addMemberRow(m));
             if(f.health) f.health.forEach(h => addHealthRow(h));
@@ -3159,6 +3378,7 @@
                             <div class="grid grid-cols-2 gap-y-6 text-sm">
                                 <span class="text-slate-400">رقم الهوية:</span> <span class="font-mono font-bold">${mask(f.pId)}</span>
                                 <span class="text-slate-400">اصدار الهوية:</span> <span class="font-bold">${f.pIdIssue || "-"}</span>
+                                <span class="text-slate-400">الجنس:</span> <span class="font-bold">${f.pGender || "-"}</span>
                                 <span class="text-slate-400">تاريخ الميلاد:</span> <span class="font-bold">${f.pDob || "-"} (${pAge.y} سنة، ${pAge.m} شهر)</span>
                                 <span class="text-slate-400">رقم الجوال:</span> <span class="font-mono font-bold">${isRestricted ? '*****' : '0' + (f.pPhone || "-")}</span>
                                 <span class="text-slate-400">جوال بديل:</span> <span class="font-mono font-bold">${isRestricted ? '*****' : '0' + (f.pAltPhone || "-")}</span>
@@ -3176,6 +3396,7 @@
                                 <span class="text-slate-400">الاسم:</span> <span class="font-bold">${f.wifeName || "غير محدد"}</span>
                                 <span class="text-slate-400">الهوية:</span> <span class="font-mono font-bold">${mask(f.wifeId)}</span>
                                 <span class="text-slate-400">تاريخ الميلاد:</span> <span class="font-bold">${f.wifeDob || "-"}</span>
+                                <span class="text-slate-400">الجنس:</span> <span class="font-bold">${f.wifeGender || "أنثى"}</span>
                                 <span class="text-slate-400">حالة الزوجة:</span> <span class="font-bold text-indigo-600">${f.wifeStatus || "-"}</span>
                             </div>
                         </div>
@@ -3186,11 +3407,13 @@
                             <table class="w-full text-right text-xs">
                                 <thead class="text-slate-400 border-b border-slate-200">
                                     <tr><th class="pb-4">الاسم</th><th class="pb-4">الصلة</th><th class="pb-4">تاريخ الميلاد</th><th class="pb-4">العمر</th><th class="pb-4">الهوية</th></tr>
+                                    <tr><th class="pb-4">الاسم</th><th class="pb-4">الجنس</th><th class="pb-4">الصلة</th><th class="pb-4">تاريخ الميلاد</th><th class="pb-4">العمر</th><th class="pb-4">الهوية</th></tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
                                     ${(f.members || []).map(m => {
                                         const age = getAge(m.dob);
                                         return `<tr><td class="py-4 font-bold text-slate-700">${m.name || "-"}</td><td>${m.relation || "-"}</td><td>${m.dob || "-"}</td><td>${age.y} سنة، ${age.m} شهر</td><td class="font-mono">${mask(m.idNum)}</td></tr>`;
+                                        return `<tr><td class="py-4 font-bold text-slate-700">${m.name || "-"}</td><td>${m.gender || "-"}</td><td>${m.relation || "-"}</td><td>${m.dob || "-"}</td><td>${age.y} سنة، ${age.m} شهر</td><td class="font-mono">${mask(m.idNum)}</td></tr>`;
                                     }).join('')}
                                 </tbody>
                             </table>
@@ -3206,6 +3429,7 @@
                                         <span class="text-red-500 text-xs bg-red-50 px-2 py-1 rounded-lg">${h.type || "-"}</span>
                                     </div>
                                     <div class="grid grid-cols-2 gap-2 text-xs text-slate-500 mb-3">
+                                        <div><span class="text-slate-400">الجنس:</span> <span class="font-bold">${h.gender || "-"}</span></div>
                                         <div><span class="text-slate-400">الهوية:</span> <span class="font-mono font-bold">${mask(h.idNum)}</span></div>
                                         <div><span class="text-slate-400">الجوال:</span> <span class="font-mono font-bold">${mask(h.phone)}</span></div>
                                         <div class="col-span-2"><span class="text-slate-400">الميلاد:</span> <span class="font-bold">${h.dob || "-"}</span></div>
@@ -4121,5 +4345,3 @@
 </body>
 
 </html>
-
-
