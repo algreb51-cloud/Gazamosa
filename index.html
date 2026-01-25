@@ -696,7 +696,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end mt-4">
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-end mt-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">المندوب (بيانات عائلية)</label>
                             <div class="multiselect-container" id="filterDelegate-container">
@@ -728,6 +728,20 @@
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعزب"> اعزب</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="أيتام"> أيتام</label>
                                     
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">حالة العائلة (تصنيف)</label>
+                            <div class="multiselect-container" id="filterFamilyStatus-container">
+                                <button onclick="toggleMultiSelect('filterFamilyStatus')" class="multiselect-btn w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-600 appearance-none cursor-pointer">
+                                    <span id="filterFamilyStatus-label">كل الحالات</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                                <div id="filterFamilyStatus-options" class="multiselect-options custom-scroll">
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="جيدة"> جيدة</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="متوسطة"> متوسطة</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="هشة"> هشة</label>
                                 </div>
                             </div>
                         </div>
@@ -1122,6 +1136,12 @@
                         <option value="">طبيعة المواطن</option>
                         <option value="نازح">نازح</option>
                         <option value="مقيم">مقيم</option>
+                    </select>
+                    <select id="pFamilyStatus" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold text-slate-600">
+                        <option value="">حالة العائلة (تصنيف)</option>
+                        <option value="جيدة">جيدة</option>
+                        <option value="متوسطة">متوسطة</option>
+                        <option value="هشة">هشة</option>
                     </select>
                 </div>
 
@@ -1599,7 +1619,8 @@
             { id: 'walletPhone', label: 'جوال المحفظة', group: 'المحفظة الإلكترونية' },
             { id: 'shelterType', label: 'طبيعة المأوى', group: 'بيانات السكن' },
             { id: 'displacementPeriod', label: 'فترة النزوح', group: 'بيانات السكن' },
-            { id: 'citizenStatus', label: 'طبيعة المواطن', group: 'بيانات السكن' }
+            { id: 'citizenStatus', label: 'طبيعة المواطن', group: 'بيانات السكن' },
+            { id: 'pFamilyStatus', label: 'حالة العائلة', group: 'بيانات السكن' }
         ];
 
         // تعريف المجموعات (Macros) للقائمة المنسدلة
@@ -1618,8 +1639,8 @@
         // إضافة المجموعات لتعريفات الأعمدة (ستظهر في القائمة)
         columnDefinitions.push(...macroDefinitions);
 
-        // إضافة أعمدة الأفراد (1-10) ديناميكياً
-        for (let i = 1; i <= 10; i++) {
+        // إضافة أعمدة الأفراد (1-12) ديناميكياً
+        for (let i = 1; i <= 12; i++) {
             columnDefinitions.push(
                 { id: `m${i}Name`, label: `اسم الفرد ${i}`, group: 'بيانات الأفراد (تفصيلي)', hidden: true },
                 { id: `m${i}Gender`, label: `جنس الفرد ${i}`, group: 'بيانات الأفراد (تفصيلي)', hidden: true },
@@ -1689,7 +1710,8 @@
             walletPhone: "جوال المحفظة",
             shelterType: "طبيعة المأوى",
             displacementPeriod: "فترة النزوح",
-            citizenStatus: "طبيعة المواطن"
+            citizenStatus: "طبيعة المواطن",
+            pFamilyStatus: "حالة العائلة"
         };
 
         function only9Numbers(input) { input.value = input.value.replace(/\D/g, '').substring(0, 9); }
@@ -2195,6 +2217,7 @@
             const countFilters = getCheckedValues('filterCount');
             const wifeStatusFilters = getCheckedValues('filterWifeStatus');
             const genderFilters = getCheckedValues('filterGender');
+            const familyStatusFilters = getCheckedValues('filterFamilyStatus');
 
             // Update Labels (Optional UX improvement)
             let ageLabel = ageFilters.length > 0 ? `تم اختيار ${ageFilters.length}` : 'اختيار الفئات العمرية...';
@@ -2206,6 +2229,7 @@
             document.getElementById('filterCount-label').innerText = countFilters.length > 0 ? `تم اختيار ${countFilters.length}` : 'اختيار العدد...';
             document.getElementById('filterWifeStatus-label').innerText = wifeStatusFilters.length > 0 ? `تم اختيار ${wifeStatusFilters.length}` : 'اختيار الحالة...';
             document.getElementById('filterGender-label').innerText = genderFilters.length > 0 ? `تم اختيار ${genderFilters.length}` : 'اختيار الجنس...';
+            document.getElementById('filterFamilyStatus-label').innerText = familyStatusFilters.length > 0 ? `تم اختيار ${familyStatusFilters.length}` : 'كل الحالات';
 
             // إذا كنا في وضع عرض المستفيدين المختارين، لا نطبق الفلاتر العادية، فقط نعرض القائمة
             if (isSelectedViewActive) {
@@ -2233,13 +2257,14 @@
             const matchesFamilyFilters = (f) => {
                 const mDelegate = delegateFilters.length === 0 || delegateFilters.includes('all') || delegateFilters.includes((f.pDelegate || "").trim());
                 const mSocial = socialFilters.length === 0 || socialFilters.includes('all') || socialFilters.includes((f.pSocial || "").trim());
+                const mFamilyStatus = familyStatusFilters.length === 0 || familyStatusFilters.includes('all') || familyStatusFilters.includes((f.pFamilyStatus || "").trim());
                 
                 let calculatedCount = 1;
                 if(f.wifeName && f.wifeName.trim()) calculatedCount++;
                 if(f.members && Array.isArray(f.members)) calculatedCount += f.members.length;
 
                 const mCount = countFilters.length === 0 || countFilters.includes('all') || countFilters.includes(calculatedCount.toString());
-                return mDelegate && mSocial && mCount;
+                return mDelegate && mSocial && mCount && mFamilyStatus;
             };
 
             const isRestricted = window.currentUserData?.role === 'viewer' && !hasPerm('view_all');
@@ -2742,6 +2767,7 @@
                 case 'shelterType': return row.shelterType || '-';
                 case 'displacementPeriod': return row.displacementPeriod || '-';
                 case 'citizenStatus': return row.citizenStatus || '-';
+                case 'pFamilyStatus': return row.pFamilyStatus || '-';
                 default: return row[colId] || '';
             }
         }
@@ -2837,6 +2863,7 @@
                 case 'shelterType': return row.shelterType || '-';
                 case 'displacementPeriod': return row.displacementPeriod || '-';
                 case 'citizenStatus': return row.citizenStatus || '-';
+                case 'pFamilyStatus': return row.pFamilyStatus || '-';
                 default: return row[colId] || '-';
             }
         }
@@ -2946,6 +2973,14 @@
             delInput.disabled = false;
             delInput.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
             delInput.classList.add('bg-slate-50');
+
+            // التحكم في ظهور حالة العائلة
+            const statusEl = document.getElementById('pFamilyStatus');
+            if (window.currentUserData.role === 'beneficiary') {
+                statusEl.classList.add('hidden');
+            } else {
+                statusEl.classList.remove('hidden');
+            }
 
             document.getElementById('formModal').classList.remove('hidden');
             updateParentGender();
@@ -3242,6 +3277,7 @@
                 shelterType: document.getElementById('shelterType').value,
                 displacementPeriod: document.getElementById('displacementPeriod').value,
                 citizenStatus: document.getElementById('citizenStatus').value,
+                pFamilyStatus: document.getElementById('pFamilyStatus').value,
                 members: Array.from(document.querySelectorAll('.member-row')).map(r => ({
                     name: r.querySelector('.m-name').value,
                     gender: r.querySelector('.m-gender').value,
@@ -3345,6 +3381,7 @@
             const isRestricted = window.currentUserData?.role === 'viewer' && !hasPerm('view_all');
             const mask = (val) => isRestricted ? '*****' : (val || "-");
 
+            const showFamilyStatus = window.currentUserData.role !== 'beneficiary';
             const pAge = getAge(f.pDob);
             const wAge = getAge(f.wifeDob);
             
@@ -3388,6 +3425,7 @@
                                 <span class="text-slate-400">طبيعة المأوى:</span> <span class="font-bold">${f.shelterType || "-"}</span>
                                 <span class="text-slate-400">فترة النزوح:</span> <span class="font-bold">${f.displacementPeriod || "-"}</span>
                                 <span class="text-slate-400">طبيعة المواطن:</span> <span class="font-bold">${f.citizenStatus || "-"}</span>
+                                ${showFamilyStatus ? `<span class="text-slate-400">حالة العائلة:</span> <span class="font-bold ${f.pFamilyStatus === 'هشة' ? 'text-red-500' : 'text-emerald-600'}">${f.pFamilyStatus || "-"}</span>` : ''}
                             </div>
                         </div>
                         <div class="space-y-8">
@@ -3528,7 +3566,7 @@
 
         function downloadTemplate() { 
             const headers = ["اسم رب الأسرة", "تاريخ ميلاد رب الأسرة", "هوية رب الأسرة", "اصدار الهوية", "رقم الجوال", "اسم الزوجة", "هوية الزوجة", "تاريخ ميلاد الزوجة", "حالة الزوجة", "الحالة الاجتماعية", "عدد الأفراد الكلي", "عدد الذكور", "عدد الإناث"];
-            for(let i=1; i<=10; i++) headers.push(`اسم الفرد ${i}`, `صلة القرابة ${i}`, `تاريخ الميلاد الفرد ${i}`, `رقم الهوية الفرد ${i}`);
+            for(let i=1; i<=12; i++) headers.push(`اسم الفرد ${i}`, `صلة القرابة ${i}`, `تاريخ الميلاد الفرد ${i}`, `رقم الهوية الفرد ${i}`);
             headers.push("منطقة السكن الأصلية", "منطقة النزوح", "طبيعة المأوى", "فترة النزوح", "طبيعة المواطن", "المندوب", "جوال بديل");
             for(let i=1; i<=5; i++) headers.push(`الاسم الحالة ${i}`, `رقم الهوية الحالة ${i}`, `رقم الجوال الحالة ${i}`, `نوع المرض ${i}`);
             headers.push("اسم المالك المحفظة", "رقم الهوية المحفظة", "رقم الجوال المحفظة");
@@ -3574,6 +3612,7 @@
                 const workbook = XLSX.read(data, { type: 'binary' });
                 const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
                 let successCount = 0;
+                let importedIds = [];
                 for (let row of rawData) {
                     let obj = {
                         updatedAt: new Date().toISOString(),
@@ -3602,7 +3641,7 @@
                         walletPhone: String(row["رقم الجوال المحفظة"] || "")
                     };
                     let members = [];
-                    for(let i=1; i<=10; i++) {
+                    for(let i=1; i<=12; i++) {
                         if(row[`اسم الفرد ${i}`]) {
                             members.push({
                                 name: row[`اسم الفرد ${i}`],
@@ -3621,7 +3660,11 @@
                     }
                     obj.health = health;
                     if(obj.pName && obj.pId) {
-                        try { await window.fs.addDoc(window.fs.collection(window.db, "artifacts", window.appId, "public", "data", "families"), obj); successCount++; } catch(err) { console.error("Import Error", err); }
+                        try { 
+                            const docRef = await window.fs.addDoc(window.fs.collection(window.db, "artifacts", window.appId, "public", "data", "families"), obj); 
+                            successCount++; 
+                            importedIds.push(docRef.id);
+                        } catch(err) { console.error("Import Error", err); }
                     }
                 }
                     
@@ -3633,6 +3676,7 @@
                             donor: vDonor,
                             date: vDate,
                             count: successCount,
+                            familyIds: importedIds,
                             createdAt: new Date().toISOString(),
                             createdBy: window.currentUserData ? window.currentUserData.name : 'Unknown',
                             notes: 'تم استيراد البيانات من ملف خارجي: ' + file.name,
@@ -3747,6 +3791,7 @@
                 donor: vDonor,
                 date: vDate,
                 count: dataToExport.length,
+                familyIds: dataToExport.map(d => d.familyId || d.id),
                 createdAt: new Date().toISOString(),
                 createdBy: window.currentUserData ? window.currentUserData.name : 'Unknown',
                 notes: 'تصدير من الجدول الرئيسي',
@@ -3812,6 +3857,7 @@
                 donor: vDonor,
                 date: vDate,
                 count: window.families.length,
+                familyIds: window.families.map(f => f.id),
                 createdAt: new Date().toISOString(),
                 createdBy: window.currentUserData ? window.currentUserData.name : 'Unknown',
                 notes: 'تصدير مخصص (أعمدة محددة)',
@@ -4093,6 +4139,9 @@
         };
 
         window.reDownloadArchive = function(meta) {
+            if (!meta.familyIds || meta.familyIds.length === 0) {
+                return alert("عذراً، هذا السجل قديم ولا يحتوي على بيانات العائلات المرتبطة به، لا يمكن إعادة تحميل النسخة.");
+            }
             const selectedFamilies = window.families.filter(f => (meta.familyIds || []).includes(f.id));
             if(selectedFamilies.length === 0) return alert("لم يتم العثور على بيانات العائلات المؤرشفة (ربما تم حذفها)");
             
