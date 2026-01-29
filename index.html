@@ -696,7 +696,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-end mt-4">
+                    <div class="grid grid-cols-1 lg:grid-cols-6 gap-4 items-end mt-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">المندوب (بيانات عائلية)</label>
                             <div class="multiselect-container" id="filterDelegate-container">
@@ -742,6 +742,22 @@
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="جيدة"> جيدة</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="متوسطة"> متوسطة</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="هشة"> هشة</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">طبيعة المأوى (تصنيف)</label>
+                            <div class="multiselect-container" id="filterShelterType-container">
+                                <button onclick="toggleMultiSelect('filterShelterType')" class="multiselect-btn w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-600 appearance-none cursor-pointer">
+                                    <span id="filterShelterType-label">كل الحالات</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                                <div id="filterShelterType-options" class="multiselect-options custom-scroll">
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="خيمة"> خيمة</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="عريشة"> عريشة</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="منزل"> منزل</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="زينقو"> زينقو</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="أخرى"> أخرى</label>
                                 </div>
                             </div>
                         </div>
@@ -2218,6 +2234,7 @@
             const wifeStatusFilters = getCheckedValues('filterWifeStatus');
             const genderFilters = getCheckedValues('filterGender');
             const familyStatusFilters = getCheckedValues('filterFamilyStatus');
+            const shelterTypeFilters = getCheckedValues('filterShelterType');
 
             // Update Labels (Optional UX improvement)
             let ageLabel = ageFilters.length > 0 ? `تم اختيار ${ageFilters.length}` : 'اختيار الفئات العمرية...';
@@ -2230,6 +2247,7 @@
             document.getElementById('filterWifeStatus-label').innerText = wifeStatusFilters.length > 0 ? `تم اختيار ${wifeStatusFilters.length}` : 'اختيار الحالة...';
             document.getElementById('filterGender-label').innerText = genderFilters.length > 0 ? `تم اختيار ${genderFilters.length}` : 'اختيار الجنس...';
             document.getElementById('filterFamilyStatus-label').innerText = familyStatusFilters.length > 0 ? `تم اختيار ${familyStatusFilters.length}` : 'كل الحالات';
+            document.getElementById('filterShelterType-label').innerText = shelterTypeFilters.length > 0 ? `تم اختيار ${shelterTypeFilters.length}` : 'كل الحالات';
 
             // إذا كنا في وضع عرض المستفيدين المختارين، لا نطبق الفلاتر العادية، فقط نعرض القائمة
             if (isSelectedViewActive) {
@@ -2258,13 +2276,14 @@
                 const mDelegate = delegateFilters.length === 0 || delegateFilters.includes('all') || delegateFilters.includes((f.pDelegate || "").trim());
                 const mSocial = socialFilters.length === 0 || socialFilters.includes('all') || socialFilters.includes((f.pSocial || "").trim());
                 const mFamilyStatus = familyStatusFilters.length === 0 || familyStatusFilters.includes('all') || familyStatusFilters.includes((f.pFamilyStatus || "").trim());
+                const mShelterType = shelterTypeFilters.length === 0 || shelterTypeFilters.includes('all') || shelterTypeFilters.includes((f.shelterType || "").trim());
                 
                 let calculatedCount = 1;
                 if(f.wifeName && f.wifeName.trim()) calculatedCount++;
                 if(f.members && Array.isArray(f.members)) calculatedCount += f.members.length;
 
                 const mCount = countFilters.length === 0 || countFilters.includes('all') || countFilters.includes(calculatedCount.toString());
-                return mDelegate && mSocial && mCount && mFamilyStatus;
+                return mDelegate && mSocial && mCount && mFamilyStatus && mShelterType;
             };
 
             const isRestricted = window.currentUserData?.role === 'viewer' && !hasPerm('view_all');
@@ -2923,8 +2942,29 @@
 
             data.forEach((row, index) => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition-all border-b border-slate-50";
                 
+                let shelterClass = 'hover:bg-slate-50'; // default hover
+                if (currentViewMode === 'family' && row.shelterType) {
+                    switch (row.shelterType.trim()) {
+                        case 'خيمة':
+                            shelterClass = 'bg-yellow-50/50 border-l-4 border-l-yellow-300 hover:bg-yellow-100/50';
+                            break;
+                        case 'عريشة':
+                            shelterClass = 'bg-orange-50/50 border-l-4 border-l-orange-300 hover:bg-orange-100/50';
+                            break;
+                        case 'منزل':
+                            shelterClass = 'bg-green-50/50 border-l-4 border-l-green-400 hover:bg-green-100/50';
+                            break;
+                        case 'زينقو':
+                            shelterClass = 'bg-gray-100/50 border-l-4 border-l-gray-400 hover:bg-gray-200/50';
+                            break;
+                        case 'أخرى':
+                            shelterClass = 'bg-purple-50/50 border-l-4 border-l-purple-400 hover:bg-purple-100/50';
+                            break;
+                    }
+                }
+                tr.className = `transition-all border-b border-slate-50 ${shelterClass}`;
+
                 const checkboxHTML = `<td class="px-4 py-4"><input type="checkbox" value="${row.familyId}" data-index="${index}" onchange="updateMainSelection()" class="main-row-check w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"></td>`;
                 let rowHTML = '';
                 
