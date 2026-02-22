@@ -3489,7 +3489,6 @@
                                 <tbody class="divide-y divide-slate-100">
                                     ${(f.members || []).map(m => {
                                         const age = getAge(m.dob);
-                                        return `<tr><td class="py-4 font-bold text-slate-700">${m.name || "-"}</td><td>${m.relation || "-"}</td><td>${m.dob || "-"}</td><td>${age.y} سنة، ${age.m} شهر</td><td class="font-mono">${mask(m.idNum)}</td></tr>`;
                                         return `<tr><td class="py-4 font-bold text-slate-700">${m.name || "-"}</td><td>${m.gender || "-"}</td><td>${m.relation || "-"}</td><td>${m.dob || "-"}</td><td>${age.y} سنة، ${age.m} شهر</td><td class="font-mono">${mask(m.idNum)}</td></tr>`;
                                     }).join('')}
                                 </tbody>
@@ -4433,4 +4432,5 @@
 </body>
 
 </html>
+
 
