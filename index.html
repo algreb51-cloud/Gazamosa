@@ -3744,7 +3744,7 @@
             data.push(["إجمالي الأفراد", f.totalCount || 0, "عدد الذكور", f.maleCount || 0, "عدد الإناث", f.femaleCount || 0]);
             data.push([]); 
             data.push(["أفراد العائلة المضافين"]);
-            data.push(["الاسم", "الصلة", "تاريخ الميلاد", "العمر", "رقم الهوية"]);
+            data.push(["الاسم", "الجنس", "الصلة", "تاريخ الميلاد", "العمر", "رقم الهوية"]);
             if(f.members && f.members.length > 0) {
                 f.members.forEach(m => { const age = getAge(m.dob); data.push([m.name || "", m.relation || "", m.dob || "", `${age.y} سنة`, m.idNum || ""]); });
             } else { data.push(["لا يوجد أفراد مضافين"]); }
@@ -4432,5 +4432,6 @@
 </body>
 
 </html>
+
 
 
