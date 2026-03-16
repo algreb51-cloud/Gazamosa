@@ -52,13 +52,22 @@
             .print-header { text-align: center; border-bottom: 3px solid #000; margin-bottom: 20px; padding-bottom: 10px; }
             .print-title { font-size: 24pt; font-weight: 900; margin: 0; }
             .print-meta { font-size: 10pt; color: #555; margin-top: 5px; }
-            .section-title { font-size: 16pt; font-weight: bold; background-color: #eee !important; -webkit-print-color-adjust: exact; padding: 8px 10px; margin-top: 25px; margin-bottom: 10px; border-right: 5px solid #000; border-bottom: 1px solid #ccc; }
+            .section-title { font-size: 16pt; font-weight: bold; background-color: #eee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 8px 10px; margin-top: 25px; margin-bottom: 10px; border-right: 5px solid #000; border-bottom: 1px solid #ccc; }
             .print-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
             .print-table th, .print-table td { border: 1px solid #000; padding: 6px 10px; text-align: right; font-size: 11pt; }
-            .print-table th { background-color: #f3f3f3 !important; -webkit-print-color-adjust: exact; font-weight: bold; width: 20%; white-space: nowrap; }
+            .print-table th { background-color: #f3f3f3 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-weight: bold; width: 20%; white-space: nowrap; }
             .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         }
     </style>
+
+        <!-- تسجيل Service Worker لدعم العمل بدون إنترنت -->
+        <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('sw.js');
+            });
+        }
+        </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
@@ -540,6 +549,10 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                         تسجيل خروج
                     </button>
+                        <button id="offlineCopyBtn" onclick="alert('تم تفعيل النسخة المحلية، يمكنك تصفح الموقع بدون إنترنت!')" class="w-full text-right p-3 rounded-xl text-sm font-bold text-blue-500 hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-2 hidden">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20v-6m0 0V4m0 10l-4-4m4 4l4-4"/></svg>
+                            النسخة المحلية (بدون إنترنت)
+                        </button>
                 </div>
                 <button onclick="togglePersonalSettings()" class="p-3 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all" title="الإعدادات الشخصية">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -584,7 +597,7 @@
 
                     <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-end">
                         <div class="lg:col-span-1 relative">
-                            <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">بحث ذكي (اسم، هوية، جوال، مندوب)</label>
+                            <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">بحث ذكي (اسم، هوية، مندوب)</label>
                             <input type="text" id="searchInput" oninput="runFilters()" class="w-full bg-slate-50 border-none rounded-2xl p-4 pr-12 text-sm input-focus" placeholder="بحث...">
                             <svg class="w-6 h-6 text-slate-300 absolute right-4 top-11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </div>
@@ -726,7 +739,7 @@
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="مطلقة"> مطلقة</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="مهجورة"> مهجورة</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعزب"> اعزب</label>
-                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="خاطب"> خاطب</label>
+                                   <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="خاطب"> خاطب</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="أيتام"> أيتام</label>
                                     
                                 </div>
@@ -1085,12 +1098,11 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-400 mb-2">الحالة الاجتماعية</label>
                         <select id="pSocial" onchange="updateParentGender(); calculateFamilyCounts()" class="w-full bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
-                            <option>متزوج</option><option>ارمله</option><option>مطلقة</option>
-                            <option>مهجورة</option><option>خاطب</option><option>اعزب</option><option>أيتام</option>
+                            <option value="">اختر...</option><option value="متزوج">متزوج</option><option value="ارمله">ارمله</option><option value="مطلقة">مطلقة</option><option value="خاطب">خاطب</option><option value="مهجورة">مهجورة</option><option value="غير محدد">غير محدد</option><option value="اعزب">اعزب</option><option value="أيتام">أيتام</option>
                         </select>
                     </div>
                 </div>
-
+                    
                 <div class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
                     <h3 class="text-slate-800 font-bold mb-6 flex items-center gap-2">
                         <svg class="w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM6 8a2 2 0 11-4 0 2 2 0 014 0zM11 18a6 6 0 00-12 0c0 .099.01.196.03.291A5.985 5.985 0 014 13.06V11a2 2 0 10-4 0v2.06A8 8 0 0015 18z"></path></svg>
@@ -1638,7 +1650,19 @@
             { id: 'shelterType', label: 'طبيعة المأوى', group: 'بيانات السكن' },
             { id: 'displacementPeriod', label: 'فترة النزوح', group: 'بيانات السكن' },
             { id: 'citizenStatus', label: 'طبيعة المواطن', group: 'بيانات السكن' },
-            { id: 'pFamilyStatus', label: 'حالة العائلة', group: 'بيانات السكن' }
+            { id: 'pFamilyStatus', label: 'حالة العائلة', group: 'بيانات السكن' },
+            { id: 'children_0_1', label: 'أطفال (0-1 سنة)', group: 'إحصائيات الأطفال' },
+            { id: 'children_0_2', label: 'أطفال (0-2 سنة)', group: 'إحصائيات الأطفال' },
+            { id: 'children_2', label: 'أطفال (عمر سنتين)', group: 'إحصائيات الأطفال' },
+            { id: 'children_3', label: 'أطفال (عمر 3 سنوات)', group: 'إحصائيات الأطفال' },
+            { id: 'children_4', label: 'أطفال (عمر 4 سنوات)', group: 'إحصائيات الأطفال' },
+            { id: 'children_5', label: 'أطفال (عمر 5 سنوات)', group: 'إحصائيات الأطفال' },
+            { id: 'children_under_3', label: 'أطفال (أقل من 3 سنوات)', group: 'إحصائيات الأطفال' },
+            { id: 'children_under_5', label: 'أطفال (أقل من 5 سنوات)', group: 'إحصائيات الأطفال' },
+            { id: 'women_over_18', label: 'نساء وفتيات (فوق 18)', group: 'إحصائيات خاصة' },
+            { id: 'elderly_over_60', label: 'كبار السن (فوق 60)', group: 'إحصائيات خاصة' },
+            { id: 'disabled_count', label: 'عدد المعاقين', group: 'إحصائيات خاصة' },
+            { id: 'chronic_disease_count', label: 'عدد الأمراض المزمنة', group: 'إحصائيات خاصة' }
         ];
 
         // تعريف المجموعات (Macros) للقائمة المنسدلة
@@ -1749,6 +1773,91 @@
             let m = now.getMonth() - birth.getMonth();
             if (m < 0) { y--; m += 12; }
             return { y, m };
+        }
+
+        function countChildrenByAge(members, ageCondition) {
+            if (!members || !Array.isArray(members)) return 0;
+            return members.filter(m => {
+                if (!['ابن', 'ابنه'].includes(m.relation)) return false;
+                const age = getAge(m.dob);
+                return ageCondition(age);
+            }).length;
+        }
+
+        function countWomenOver18(family) {
+            if (!family) return 0;
+            const countedPeople = new Set();
+
+            // Head of household
+            const pGender = family.pGender || (['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(family.pSocial) ? 'أنثى' : 'ذكر');
+            if (pGender === 'أنثى' && family.pDob && getAge(family.pDob).y >= 18) {
+                countedPeople.add(family.pId || family.pName);
+            }
+
+            // Wife
+            if (family.wifeName && family.wifeDob && getAge(family.wifeDob).y >= 18) {
+                countedPeople.add(family.wifeId || family.wifeName);
+            }
+
+            // Members
+            if (family.members) {
+                family.members.forEach(m => {
+                    let gender = m.gender || (['اخت', 'زوجة', 'ابنه', 'ام', 'خاله', 'عمه', 'جده', 'محتضنه'].includes(m.relation) ? 'أنثى' : 'ذكر');
+                    if (gender === 'أنثى' && m.dob && getAge(m.dob).y >= 18) {
+                        countedPeople.add(m.idNum || m.name);
+                    }
+                });
+            }
+            countedPeople.delete(undefined);
+            countedPeople.delete(null);
+            countedPeople.delete('');
+            return countedPeople.size;
+        }
+
+        function countElderlyOver60(family) {
+            if (!family) return 0;
+            const countedPeople = new Set();
+
+            if (family.pDob && getAge(family.pDob).y > 60) {
+                countedPeople.add(family.pId || family.pName);
+            }
+            if (family.wifeName && family.wifeDob && getAge(family.wifeDob).y > 60) {
+                countedPeople.add(family.wifeId || family.wifeName);
+            }
+            if (family.members) {
+                family.members.forEach(m => {
+                    if (m.dob && getAge(m.dob).y > 60) {
+                        countedPeople.add(m.idNum || m.name);
+                    }
+                });
+            }
+            countedPeople.delete(undefined);
+            countedPeople.delete(null);
+            countedPeople.delete('');
+            return countedPeople.size;
+        }
+
+        function countDisabled(family) {
+            if (!family || !family.health || !Array.isArray(family.health)) return 0;
+            const disabilityTypes = ['اعاقة سمعية', 'اعاقة حركية', 'اعاقة بصرية'];
+            const disabledPeople = new Set();
+            family.health.forEach(h => {
+                if (disabilityTypes.includes(h.type) && (h.idNum || h.name)) {
+                    disabledPeople.add(h.idNum || h.name);
+                }
+            });
+            return disabledPeople.size;
+        }
+
+        function countChronicDiseases(family) {
+            if (!family || !family.health || !Array.isArray(family.health)) return 0;
+            const chronicPeople = new Set();
+            family.health.forEach(h => {
+                if (h.type === 'مرض مزمن' && (h.idNum || h.name)) {
+                    chronicPeople.add(h.idNum || h.name);
+                }
+            });
+            return chronicPeople.size;
         }
 
         // ===========================================
@@ -2789,6 +2898,18 @@
                 case 'displacementPeriod': return row.displacementPeriod || '-';
                 case 'citizenStatus': return row.citizenStatus || '-';
                 case 'pFamilyStatus': return row.pFamilyStatus || '-';
+                case 'children_0_1': return countChildrenByAge(row.members, age => age.y <= 1);
+                case 'children_0_2': return countChildrenByAge(row.members, age => age.y <= 2);
+                case 'children_2': return countChildrenByAge(row.members, age => age.y === 2);
+                case 'children_3': return countChildrenByAge(row.members, age => age.y === 3);
+                case 'children_4': return countChildrenByAge(row.members, age => age.y === 4);
+                case 'children_5': return countChildrenByAge(row.members, age => age.y === 5);
+                case 'children_under_3': return countChildrenByAge(row.members, age => age.y < 3);
+                case 'children_under_5': return countChildrenByAge(row.members, age => age.y < 5);
+                case 'women_over_18': return countWomenOver18(row);
+                case 'elderly_over_60': return countElderlyOver60(row);
+                case 'disabled_count': return countDisabled(row);
+                case 'chronic_disease_count': return countChronicDiseases(row);
                 default: return row[colId] || '';
             }
         }
@@ -2885,6 +3006,18 @@
                 case 'displacementPeriod': return row.displacementPeriod || '-';
                 case 'citizenStatus': return row.citizenStatus || '-';
                 case 'pFamilyStatus': return row.pFamilyStatus || '-';
+                case 'children_0_1': return countChildrenByAge(row.members, age => age.y <= 1);
+                case 'children_0_2': return countChildrenByAge(row.members, age => age.y <= 2);
+                case 'children_2': return countChildrenByAge(row.members, age => age.y === 2);
+                case 'children_3': return countChildrenByAge(row.members, age => age.y === 3);
+                case 'children_4': return countChildrenByAge(row.members, age => age.y === 4);
+                case 'children_5': return countChildrenByAge(row.members, age => age.y === 5);
+                case 'children_under_3': return countChildrenByAge(row.members, age => age.y < 3);
+                case 'children_under_5': return countChildrenByAge(row.members, age => age.y < 5);
+                case 'women_over_18': return countWomenOver18(row);
+                case 'elderly_over_60': return countElderlyOver60(row);
+                case 'disabled_count': return countDisabled(row);
+                case 'chronic_disease_count': return countChronicDiseases(row);
                 default: return row[colId] || '-';
             }
         }
@@ -4430,12 +4563,22 @@
         window.closeModal = closeModal;
         window.runFilters = runFilters;
         window.exitSelectedView = exitSelectedView;
+
+            // إظهار أيقونة النسخة المحلية للمديرين والمشرفين فقط
+            function showOfflineIcon() {
+                    const u = window.currentUserData;
+                    const btn = document.getElementById('offlineCopyBtn');
+                    if (!navigator.onLine && u && (['admin','super_admin','employee','مدير رئيسي'].includes(u.role))) {
+                        btn.classList.remove('hidden');
+                    } else {
+                        btn.classList.add('hidden');
+                    }
+            }
+            window.addEventListener('offline', showOfflineIcon);
+            window.addEventListener('online', showOfflineIcon);
+            window.addEventListener('DOMContentLoaded', showOfflineIcon);
+            window.addEventListener('currentUserDataChanged', showOfflineIcon);
     </script>
 </body>
 
 </html>
-
-
-
-
-
