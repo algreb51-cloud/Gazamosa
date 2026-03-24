@@ -655,7 +655,9 @@
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="10-17"> 10 - 17 سنة</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="18-25"> 18 - 25 سنة</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="26-40"> 26 - 40 سنة</label>
-                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="41-80"> 41 - 80 سنة</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="41-60"> 41 - 60 سنة</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="61-80"> 61 - 80 سنة</label>
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="81-100"> 81 - 100 سنة</label>
                                         
                                     </div>
                                 </div>
@@ -1106,28 +1108,36 @@
                 <div class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
                     <h3 class="text-slate-800 font-bold mb-6 flex items-center gap-2">
                         <svg class="w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM6 8a2 2 0 11-4 0 2 2 0 014 0zM11 18a6 6 0 00-12 0c0 .099.01.196.03.291A5.985 5.985 0 014 13.06V11a2 2 0 10-4 0v2.06A8 8 0 0015 18z"></path></svg>
-                        بيانات الزوجة
+                        <span id="wifeSectionTitleText">بيانات الزوجة</span>
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 mb-2">اسم الزوجة</label>
+                            <label class="block text-xs font-bold text-slate-400 mb-2" id="lblWifeName">اسم الزوجة</label>
                             <input type="text" id="wifeName" oninput="calculateFamilyCounts()" class="w-full bg-white border-none rounded-2xl p-5 text-sm font-bold shadow-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 mb-2">هوية الزوجة</label>
+                            <label class="block text-xs font-bold text-slate-400 mb-2" id="lblWifeId">هوية الزوجة</label>
                             <input type="text" id="wifeId" maxlength="9" oninput="only9Numbers(this)" class="w-full bg-white border-none rounded-2xl p-5 text-sm font-mono shadow-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 mb-2">تاريخ الميلاد</label>
+                            <label class="block text-xs font-bold text-slate-400 mb-2" id="lblWifeDob">تاريخ الميلاد</label>
                             <input type="date" id="wifeDob" class="w-full bg-white border-none rounded-2xl p-5 text-sm shadow-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 mb-2">حالة الزوجة</label>
+                            <label class="block text-xs font-bold text-slate-400 mb-2" id="lblWifeStatus">حالة الزوجة</label>
                             <select id="wifeStatus" class="w-full bg-white border-none rounded-2xl p-5 text-sm font-bold shadow-sm text-slate-600">
                                 <option value="">(اختياري)</option>
                                 <option value="لا يوجد">لا يوجد</option>
                                 <option value="حامل">حامل</option>
                                 <option value="مرضعة">مرضعة</option>
+                            </select>
+                        </div>
+                        <div id="widowStatusDiv" class="hidden">
+                            <label class="block text-xs font-bold text-slate-400 mb-2">حالة المتوفى</label>
+                            <select id="widowStatus" class="w-full bg-white border-none rounded-2xl p-5 text-sm font-bold shadow-sm text-slate-600">
+                                <option value="">(اختياري)</option>
+                                <option value="شهيد">شهيد</option>
+                                <option value="متوفى">متوفى</option>
                             </select>
                         </div>
                         <div>
@@ -1739,6 +1749,7 @@
             wifeGender: "جنس الزوجة",
             wifeDob: "تاريخ ميلاد الزوجة",
             wifeStatus: "حالة الزوجة",
+            widowStatus: "حالة المتوفى",
             pSocial: "الحالة الاجتماعية",
             pDelegate: "اسم المندوب",
             pAltPhone: "جوال بديل",
@@ -2433,7 +2444,9 @@
                                     if (ageF === '10-17' && age.y > 10 && age.y <= 17) match = true;
                                     if (ageF === '18-25' && age.y > 17 && age.y <= 25) match = true;
                                     if (ageF === '26-40' && age.y > 25 && age.y <= 40) match = true;
-                                    if (ageF === '41-80' && age.y > 40 && age.y <= 80) match = true;
+                                    if (ageF === '41-60' && age.y > 40 && age.y <= 60) match = true;
+                                    if (ageF === '61-80' && age.y > 60 && age.y <= 80) match = true;
+                                    if (ageF === '81-100' && age.y > 80 && age.y <= 100) match = true;
                                 });
                             }
                             
@@ -2480,7 +2493,9 @@
                                     if (ageF === '10-17' && age.y > 10 && age.y <= 17) match = true;
                                     if (ageF === '18-25' && age.y > 17 && age.y <= 25) match = true;
                                     if (ageF === '26-40' && age.y > 25 && age.y <= 40) match = true;
-                                    if (ageF === '41-80' && age.y > 40 && age.y <= 80) match = true;
+                                    if (ageF === '41-60' && age.y > 40 && age.y <= 60) match = true;
+                                    if (ageF === '61-80' && age.y > 60 && age.y <= 80) match = true;
+                                    if (ageF === '81-100' && age.y > 80 && age.y <= 100) match = true;
                                 });
                             }
                             
@@ -2953,7 +2968,6 @@
 
             // معالجة بيانات الأفراد والحالات الصحية للتصدير (تجميع البيانات)
             if (colId === 'targetName') return row.targetName || (row.members ? row.members.map(m => m.name).join(', ') : '-');
-            if (colId === 'targetGender') return row.targetGender || (row.members ? row.members.map(m => m.gender).join(', ') : '-');
             if (colId === 'targetGender') return row.targetGender || (row.members ? row.members.map(m => {
                 let g = m.gender;
                 if (!g) {
@@ -3159,19 +3173,68 @@
 
             document.getElementById('formModal').classList.remove('hidden');
             updateParentGender();
+            updateWifeSectionUI();
         }
+
+        window.updateWifeSectionUI = function() {
+            const pSocial = document.getElementById('pSocial').value;
+            const isWidow = pSocial === 'ارمله';
+            const widowDiv = document.getElementById('widowStatusDiv');
+            
+            const title = document.getElementById('wifeSectionTitleText');
+            const lblName = document.getElementById('lblWifeName');
+            const lblId = document.getElementById('lblWifeId');
+            const lblDob = document.getElementById('lblWifeDob');
+            const lblStatus = document.getElementById('lblWifeStatus');
+            const statusSelect = document.getElementById('wifeStatus');
+            const genderSelect = document.getElementById('wifeGender');
+
+            if(isWidow) {
+                title.innerText = "بيانات الزوج المتوفى";
+                lblName.innerText = "اسم الزوج المتوفى";
+                lblId.innerText = "رقم هوية الزوج";
+                lblDob.innerText = "تاريخ الوفاة";
+                if(widowDiv) widowDiv.classList.remove('hidden');
+                
+                // التأكد من أن حالة الزوجة تعرض الخيارات الصحيحة (حامل/مرضعة..) حتى للأرملة
+                lblStatus.innerText = "حالة الزوجة";
+                if (!statusSelect.querySelector('option[value="حامل"]')) {
+                    statusSelect.innerHTML = `<option value="">(اختياري)</option><option value="لا يوجد">لا يوجد</option><option value="حامل">حامل</option><option value="مرضعة">مرضعة</option>`;
+                }
+                genderSelect.value = 'ذكر';
+            } else {
+                title.innerText = "بيانات الزوجة";
+                lblName.innerText = "اسم الزوجة";
+                lblId.innerText = "هوية الزوجة";
+                lblDob.innerText = "تاريخ الميلاد";
+                lblStatus.innerText = "حالة الزوجة";
+                
+                if(widowDiv) {
+                    widowDiv.classList.add('hidden');
+                    document.getElementById('widowStatus').value = "";
+                }
+
+                if (!statusSelect.querySelector('option[value="حامل"]')) {
+                    const currentVal = statusSelect.value;
+                    statusSelect.innerHTML = `<option value="">(اختياري)</option><option value="لا يوجد">لا يوجد</option><option value="حامل">حامل</option><option value="مرضعة">مرضعة</option>`;
+                    if(['لا يوجد', 'حامل', 'مرضعة'].includes(currentVal)) statusSelect.value = currentVal;
+                }
+            }
+        };
 
         window.updateParentGender = function() {
             const pSocial = document.getElementById('pSocial').value;
             const pGender = document.getElementById('pGender');
             const wifeGender = document.getElementById('wifeGender');
             
-            if(pSocial === 'متزوج') {
+            if(pSocial === 'متزوج') 
+            {
                 pGender.value = 'ذكر';
                 if(wifeGender) wifeGender.value = 'أنثى';
             } else if(['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(pSocial)) {
                 pGender.value = 'أنثى';
             }
+            updateWifeSectionUI();
         };
 
         window.updateMemberGender = function(select) {
@@ -3189,6 +3252,7 @@
         window.calculateFamilyCounts = function() {
             const pSocial = document.getElementById('pSocial').value;
             const pGender = document.getElementById('pGender');
+            const isWidow = pSocial === 'ارمله';
 
             let calcTotal = 1; // رب الأسرة
             let calcMale = 0;
@@ -3200,11 +3264,12 @@
 
             const wifeName = document.getElementById('wifeName').value;
             if(wifeName && wifeName.trim()) {
-                calcTotal++;
-                calcFemale++;
-                // التأكد من أن جنس الزوجة أنثى
-                const wGender = document.getElementById('wifeGender');
-                if(!wGender.value) wGender.value = 'أنثى';
+                if (!isWidow) {
+                    calcTotal++;
+                    calcFemale++;
+                    const wGender = document.getElementById('wifeGender');
+                    if(!wGender.value) wGender.value = 'أنثى';
+                }
             }
 
             const members = document.querySelectorAll('.member-row');
@@ -3438,6 +3503,7 @@
                 wifeId: document.getElementById('wifeId').value,
                 wifeDob: document.getElementById('wifeDob').value,
                 wifeStatus: document.getElementById('wifeStatus').value,
+                widowStatus: document.getElementById('widowStatus').value,
                 wifeGender: document.getElementById('wifeGender').value,
                 pDelegate: document.getElementById('pDelegate').value,
                 pAltPhone: document.getElementById('pAltPhone').value,
@@ -3514,6 +3580,7 @@
             
             if(!f.wifeGender) document.getElementById('wifeGender').value = 'أنثى';
 
+            updateWifeSectionUI();
             if(f.members) f.members.forEach(m => addMemberRow(m));
             if(f.health) f.health.forEach(h => addHealthRow(h));
             
@@ -3556,6 +3623,7 @@
             const isRestricted = window.currentUserData?.role === 'viewer' && !hasPerm('view_all');
             const mask = (val) => isRestricted ? '*****' : (val || "-");
 
+            const isWidow = f.pSocial === 'ارمله';
             const showFamilyStatus = window.currentUserData.role !== 'beneficiary';
             const pAge = getAge(f.pDob);
             const wAge = getAge(f.wifeDob);
@@ -3604,12 +3672,13 @@
                             </div>
                         </div>
                         <div class="space-y-8">
-                            <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] border-b pb-4">بيانات الزوجة</h3>
+                            <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] border-b pb-4">${isWidow ? 'بيانات الزوج المتوفى' : 'بيانات الزوجة'}</h3>
                             <div class="grid grid-cols-2 gap-y-6 text-sm">
-                                <span class="text-slate-400">الاسم:</span> <span class="font-bold">${f.wifeName || "غير محدد"}</span>
-                                <span class="text-slate-400">الهوية:</span> <span class="font-mono font-bold">${mask(f.wifeId)}</span>
-                                <span class="text-slate-400">تاريخ الميلاد:</span> <span class="font-bold">${f.wifeDob || "-"}</span>
-                                <span class="text-slate-400">الجنس:</span> <span class="font-bold">${f.wifeGender || "أنثى"}</span>
+                                <span class="text-slate-400">${isWidow ? 'اسم الزوج:' : 'الاسم:'}</span> <span class="font-bold">${f.wifeName || "غير محدد"}</span>
+                                <span class="text-slate-400">${isWidow ? 'هوية الزوج:' : 'الهوية:'}</span> <span class="font-mono font-bold">${mask(f.wifeId)}</span>
+                                <span class="text-slate-400">${isWidow ? 'تاريخ الوفاة:' : 'تاريخ الميلاد:'}</span> <span class="font-bold">${f.wifeDob || "-"}</span>
+                                ${!isWidow ? `<span class="text-slate-400">الجنس:</span> <span class="font-bold">${f.wifeGender || "أنثى"}</span>` : ''}
+                                ${isWidow ? `<span class="text-slate-400">حالة المتوفى:</span> <span class="font-bold text-indigo-600">${f.widowStatus || "-"}</span>` : ''}
                                 <span class="text-slate-400">حالة الزوجة:</span> <span class="font-bold text-indigo-600">${f.wifeStatus || "-"}</span>
                             </div>
                         </div>
