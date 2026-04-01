@@ -688,7 +688,7 @@
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعاقة سمعية"> إعاقة سمعية</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعاقة حركية"> إعاقة حركية</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اعاقة بصرية"> إعاقة بصرية</label>
-                                       
+                                        <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اصابة حرب"> اصابة حرب</label>
                                         <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="اخرى"> اخرى</label>
                                     </div>
                                 </div>
@@ -774,6 +774,19 @@
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="منزل"> منزل</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="زينقو"> زينقو</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="أخرى"> أخرى</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">حالة المتوفى (أرامل)</label>
+                            <div class="multiselect-container" id="filterWidowStatus-container">
+                                <button onclick="toggleMultiSelect('filterWidowStatus')" class="multiselect-btn w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-600 appearance-none cursor-pointer">
+                                    <span id="filterWidowStatus-label">الكل (شهيد/متوفى)</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                                <div id="filterWidowStatus-options" class="multiselect-options custom-scroll">
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="شهيد"> شهيد</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="متوفى"> متوفى</label>
                                 </div>
                             </div>
                         </div>
@@ -1100,7 +1113,7 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-400 mb-2">الحالة الاجتماعية</label>
                         <select id="pSocial" onchange="updateParentGender(); calculateFamilyCounts()" class="w-full bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
-                            <option value="">اختر...</option><option value="متزوج">متزوج</option><option value="ارمله">ارمله</option><option value="مطلقة">مطلقة</option><option value="خاطب">خاطب</option><option value="مهجورة">مهجورة</option><option value="اعزب">اعزب</option><option value="أيتام">أيتام</option>
+                            <option value="">اختر...</option><option value="متزوج">متزوج</option><option value="ارمله">ارمله</option><option value="مطلقة">مطلقة</option><option value="خاطب">خاطب</option><option value="مهجورة">مهجورة</option><option value="غير محدد">غير محدد</option><option value="اعزب">اعزب</option><option value="أيتام">أيتام</option>
                         </select>
                     </div>
                 </div>
@@ -1646,6 +1659,10 @@
             { id: 'wifeId', label: 'هوية الزوجة', group: 'بيانات الزوجة' },
             { id: 'wifeDob', label: 'تاريخ ميلاد الزوجة', group: 'بيانات الزوجة' },
             { id: 'wifeStatus', label: 'حالة الزوجة', group: 'بيانات الزوجة' },
+            { id: 'deadHusbandName', label: 'اسم الزوج المتوفى', group: 'بيانات الزوج المتوفى' },
+            { id: 'deadHusbandId', label: 'هوية الزوج المتوفى', group: 'بيانات الزوج المتوفى' },
+            { id: 'deadHusbandDob', label: 'تاريخ الوفاة', group: 'بيانات الزوج المتوفى' },
+            { id: 'widowStatus', label: 'حالة المتوفى', group: 'بيانات الزوج المتوفى' },
             { id: 'pPhone', label: 'رقم الجوال', group: 'بيانات الاتصال' },
             { id: 'pAltPhone', label: 'جوال بديل', group: 'بيانات الاتصال' },
             { id: 'pDelegate', label: 'المندوب', group: 'بيانات الاتصال' },
@@ -1672,7 +1689,8 @@
             { id: 'women_over_18', label: 'نساء وفتيات (فوق 18)', group: 'إحصائيات خاصة' },
             { id: 'elderly_over_60', label: 'كبار السن (فوق 60)', group: 'إحصائيات خاصة' },
             { id: 'disabled_count', label: 'عدد المعاقين', group: 'إحصائيات خاصة' },
-            { id: 'chronic_disease_count', label: 'عدد الأمراض المزمنة', group: 'إحصائيات خاصة' }
+            { id: 'chronic_disease_count', label: 'عدد الأمراض المزمنة', group: 'إحصائيات خاصة' },
+            { id: 'injury_count', label: 'عدد الإصابات', group: 'إحصائيات خاصة' }
         ];
 
         // تعريف المجموعات (Macros) للقائمة المنسدلة
@@ -1806,7 +1824,7 @@
             }
 
             // Wife
-            if (family.wifeName && family.wifeDob && getAge(family.wifeDob).y >= 18) {
+            if (family.pSocial !== 'ارمله' && family.wifeName && family.wifeDob && getAge(family.wifeDob).y >= 18) {
                 countedPeople.add(family.wifeId || family.wifeName);
             }
 
@@ -1832,7 +1850,7 @@
             if (family.pDob && getAge(family.pDob).y > 60) {
                 countedPeople.add(family.pId || family.pName);
             }
-            if (family.wifeName && family.wifeDob && getAge(family.wifeDob).y > 60) {
+            if (family.pSocial !== 'ارمله' && family.wifeName && family.wifeDob && getAge(family.wifeDob).y > 60) {
                 countedPeople.add(family.wifeId || family.wifeName);
             }
             if (family.members) {
@@ -1869,6 +1887,20 @@
                 }
             });
             return chronicPeople.size;
+        }
+
+        function countInjuries(family) {
+            if (!family || !family.health || !Array.isArray(family.health)) return 0;
+            const injuryPeople = new Set();
+            family.health.forEach(h => {
+                // استثناء بيانات الزوج المتوفى من الحساب
+                if (family.pSocial === 'ارمله' && h.name === family.wifeName) return;
+                
+                if (h.type === 'اصابة حرب' && (h.idNum || h.name)) {
+                    injuryPeople.add(h.idNum || h.name);
+                }
+            });
+            return injuryPeople.size;
         }
 
         // ===========================================
@@ -2357,6 +2389,7 @@
             const genderFilters = getCheckedValues('filterGender');
             const familyStatusFilters = getCheckedValues('filterFamilyStatus');
             const shelterTypeFilters = getCheckedValues('filterShelterType');
+            const widowStatusFilters = getCheckedValues('filterWidowStatus');
 
             // Update Labels (Optional UX improvement)
             let ageLabel = ageFilters.length > 0 ? `تم اختيار ${ageFilters.length}` : 'اختيار الفئات العمرية...';
@@ -2370,6 +2403,7 @@
             document.getElementById('filterGender-label').innerText = genderFilters.length > 0 ? `تم اختيار ${genderFilters.length}` : 'اختيار الجنس...';
             document.getElementById('filterFamilyStatus-label').innerText = familyStatusFilters.length > 0 ? `تم اختيار ${familyStatusFilters.length}` : 'كل الحالات';
             document.getElementById('filterShelterType-label').innerText = shelterTypeFilters.length > 0 ? `تم اختيار ${shelterTypeFilters.length}` : 'كل الحالات';
+            document.getElementById('filterWidowStatus-label').innerText = widowStatusFilters.length > 0 ? `تم اختيار ${widowStatusFilters.length}` : 'الكل (شهيد/متوفى)';
 
             // إذا كنا في وضع عرض المستفيدين المختارين، لا نطبق الفلاتر العادية، فقط نعرض القائمة
             if (isSelectedViewActive) {
@@ -2399,13 +2433,14 @@
                 const mSocial = socialFilters.length === 0 || socialFilters.includes('all') || socialFilters.includes((f.pSocial || "").trim());
                 const mFamilyStatus = familyStatusFilters.length === 0 || familyStatusFilters.includes('all') || familyStatusFilters.includes((f.pFamilyStatus || "").trim());
                 const mShelterType = shelterTypeFilters.length === 0 || shelterTypeFilters.includes('all') || shelterTypeFilters.includes((f.shelterType || "").trim());
+                const mWidowStatus = widowStatusFilters.length === 0 || widowStatusFilters.includes('all') || widowStatusFilters.includes((f.widowStatus || "").trim());
                 
                 let calculatedCount = 1;
                 if(f.wifeName && f.wifeName.trim()) calculatedCount++;
                 if(f.members && Array.isArray(f.members)) calculatedCount += f.members.length;
 
                 const mCount = countFilters.length === 0 || countFilters.includes('all') || countFilters.includes(calculatedCount.toString());
-                return mDelegate && mSocial && mCount && mFamilyStatus && mShelterType;
+                return mDelegate && mSocial && mCount && mFamilyStatus && mShelterType && mWidowStatus;
             };
 
             const isRestricted = window.currentUserData?.role === 'viewer' && !hasPerm('view_all');
@@ -2476,8 +2511,9 @@
                                 });
                             }
                         });
-                        [ {name: f.pName, dob: f.pDob, id: f.pId, role: 'أب', gender: f.pGender}, {name: f.wifeName, dob: f.wifeDob, id: f.wifeId, role: 'زوجة', gender: f.wifeGender} ]
-                        .filter(p => p.name && p.dob && p.dob.trim() !== '')
+                        [ {name: f.pName, dob: f.pDob, id: f.pId, role: 'أب', gender: f.pGender}, 
+                          (f.pSocial === 'ارمله' ? null : {name: f.wifeName, dob: f.wifeDob, id: f.wifeId, role: 'زوجة', gender: f.wifeGender}) ]
+                        .filter(p => p && p.name && p.dob && p.dob.trim() !== '')
                         .forEach(p => {
                             const age = getAge(p.dob);
                             let match = false;
@@ -2538,6 +2574,9 @@
                     const showAll = !hasDiseaseFilter;
 
                     (f.health || []).forEach(h => {
+                        // استبعاد السجلات الصحية المرتبطة بالزوج المتوفى من الفرز الصحي
+                        if (f.pSocial === 'ارمله' && h.name === f.wifeName) return;
+
                         if (showAll || diseaseFilters.includes(h.type)) {
                             const patientAge = getAge(h.dob);
                             const pAge = getAge(f.pDob);
@@ -2618,7 +2657,7 @@
             let total = 0;
             data.forEach(f => {
                 total++; // رب الأسرة
-                if (f.wifeName && f.wifeName.trim()) total++; // الزوجة
+                if (f.wifeName && f.wifeName.trim() && f.pSocial !== 'ارمله') total++; // الزوجة
                 if (f.members && Array.isArray(f.members)) total += f.members.length; // الأفراد المضافين
             });
             document.getElementById('totalPersons').innerText = total;
@@ -2892,11 +2931,15 @@
                 case 'pIdIssue': return row.pIdIssue || '-';
                 case 'pDob': return `<span class="font-mono text-slate-500">${row.pDob || '-'}</span>`;
                 case 'age': return `<span class="font-bold text-slate-500">${getAge(row.pDob).y} سنة</span>`;
-                case 'wifeName': return row.wifeName || '-';
-                case 'wifeGender': return row.wifeGender || (row.wifeName ? 'أنثى' : '-');
-                case 'wifeId': return `<span class="font-mono text-slate-500">${mask(row.wifeId)}</span>`;
-                case 'wifeDob': return row.wifeDob || '-';
+                case 'wifeName': return (row.pSocial === 'ارمله') ? '-' : (row.wifeName || '-');
+                case 'wifeGender': return (row.pSocial === 'ارمله') ? '-' : (row.wifeGender || (row.wifeName ? 'أنثى' : '-'));
+                case 'wifeId': return (row.pSocial === 'ارمله') ? '-' : `<span class="font-mono text-slate-500">${mask(row.wifeId)}</span>`;
+                case 'wifeDob': return (row.pSocial === 'ارمله') ? '-' : (row.wifeDob || '-');
                 case 'wifeStatus': return row.wifeStatus || '-';
+                case 'deadHusbandName': return (row.pSocial === 'ارمله') ? (row.wifeName || '-') : '-';
+                case 'deadHusbandId': return (row.pSocial === 'ارمله') ? `<span class="font-mono text-slate-500">${mask(row.wifeId)}</span>` : '-';
+                case 'deadHusbandDob': return (row.pSocial === 'ارمله') ? `<span class="font-mono text-slate-500">${row.wifeDob || '-'}</span>` : '-';
+                case 'widowStatus': return (row.pSocial === 'ارمله') ? (row.widowStatus || '-') : '-';
                 case 'pPhone': return `<span class="font-mono text-slate-500">${mask(row.pPhone ? '0' + row.pPhone : '')}</span>`;
                 case 'pAltPhone': return `<span class="font-mono text-slate-500">${mask(row.pAltPhone ? '0' + row.pAltPhone : '')}</span>`;
                 case 'pDelegate': return `<span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold">${row.pDelegate || '-'}</span>`;
@@ -2925,6 +2968,7 @@
                 case 'elderly_over_60': return countElderlyOver60(row);
                 case 'disabled_count': return countDisabled(row);
                 case 'chronic_disease_count': return countChronicDiseases(row);
+                case 'injury_count': return countInjuries(row);
                 default: return row[colId] || '';
             }
         }
@@ -2999,11 +3043,15 @@
                 case 'pIdIssue': return row.pIdIssue || '-';
                 case 'pDob': return row.pDob || '-';
                 case 'age': return getAge(row.pDob).y;
-                case 'wifeName': return row.wifeName || '-';
-                case 'wifeGender': return row.wifeGender || (row.wifeName ? 'أنثى' : '-');
-                case 'wifeId': return row.wifeId || '-';
-                case 'wifeDob': return row.wifeDob || '-';
+                case 'wifeName': return (row.pSocial === 'ارمله') ? '-' : (row.wifeName || '-');
+                case 'wifeGender': return (row.pSocial === 'ارمله') ? '-' : (row.wifeGender || (row.wifeName ? 'أنثى' : '-'));
+                case 'wifeId': return (row.pSocial === 'ارمله') ? '-' : (row.wifeId || '-');
+                case 'wifeDob': return (row.pSocial === 'ارمله') ? '-' : (row.wifeDob || '-');
                 case 'wifeStatus': return row.wifeStatus || '-';
+                case 'deadHusbandName': return (row.pSocial === 'ارمله') ? (row.wifeName || '-') : '-';
+                case 'deadHusbandId': return (row.pSocial === 'ارمله') ? (row.wifeId || '-') : '-';
+                case 'deadHusbandDob': return (row.pSocial === 'ارمله') ? (row.wifeDob || '-') : '-';
+                case 'widowStatus': return (row.pSocial === 'ارمله') ? (row.widowStatus || '-') : '-';
                 case 'pPhone': return row.pPhone ? '0' + row.pPhone : '-';
                 case 'pAltPhone': return row.pAltPhone ? '0' + row.pAltPhone : '-';
                 case 'pDelegate': return row.pDelegate || '-';
@@ -3032,6 +3080,7 @@
                 case 'elderly_over_60': return countElderlyOver60(row);
                 case 'disabled_count': return countDisabled(row);
                 case 'chronic_disease_count': return countChronicDiseases(row);
+                case 'injury_count': return countInjuries(row);
                 default: return row[colId] || '-';
             }
         }
@@ -3317,7 +3366,7 @@
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 mb-1">نوع الحالة</label>
                         <select class="h-type w-full border-none bg-white rounded-xl p-3 text-xs font-bold text-slate-600 shadow-sm">
-                            ${['مرض مزمن', 'اعاقة سمعية', 'اعاقة حركية', 'اعاقة بصرية', 'اخرى'].map(t => `<option ${data.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+                            ${['مرض مزمن', 'اعاقة سمعية', 'اعاقة حركية', 'اعاقة بصرية', 'اصابة حرب', 'اخرى'].map(t => `<option ${data.type === t ? 'selected' : ''}>${t}</option>`).join('')}
                         </select>
                     </div>
                     <div>
@@ -3382,7 +3431,10 @@
             
             let optionsHTML = '<option value="">اختر الاسم...</option>';
             if(pName) optionsHTML += `<option value="${pName}" data-id="${pId}" data-dob="${pDob}" data-phone="${pPhone}" data-gender="${pGender}">رب الأسرة: ${pName}</option>`;
-            if(wifeName) optionsHTML += `<option value="${wifeName}" data-id="${wifeId}" data-dob="${wifeDob}" data-phone="${pPhone}" data-gender="${wifeGender}">الزوجة: ${wifeName}</option>`;
+            if(wifeName) {
+                const label = (document.getElementById('pSocial').value === 'ارمله') ? 'الزوج المتوفى' : 'الزوجة';
+                optionsHTML += `<option value="${wifeName}" data-id="${wifeId}" data-dob="${wifeDob}" data-phone="${pPhone}" data-gender="${wifeGender}">${label}: ${wifeName}</option>`;
+            }
             
             document.querySelectorAll('.member-row').forEach(row => {
                 const mName = row.querySelector('.m-name').value.trim();
