@@ -2632,7 +2632,7 @@
                 }
                 resultData = filtered.map(f => {
                     let count = 1; // رب الأسرة
-                    if(f.wifeName && f.wifeName.trim()) count++; // الزوجة
+                   if(f.wifeName && f.wifeName.trim() && f.pSocial !== 'ارمله') count++; // الزوجة (تحسب فقط إذا لم تكن أرملة)
                     if(f.members && Array.isArray(f.members)) count += f.members.length; // الأفراد
 
                     return {
@@ -4199,7 +4199,7 @@
                 if(search && !f.pName.includes(search) && !f.pId.includes(search)) return;
                 
                 let count = 1;
-                if(f.wifeName && f.wifeName.trim()) count++;
+                if(f.wifeName && f.wifeName.trim() && f.pSocial !== 'ارمله') count++;
                 if(f.members && Array.isArray(f.members)) count += f.members.length;
 
                 const tr = document.createElement('tr');
@@ -4263,10 +4263,9 @@
 
             const wb = XLSX.utils.book_new();
             const data = [["تقرير المستفيدين - نظام الأرشفة"], ["اسم الملف", meta.fileName, "نوع المساعدة", meta.type], ["الجهة المانحة", meta.donor, "تاريخ الاستفادة", meta.date], ["ملاحظات", meta.notes], [], ["اسم رب الأسرة", "رقم الهوية", "رقم الجوال", "عدد الأفراد", "المندوب", "الزوجة", "هوية الزوجة"]];
-            selectedFamilies.forEach(f => { data.push([f.pName, f.pId, f.pPhone, f.totalCount, f.pDelegate, f.wifeName, f.wifeId]); });
             selectedFamilies.forEach(f => { 
                 let count = 1;
-                if(f.wifeName && f.wifeName.trim()) count++;
+                if(f.wifeName && f.wifeName.trim() && f.pSocial !== 'ارمله') count++;
                 if(f.members && Array.isArray(f.members)) count += f.members.length;
                 data.push([f.pName, f.pId, f.pPhone, count, f.pDelegate, f.wifeName, f.wifeId]); 
             });
