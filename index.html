@@ -932,6 +932,10 @@
                                         <input type="checkbox" name="perms" value="view_all" class="w-5 h-5 rounded text-indigo-600">
                                         <span class="text-sm font-bold text-blue-600">مشاهدة كافة البيانات (تخطي الفلاتر)</span>
                                     </label>
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input type="checkbox" name="perms" value="hide_history" class="w-5 h-5 rounded text-indigo-600">
+                                        <span class="text-sm font-bold text-red-600">إخفاء سجل الاستفادة (عن هذا المستخدم)</span>
+                                    </label>
                                 </div>
                             </div>
 
@@ -1059,6 +1063,10 @@
                         <label class="flex items-center gap-3 cursor-pointer">
                             <input type="checkbox" name="editPerms" value="view_all" class="w-4 h-4 rounded text-indigo-600">
                             <span class="text-xs font-bold text-blue-600">مشاهدة كافة البيانات</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" name="editPerms" value="hide_history" class="w-4 h-4 rounded text-indigo-600">
+                            <span class="text-xs font-bold text-red-600">إخفاء سجل الاستفادة</span>
                         </label>
                     </div>
                 </div>
@@ -3735,12 +3743,13 @@
                             </div>
                         </div>
                     </div>
+                    ${hasPerm('hide_history') ? '' : `
                     <div class="mt-16">
                         <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] border-b pb-4 mb-8">أفراد العائلة المضافين (${f.members?.length || 0})</h3>
                         <div class="bg-slate-50 rounded-[3rem] p-10 overflow-x-auto">
                             <table class="w-full text-right text-xs">
                                 <thead class="text-slate-400 border-b border-slate-200">
-                                    <tr><th class="pb-4">الاسم</th><th class="pb-4">الجنس</th><th class="pb-4">الصلة</th><th class="pb-4">تاريخ الميلاد</th><th class="pb-4">العمر</th><th class="pb-4">الهوية</th></tr>
+                                    <tr><th class="pb-4">الاسم</th><th class="pb-4 text-center">الجنس</th><th class="pb-4 text-center">الصلة</th><th class="pb-4 text-center">تاريخ الميلاد</th><th class="pb-4 text-center">العمر</th><th class="pb-4 text-center">الهوية</th></tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
                                     ${(f.members || []).map(m => {
@@ -3749,7 +3758,7 @@
                                     }).join('')}
                                 </tbody>
                             </table>
-                        </div>
+                        </div>`}
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mt-16">
                         <div class="p-10 bg-red-50 rounded-[3rem] border border-red-100">
@@ -3782,12 +3791,13 @@
                             </div>
                         </div>
                     </div>
+                    ${hasPerm('hide_history') ? '' : `
                     <div class="mt-16">
                         <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] border-b pb-4 mb-8">سجل الاستفادة</h3>
                         <div id="benefitHistoryContainer" class="bg-slate-50 rounded-[3rem] p-10 overflow-x-auto">
                             <p class="text-center text-slate-400">جاري تحميل السجل...</p>
                         </div>
-                    </div>
+                    </div>`}
                 `;
             }
 
@@ -3811,7 +3821,7 @@
             }
             
             document.getElementById('detailsModal').classList.remove('hidden');
-            if (!isRestricted) {
+            if (!isRestricted && !hasPerm('hide_history')) {
                 await fetchAndRenderBenefitHistory(id);
             }
         }
@@ -4490,16 +4500,17 @@
                             </div>
                         </div>
                     </div>
+                    ${hasPerm('hide_history') ? '' : `
                     <div class="mt-8">
                         <h3 class="font-bold text-slate-800 mb-4">سجل الاستفادة</h3>
                         <div id="benefitHistoryContainer" class="bg-slate-50 rounded-3xl p-6 overflow-x-auto">
                             <p class="text-center text-slate-400">جاري تحميل السجل...</p>
                         </div>
-                    </div>
+                    </div>`}
                 </div>
             `;
             document.getElementById('benProfileContent').innerHTML = html;
-            fetchAndRenderBenefitHistory(f.id);
+            if (!hasPerm('hide_history')) fetchAndRenderBenefitHistory(f.id);
         };
 
         window.togglePersonalSettings = function() {
