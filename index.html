@@ -1698,7 +1698,14 @@
             { id: 'elderly_over_60', label: 'كبار السن (فوق 60)', group: 'إحصائيات خاصة' },
             { id: 'disabled_count', label: 'عدد المعاقين', group: 'إحصائيات خاصة' },
             { id: 'chronic_disease_count', label: 'عدد الأمراض المزمنة', group: 'إحصائيات خاصة' },
-            { id: 'injury_count', label: 'عدد الإصابات', group: 'إحصائيات خاصة' }
+            { id: 'injury_count', label: 'عدد الإصابات', group: 'إحصائيات خاصة' },
+            { id: 'children_under_12', label: 'أطفال (أقل من 12 سنة)', group: 'إحصائيات العمر والنوع' },
+            { id: 'females_0_17', label: 'إناث (0-17 سنة)', group: 'إحصائيات العمر والنوع' },
+            { id: 'males_0_17', label: 'ذكور (0-17 سنة)', group: 'إحصائيات العمر والنوع' },
+            { id: 'females_18_59', label: 'إناث (18-59 سنة)', group: 'إحصائيات العمر والنوع' },
+            { id: 'males_18_59', label: 'ذكور (18-59 سنة)', group: 'إحصائيات العمر والنوع' },
+            { id: 'females_60_plus', label: 'إناث (60+ سنة)', group: 'إحصائيات العمر والنوع' },
+            { id: 'males_60_plus', label: 'ذكور (60+ سنة)', group: 'إحصائيات العمر والنوع' }
         ];
 
         // تعريف المجموعات (Macros) للقائمة المنسدلة
@@ -1895,6 +1902,202 @@
                 }
             });
             return chronicPeople.size;
+        }
+
+        function countChildrenUnder12(family) {
+            if (!family) return 0;
+            const countedPeople = new Set();
+            if (family.members) {
+                family.members.forEach(m => {
+                    if (['ابن', 'ابنه'].includes(m.relation) && m.dob && getAge(m.dob).y < 12) {
+                        countedPeople.add(m.idNum || m.name);
+                    }
+                });
+            }
+            countedPeople.delete(undefined);
+            countedPeople.delete(null);
+            countedPeople.delete('');
+            return countedPeople.size;
+        }
+
+        function countFemales0_17(family) {
+            if (!family) return 0;
+            const countedPeople = new Set();
+            
+            // Head of household
+            const pGender = family.pGender || (['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(family.pSocial) ? 'أنثى' : 'ذكر');
+            if (pGender === 'أنثى' && family.pDob && getAge(family.pDob).y >= 0 && getAge(family.pDob).y <= 17) {
+                countedPeople.add(family.pId || family.pName);
+            }
+            
+            // Wife
+            if (family.pSocial !== 'ارمله' && family.wifeName && family.wifeDob && getAge(family.wifeDob).y >= 0 && getAge(family.wifeDob).y <= 17) {
+                countedPeople.add(family.wifeId || family.wifeName);
+            }
+            
+            // Members
+            if (family.members) {
+                family.members.forEach(m => {
+                    let gender = m.gender || (['اخت', 'زوجة', 'ابنه', 'ام', 'خاله', 'عمه', 'جده', 'محتضنه'].includes(m.relation) ? 'أنثى' : 'ذكر');
+                    if (gender === 'أنثى' && m.dob && getAge(m.dob).y >= 0 && getAge(m.dob).y <= 17) {
+                        countedPeople.add(m.idNum || m.name);
+                    }
+                });
+            }
+            countedPeople.delete(undefined);
+            countedPeople.delete(null);
+            countedPeople.delete('');
+            return countedPeople.size;
+        }
+
+        function countMales0_17(family) {
+            if (!family) return 0;
+            const countedPeople = new Set();
+            
+            // Head of household
+            const pGender = family.pGender || (['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(family.pSocial) ? 'أنثى' : 'ذكر');
+            if (pGender === 'ذكر' && family.pDob && getAge(family.pDob).y >= 0 && getAge(family.pDob).y <= 17) {
+                countedPeople.add(family.pId || family.pName);
+            }
+            
+            // Wife
+            if (family.pSocial !== 'ارمله' && family.wifeName && family.wifeDob && getAge(family.wifeDob).y >= 0 && getAge(family.wifeDob).y <= 17) {
+                countedPeople.add(family.wifeId || family.wifeName);
+            }
+            
+            // Members
+            if (family.members) {
+                family.members.forEach(m => {
+                    let gender = m.gender || (['اخ', 'ابن', 'اب', 'جد', 'عم', 'خال'].includes(m.relation) ? 'ذكر' : 'أنثى');
+                    if (gender === 'ذكر' && m.dob && getAge(m.dob).y >= 0 && getAge(m.dob).y <= 17) {
+                        countedPeople.add(m.idNum || m.name);
+                    }
+                });
+            }
+            countedPeople.delete(undefined);
+            countedPeople.delete(null);
+            countedPeople.delete('');
+            return countedPeople.size;
+        }
+
+        function countFemales18_59(family) {
+            if (!family) return 0;
+            const countedPeople = new Set();
+            
+            // Head of household
+            const pGender = family.pGender || (['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(family.pSocial) ? 'أنثى' : 'ذكر');
+            if (pGender === 'أنثى' && family.pDob && getAge(family.pDob).y >= 18 && getAge(family.pDob).y <= 59) {
+                countedPeople.add(family.pId || family.pName);
+            }
+            
+            // Wife
+            if (family.pSocial !== 'ارمله' && family.wifeName && family.wifeDob && getAge(family.wifeDob).y >= 18 && getAge(family.wifeDob).y <= 59) {
+                countedPeople.add(family.wifeId || family.wifeName);
+            }
+            
+            // Members
+            if (family.members) {
+                family.members.forEach(m => {
+                    let gender = m.gender || (['اخت', 'زوجة', 'ابنه', 'ام', 'خاله', 'عمه', 'جده', 'محتضنه'].includes(m.relation) ? 'أنثى' : 'ذكر');
+                    if (gender === 'أنثى' && m.dob && getAge(m.dob).y >= 18 && getAge(m.dob).y <= 59) {
+                        countedPeople.add(m.idNum || m.name);
+                    }
+                });
+            }
+            countedPeople.delete(undefined);
+            countedPeople.delete(null);
+            countedPeople.delete('');
+            return countedPeople.size;
+        }
+
+        function countMales18_59(family) {
+            if (!family) return 0;
+            const countedPeople = new Set();
+            
+            // Head of household
+            const pGender = family.pGender || (['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(family.pSocial) ? 'أنثى' : 'ذكر');
+            if (pGender === 'ذكر' && family.pDob && getAge(family.pDob).y >= 18 && getAge(family.pDob).y <= 59) {
+                countedPeople.add(family.pId || family.pName);
+            }
+            
+            // Wife
+            if (family.pSocial !== 'ارمله' && family.wifeName && family.wifeDob && getAge(family.wifeDob).y >= 18 && getAge(family.wifeDob).y <= 59) {
+                countedPeople.add(family.wifeId || family.wifeName);
+            }
+            
+            // Members
+            if (family.members) {
+                family.members.forEach(m => {
+                    let gender = m.gender || (['اخ', 'ابن', 'اب', 'جد', 'عم', 'خال'].includes(m.relation) ? 'ذكر' : 'أنثى');
+                    if (gender === 'ذكر' && m.dob && getAge(m.dob).y >= 18 && getAge(m.dob).y <= 59) {
+                        countedPeople.add(m.idNum || m.name);
+                    }
+                });
+            }
+            countedPeople.delete(undefined);
+            countedPeople.delete(null);
+            countedPeople.delete('');
+            return countedPeople.size;
+        }
+
+        function countFemales60Plus(family) {
+            if (!family) return 0;
+            const countedPeople = new Set();
+            
+            // Head of household
+            const pGender = family.pGender || (['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(family.pSocial) ? 'أنثى' : 'ذكر');
+            if (pGender === 'أنثى' && family.pDob && getAge(family.pDob).y >= 60) {
+                countedPeople.add(family.pId || family.pName);
+            }
+            
+            // Wife
+            if (family.pSocial !== 'ارمله' && family.wifeName && family.wifeDob && getAge(family.wifeDob).y >= 60) {
+                countedPeople.add(family.wifeId || family.wifeName);
+            }
+            
+            // Members
+            if (family.members) {
+                family.members.forEach(m => {
+                    let gender = m.gender || (['اخت', 'زوجة', 'ابنه', 'ام', 'خاله', 'عمه', 'جده', 'محتضنه'].includes(m.relation) ? 'أنثى' : 'ذكر');
+                    if (gender === 'أنثى' && m.dob && getAge(m.dob).y >= 60) {
+                        countedPeople.add(m.idNum || m.name);
+                    }
+                });
+            }
+            countedPeople.delete(undefined);
+            countedPeople.delete(null);
+            countedPeople.delete('');
+            return countedPeople.size;
+        }
+
+        function countMales60Plus(family) {
+            if (!family) return 0;
+            const countedPeople = new Set();
+            
+            // Head of household
+            const pGender = family.pGender || (['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(family.pSocial) ? 'أنثى' : 'ذكر');
+            if (pGender === 'ذكر' && family.pDob && getAge(family.pDob).y >= 60) {
+                countedPeople.add(family.pId || family.pName);
+            }
+            
+            // Wife
+            if (family.pSocial !== 'ارمله' && family.wifeName && family.wifeDob && getAge(family.wifeDob).y >= 60) {
+                countedPeople.add(family.wifeId || family.wifeName);
+            }
+            
+            // Members
+            if (family.members) {
+                family.members.forEach(m => {
+                    let gender = m.gender || (['اخ', 'ابن', 'اب', 'جد', 'عم', 'خال'].includes(m.relation) ? 'ذكر' : 'أنثى');
+                    if (gender === 'ذكر' && m.dob && getAge(m.dob).y >= 60) {
+                        countedPeople.add(m.idNum || m.name);
+                    }
+                });
+            }
+            countedPeople.delete(undefined);
+            countedPeople.delete(null);
+            countedPeople.delete('');
+            return countedPeople.size;
         }
 
         function countInjuries(family) {
@@ -2954,9 +3157,33 @@
                 case 'pSocial': return `<span class="text-xs font-bold">${row.pSocial || '-'}</span>`;
                 case 'originArea': return row.originArea || '-';
                 case 'displaceArea': return row.displaceArea || '-';
-                case 'totalCount': return `<span class="font-bold">${row.totalCount || 0}</span>`;
-                case 'maleCount': return row.maleCount || 0;
-                case 'femaleCount': return row.femaleCount || 0;
+                case 'totalCount': {
+                    let total = 1; // رب الأسرة
+                    if (row.wifeName && row.wifeName.trim() && row.pSocial !== 'ارمله') total++;
+                    if (row.members && Array.isArray(row.members)) total += row.members.length;
+                    return `<span class="font-bold">${total}</span>`;
+                }
+                case 'maleCount': {
+                    let males = 1; // رب الأسرة
+                    if (row.members && Array.isArray(row.members)) {
+                        males += row.members.filter(m => {
+                            let gender = m.gender || (['اخ', 'ابن', 'اب', 'جد', 'عم', 'خال'].includes(m.relation) ? 'ذكر' : 'أنثى');
+                            return gender === 'ذكر';
+                        }).length;
+                    }
+                    return males;
+                }
+                case 'femaleCount': {
+                    let females = 0;
+                    if (row.wifeName && row.wifeName.trim() && row.pSocial !== 'ارمله') females++;
+                    if (row.members && Array.isArray(row.members)) {
+                        females += row.members.filter(m => {
+                            let gender = m.gender || (['اخت', 'زوجة', 'ابنه', 'ام', 'خاله', 'عمه', 'جده', 'محتضنه'].includes(m.relation) ? 'أنثى' : 'ذكر');
+                            return gender === 'أنثى';
+                        }).length;
+                    }
+                    return females;
+                }
                 case 'walletOwner': return row.walletOwner || '-';
                 case 'walletId': return `<span class="font-mono">${mask(row.walletId)}</span>`;
                 case 'walletPhone': return `<span class="font-mono">${mask(row.walletPhone)}</span>`;
@@ -2977,6 +3204,13 @@
                 case 'disabled_count': return countDisabled(row);
                 case 'chronic_disease_count': return countChronicDiseases(row);
                 case 'injury_count': return countInjuries(row);
+                case 'children_under_12': return countChildrenUnder12(row);
+                case 'females_0_17': return countFemales0_17(row);
+                case 'males_0_17': return countMales0_17(row);
+                case 'females_18_59': return countFemales18_59(row);
+                case 'males_18_59': return countMales18_59(row);
+                case 'females_60_plus': return countFemales60Plus(row);
+                case 'males_60_plus': return countMales60Plus(row);
                 default: return row[colId] || '';
             }
         }
@@ -3066,9 +3300,33 @@
                 case 'pSocial': return row.pSocial || '-';
                 case 'originArea': return row.originArea || '-';
                 case 'displaceArea': return row.displaceArea || '-';
-                case 'totalCount': return row.totalCount || 0;
-                case 'maleCount': return row.maleCount || 0;
-                case 'femaleCount': return row.femaleCount || 0;
+                case 'totalCount': {
+                    let total = 1; // رب الأسرة
+                    if (row.wifeName && row.wifeName.trim() && row.pSocial !== 'ارمله') total++;
+                    if (row.members && Array.isArray(row.members)) total += row.members.length;
+                    return total;
+                }
+                case 'maleCount': {
+                    let males = 1; // رب الأسرة
+                    if (row.members && Array.isArray(row.members)) {
+                        males += row.members.filter(m => {
+                            let gender = m.gender || (['اخ', 'ابن', 'اب', 'جد', 'عم', 'خال'].includes(m.relation) ? 'ذكر' : 'أنثى');
+                            return gender === 'ذكر';
+                        }).length;
+                    }
+                    return males;
+                }
+                case 'femaleCount': {
+                    let females = 0;
+                    if (row.wifeName && row.wifeName.trim() && row.pSocial !== 'ارمله') females++;
+                    if (row.members && Array.isArray(row.members)) {
+                        females += row.members.filter(m => {
+                            let gender = m.gender || (['اخت', 'زوجة', 'ابنه', 'ام', 'خاله', 'عمه', 'جده', 'محتضنه'].includes(m.relation) ? 'أنثى' : 'ذكر');
+                            return gender === 'أنثى';
+                        }).length;
+                    }
+                    return females;
+                }
                 case 'walletOwner': return row.walletOwner || '-';
                 case 'walletId': return row.walletId || '-';
                 case 'walletPhone': return row.walletPhone || '-';
@@ -3089,6 +3347,13 @@
                 case 'disabled_count': return countDisabled(row);
                 case 'chronic_disease_count': return countChronicDiseases(row);
                 case 'injury_count': return countInjuries(row);
+                case 'children_under_12': return countChildrenUnder12(row);
+                case 'females_0_17': return countFemales0_17(row);
+                case 'males_0_17': return countMales0_17(row);
+                case 'females_18_59': return countFemales18_59(row);
+                case 'males_18_59': return countMales18_59(row);
+                case 'females_60_plus': return countFemales60Plus(row);
+                case 'males_60_plus': return countMales60Plus(row);
                 default: return row[colId] || '-';
             }
         }
