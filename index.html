@@ -593,6 +593,7 @@
                         <button onclick="setViewMode('family')" id="viewBtn-family" class="px-6 py-3 rounded-xl text-sm font-bold bg-slate-800 text-white shadow-lg transition-all">عرض العائلات</button>
                         <button onclick="setViewMode('individual')" id="viewBtn-individual" class="px-6 py-3 rounded-xl text-sm font-bold bg-white text-slate-500 hover:bg-slate-100 transition-all">عرض الأفراد (تفصيلي)</button>
                         <button onclick="setViewMode('health')" id="viewBtn-health" class="px-6 py-3 rounded-xl text-sm font-bold bg-white text-slate-500 hover:bg-slate-100 transition-all">عرض الحالات الصحية</button>
+                        <button onclick="openArchiveModal()" id="viewBtn-archive" class="px-6 py-3 rounded-xl text-sm font-bold bg-white text-orange-500 hover:bg-orange-50 transition-all">أرشيف العائلات</button>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-end">
@@ -1498,6 +1499,36 @@
             <div class="px-6 pt-4"><button onclick="testNotification()" class="w-full py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-200">🔔 تجربة صوت وإشعار (Test)</button></div>
             <div id="notificationsList" class="flex-1 p-6 overflow-y-auto custom-scroll space-y-4 bg-slate-50/50">
                 <!-- Items -->
+            </div>
+        </div>
+    </div>
+
+    <div id="archiveModal" class="fixed inset-0 bg-slate-900/80 hidden z-[1800] flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white w-full max-w-6xl rounded-[2.5rem] shadow-2xl modal-anim overflow-hidden h-[85vh] flex flex-col">
+            <div class="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                <h3 class="text-xl font-black text-slate-800">أرشيف العائلات</h3>
+                <button onclick="closeModal('archiveModal')" class="p-2 bg-white border rounded-xl hover:bg-red-50 hover:text-red-500 transition-all">✕</button>
+            </div>
+            <div class="flex-1 p-6 overflow-y-auto custom-scroll bg-slate-50/50">
+                <table class="w-full border-collapse">
+                    <thead class="sticky top-0 bg-white">
+                        <tr class="border-b border-slate-200">
+                            <th class="py-4 px-4 text-right font-black text-slate-700 text-sm">اسم العائلة</th>
+                            <th class="py-4 px-4 text-right font-bold text-slate-600 text-xs">الهوية</th>
+                            <th class="py-4 px-4 text-right font-bold text-slate-600 text-xs">الجوال</th>
+                            <th class="py-4 px-4 text-center font-bold text-slate-600 text-xs">عدد الأفراد</th>
+                            <th class="py-4 px-4 text-right font-bold text-slate-600 text-xs">تاريخ الأرشفة</th>
+                            <th class="py-4 px-4 text-right font-bold text-slate-600 text-xs">أرشف بواسطة</th>
+                            <th class="py-4 px-4 text-center font-bold text-slate-600 text-xs">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="archiveTableBody" class="divide-y divide-slate-100">
+                        <!-- Archive rows will be rendered here -->
+                    </tbody>
+                </table>
+                <div id="archiveEmptyState" class="text-center py-12">
+                    <p class="text-slate-400 text-sm">لا توجد عائلات مؤرشفة حالياً</p>
+                </div>
             </div>
         </div>
     </div>
@@ -3377,6 +3408,7 @@
                     
                     let actionButtons = `<button onclick="viewDetails('${row.familyId}')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="تفاصيل"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>`;
                     if(hasPerm('edit')) actionButtons += `<button onclick="editFamily('${row.familyId}')" class="p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-all" title="تعديل"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>`;
+                    if(hasPerm('remove') && currentViewMode === 'family') actionButtons += `<button onclick="window.archiveFamily('${row.familyId}', '${row.pName}')" class="p-2 text-orange-500 hover:bg-orange-50 rounded-lg transition-all" title="أرشفة"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg></button>`;
                     if(hasPerm('remove')) actionButtons += `<button onclick="triggerDelete('${row.familyId}')" class="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all" title="حذف"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>`;
                     
                     const actions = `<div class="flex items-center justify-center gap-2">${actionButtons}</div>`;
@@ -3445,6 +3477,9 @@
 
                 if(hasPerm('edit')) {
                     actionButtons += `<button onclick="editFamily('${row.familyId}')" class="p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-all" title="تعديل"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>`;
+                }
+                if(hasPerm('remove') && currentViewMode === 'family') {
+                    actionButtons += `<button onclick="window.archiveFamily('${row.familyId}', '${row.pName}')" class="p-2 text-orange-500 hover:bg-orange-50 rounded-lg transition-all" title="أرشفة"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg></button>`;
                 }
                 if(hasPerm('remove')) {
                     actionButtons += `<button onclick="triggerDelete('${row.familyId}')" class="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all" title="حذف"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>`;
@@ -3940,6 +3975,202 @@
             pendingDeleteId = null;
             document.getElementById('undoToast').classList.add('hidden');
         }
+
+        window.openArchiveModal = async function() {
+            document.getElementById('archiveModal').classList.remove('hidden');
+            await renderArchiveTable();
+        };
+
+        async function renderArchiveTable() {
+            try {
+                const q = window.fs.query(
+                    window.fs.collection(window.db, "artifacts", window.appId, "public", "data", "archived_families"),
+                    window.fs.orderBy("archivedAt", "desc")
+                );
+                const snap = await window.fs.getDocs(q);
+                const tbody = document.getElementById('archiveTableBody');
+                const emptyState = document.getElementById('archiveEmptyState');
+
+                if (snap.empty) {
+                    tbody.innerHTML = '';
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+
+                emptyState.classList.add('hidden');
+                tbody.innerHTML = '';
+
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    const archivedDate = data.archivedAt ? new Date(data.archivedAt).toLocaleDateString('ar-SA') : '-';
+                    const memberCount = (data.members || []).length;
+
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-slate-50 border-b border-slate-100';
+                    row.innerHTML = `
+                        <td class="py-4 px-4 font-bold text-slate-800">${data.pName || '-'}</td>
+                        <td class="py-4 px-4 text-slate-600 font-mono text-xs">${data.pId || '-'}</td>
+                        <td class="py-4 px-4 text-slate-600 font-mono text-xs">0${data.pPhone || '-'}</td>
+                        <td class="py-4 px-4 text-center text-slate-600 font-bold">${memberCount}</td>
+                        <td class="py-4 px-4 text-slate-600 text-sm">${archivedDate}</td>
+                        <td class="py-4 px-4 text-slate-600 text-sm">${data.archivedByName || data.archivedBy || '-'}</td>
+                        <td class="py-4 px-4 text-center">
+                            <div class="flex gap-2 justify-center">
+                                <button onclick="window.restoreArchived('${doc.id}', '${data.pName}')" title="استعادة" class="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                </button>
+                                <button onclick="window.editArchivedFamily('${doc.id}')" title="تعديل" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </button>
+                                <button onclick="window.deleteArchived('${doc.id}', '${data.pName}')" title="حذف" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (err) {
+                console.error("Error rendering archive table:", err);
+                alert("حدث خطأ في تحميل الأرشيف: " + err.message);
+            }
+        }
+
+        window.archiveFamily = async function(familyId, familyName) {
+            if(!hasPerm('remove')) return alert("ليس لديك صلاحية أرشفة");
+            if(!confirm(`هل أنت متأكد من أرشفة عائلة: ${familyName}؟`)) return;
+            
+            try {
+                const docRef = window.fs.doc(window.db, "artifacts", window.appId, "public", "data", "families", familyId);
+                const docSnap = await window.fs.getDoc(docRef);
+                
+                if(!docSnap.exists()) {
+                    alert("العائلة غير موجودة");
+                    return;
+                }
+                
+                const familyData = docSnap.data();
+                
+                // Copy to archive with metadata
+                await window.fs.setDoc(
+                    window.fs.doc(window.db, "artifacts", window.appId, "public", "data", "archived_families", familyId),
+                    {
+                        ...familyData,
+                        archivedAt: new Date().toISOString(),
+                        archivedBy: window.currentUserData?.username || 'unknown',
+                        archivedByName: window.currentUserData?.name || 'غير محدد',
+                        originalId: familyId
+                    }
+                );
+                
+                // Delete from main collection
+                await window.fs.deleteDoc(docRef);
+                
+                alert(`تم أرشفة عائلة ${familyName} بنجاح`);
+                runFilters(); // Update main table
+            } catch(err) {
+                console.error("Archive Error:", err);
+                alert("حدث خطأ أثناء الأرشفة: " + err.message);
+            }
+        };
+
+        window.restoreArchived = async function(archivedId, familyName) {
+            if(!hasPerm('remove')) return alert("ليس لديك صلاحية استعادة");
+            if(!confirm(`هل تريد استعادة عائلة ${familyName} إلى القائمة الرئيسية؟`)) return;
+            
+            try {
+                const archivedRef = window.fs.doc(window.db, "artifacts", window.appId, "public", "data", "archived_families", archivedId);
+                const archivedSnap = await window.fs.getDoc(archivedRef);
+                
+                if(!archivedSnap.exists()) {
+                    alert("السجل المؤرشف غير موجود");
+                    return;
+                }
+                
+                const archivedData = archivedSnap.data();
+                const { archivedAt, archivedBy, archivedByName, originalId, ...familyData } = archivedData;
+                
+                // Save to main collection
+                await window.fs.setDoc(
+                    window.fs.doc(window.db, "artifacts", window.appId, "public", "data", "families", archivedId),
+                    familyData
+                );
+                
+                // Delete from archive
+                await window.fs.deleteDoc(archivedRef);
+                
+                alert(`تم استعادة عائلة ${familyName} بنجاح`);
+                await renderArchiveTable(); // Refresh archive table
+                runFilters(); // Update main table
+            } catch(err) {
+                console.error("Restore Error:", err);
+                alert("حدث خطأ أثناء الاستعادة: " + err.message);
+            }
+        };
+
+        window.deleteArchived = async function(archivedId, familyName) {
+            if(!hasPerm('remove')) return alert("ليس لديك صلاحية حذف");
+            if(!confirm(`هل أنت متأكد من حذف ${familyName} بشكل دائم؟ لا يمكن استرجاع البيانات بعد الحذف.`)) return;
+            
+            try {
+                const archivedRef = window.fs.doc(window.db, "artifacts", window.appId, "public", "data", "archived_families", archivedId);
+                await window.fs.deleteDoc(archivedRef);
+                
+                alert(`تم حذف عائلة ${familyName} بشكل دائم من الأرشيف`);
+                await renderArchiveTable(); // Refresh archive table
+            } catch(err) {
+                console.error("Delete Archive Error:", err);
+                alert("حدث خطأ أثناء الحذف: " + err.message);
+            }
+        };
+
+        window.editArchivedFamily = async function(archivedId) {
+            try {
+                const archivedRef = window.fs.doc(window.db, "artifacts", window.appId, "public", "data", "archived_families", archivedId);
+                const archivedSnap = await window.fs.getDoc(archivedRef);
+                
+                if(!archivedSnap.exists()) {
+                    alert("السجل المؤرشف غير موجود");
+                    return;
+                }
+                
+                const familyData = archivedSnap.data();
+                
+                // Load data into form
+                document.getElementById('pName').value = familyData.pName || '';
+                document.getElementById('pDob').value = familyData.pDob || '';
+                document.getElementById('pId').value = familyData.pId || '';
+                document.getElementById('pIdIssue').value = familyData.pIdIssue || '';
+                document.getElementById('pPhone').value = familyData.pPhone || '';
+                document.getElementById('pAltPhone').value = familyData.pAltPhone || '';
+                document.getElementById('pGender').value = familyData.pGender || 'ذكر';
+                document.getElementById('pSocial').value = familyData.pSocial || 'متزوج';
+                document.getElementById('pDelegate').value = familyData.pDelegate || '';
+                document.getElementById('originArea').value = familyData.originArea || '';
+                document.getElementById('displaceArea').value = familyData.displaceArea || '';
+                document.getElementById('shelterType').value = familyData.shelterType || '';
+                document.getElementById('displacementPeriod').value = familyData.displacementPeriod || '';
+                document.getElementById('citizenStatus').value = familyData.citizenStatus || '';
+                document.getElementById('pFamilyStatus').value = familyData.pFamilyStatus || '';
+                document.getElementById('wifeName').value = familyData.wifeName || '';
+                document.getElementById('wifeId').value = familyData.wifeId || '';
+                document.getElementById('wifeDob').value = familyData.wifeDob || '';
+                document.getElementById('wifeStatus').value = familyData.wifeStatus || '';
+                document.getElementById('walletOwner').value = familyData.walletOwner || '';
+                document.getElementById('walletId').value = familyData.walletId || '';
+                document.getElementById('walletPhone').value = familyData.walletPhone || '';
+                
+                // Store archived ID for saving later
+                window.editingArchivedId = archivedId;
+                
+                // Close archive modal and open form
+                closeModal('archiveModal');
+                openForm();
+            } catch(err) {
+                console.error("Edit Archived Error:", err);
+                alert("حدث خطأ أثناء تحميل البيانات: " + err.message);
+            }
+        };
 
         async function viewDetails(id) {
             const f = window.families.find(x => x.id === id);
