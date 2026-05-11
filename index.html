@@ -1177,7 +1177,33 @@
                     <input type="text" id="pDelegate" placeholder="المندوب (موسى، نبيل..)" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
                     <input type="text" id="pAltPhone" maxlength="9" oninput="only9Numbers(this)" placeholder="جوال بديل" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-mono">
                     <input type="text" id="originArea" placeholder="السكن الأصلي" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
-                    <input type="text" id="displaceArea" placeholder="منطقة النزوح" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
+                     <input type="text" id="displaceArea" placeholder="منطقة النزوح" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
+                    <input type="text" id="originCluster" placeholder="التجمع السكني الأصلي" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
+                    <input type="text" id="originNeighborhood" placeholder="الحي" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
+                    <input type="text" id="originStreet" placeholder="الشارع" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
+                    <input type="number" id="familyMartyrCount" min="0" step="1" placeholder="عدد شهداء العائلة" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
+                    <select id="headIsMartyr" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold text-slate-600">
+                        <option value="">هل رب الأسرة شهيد؟</option>
+                        <option value="نعم">نعم</option>
+                        <option value="لا">لا</option>
+                    </select>
+                    <select id="originHousingType" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold text-slate-600">
+                        <option value="">نوع السكن الأصلي</option>
+                        <option value="منزل">منزل</option>
+                        <option value="شقة">شقة</option>
+                        <option value="مشترك">مشترك</option>
+                    </select>
+                    <select id="originOwnershipType" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold text-slate-600">
+                        <option value="">نوع الحيازة للسكن الأصلي</option>
+                        <option value="ملك">ملك</option>
+                        <option value="إيجار">إيجار</option>
+                    </select>
+                    <select id="originHousingDamage" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold text-slate-600">
+                        <option value="">نوع الضرر للمسكن</option>
+                        <option value="ضرر كلي">ضرر كلي</option>
+                        <option value="ضرر جزئي">ضرر جزئي</option>
+                        <option value="لم يتضرر">لم يتضرر</option>
+                    </select>
                     <input type="number" id="totalCount" placeholder="إجمالي الأفراد" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
                     <input type="number" id="maleCount" placeholder="عدد الذكور" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
                     <input type="number" id="femaleCount" placeholder="عدد الإناث" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
@@ -1204,6 +1230,11 @@
                         <option value="جيدة">جيدة</option>
                         <option value="متوسطة">متوسطة</option>
                         <option value="هشة">هشة</option>
+                    </select>
+                    <select id="currentHousingOwnership" class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold text-slate-600">
+                        <option value="">حيازة السكن الحالي</option>
+                        <option value="إيجار">إيجار</option>
+                        <option value="بدون إيجار">بدون إيجار</option>
                     </select>
                 </div>
 
@@ -1713,6 +1744,15 @@
             { id: 'walletOwner', label: 'مالك المحفظة', group: 'المحفظة الإلكترونية' },
             { id: 'walletId', label: 'هوية المحفظة', group: 'المحفظة الإلكترونية' },
             { id: 'walletPhone', label: 'جوال المحفظة', group: 'المحفظة الإلكترونية' },
+            { id: 'originCluster', label: 'التجمع السكني الأصلي', group: 'بيانات السكن الأصلي' },
+            { id: 'originNeighborhood', label: 'الحي', group: 'بيانات السكن الأصلي' },
+            { id: 'originStreet', label: 'الشارع', group: 'بيانات السكن الأصلي' },
+            { id: 'headIsMartyr', label: 'هل رب الأسرة شهيد؟', group: 'بيانات السكن الأصلي' },
+            { id: 'originHousingType', label: 'نوع السكن الأصلي', group: 'بيانات السكن الأصلي' },
+            { id: 'originOwnershipType', label: 'نوع الحيازة للسكن الأصلي', group: 'بيانات السكن الأصلي' },
+            { id: 'originHousingDamage', label: 'نوع الضرر للمسكن', group: 'بيانات السكن الأصلي' },
+            { id: 'familyMartyrCount', label: 'عدد شهداء العائلة', group: 'بيانات السكن الأصلي' },
+            { id: 'currentHousingOwnership', label: 'حيازة السكن الحالي', group: 'بيانات السكن' },
             { id: 'shelterType', label: 'طبيعة المأوى', group: 'بيانات السكن' },
             { id: 'displacementPeriod', label: 'فترة النزوح', group: 'بيانات السكن' },
             { id: 'citizenStatus', label: 'طبيعة المواطن', group: 'بيانات السكن' },
@@ -3188,6 +3228,15 @@
                 case 'pSocial': return `<span class="text-xs font-bold">${row.pSocial || '-'}</span>`;
                 case 'originArea': return row.originArea || '-';
                 case 'displaceArea': return row.displaceArea || '-';
+                case 'originCluster': return row.originCluster || '-';
+                case 'originNeighborhood': return row.originNeighborhood || '-';
+                case 'originStreet': return row.originStreet || '-';
+                case 'headIsMartyr': return row.headIsMartyr || '-';
+                case 'originHousingType': return row.originHousingType || '-';
+                case 'originOwnershipType': return row.originOwnershipType || '-';
+                case 'originHousingDamage': return row.originHousingDamage || '-';
+                case 'familyMartyrCount': return row.familyMartyrCount || '0';
+                case 'currentHousingOwnership': return row.currentHousingOwnership || '-';
                 case 'totalCount': {
                     let total = 1; // رب الأسرة
                     if (row.wifeName && row.wifeName.trim() && row.pSocial !== 'ارمله') total++;
@@ -3331,6 +3380,15 @@
                 case 'pSocial': return row.pSocial || '-';
                 case 'originArea': return row.originArea || '-';
                 case 'displaceArea': return row.displaceArea || '-';
+                case 'originCluster': return row.originCluster || '-';
+                case 'originNeighborhood': return row.originNeighborhood || '-';
+                case 'originStreet': return row.originStreet || '-';
+                case 'headIsMartyr': return row.headIsMartyr || '-';
+                case 'originHousingType': return row.originHousingType || '-';
+                case 'originOwnershipType': return row.originOwnershipType || '-';
+                case 'originHousingDamage': return row.originHousingDamage || '-';
+                case 'familyMartyrCount': return row.familyMartyrCount || 0;
+                case 'currentHousingOwnership': return row.currentHousingOwnership || '-';
                 case 'totalCount': {
                     let total = 1; // رب الأسرة
                     if (row.wifeName && row.wifeName.trim() && row.pSocial !== 'ارمله') total++;
@@ -3868,7 +3926,16 @@
                 pDelegate: document.getElementById('pDelegate').value,
                 pAltPhone: document.getElementById('pAltPhone').value,
                 originArea: document.getElementById('originArea').value,
+                originCluster: document.getElementById('originCluster').value,
+                originNeighborhood: document.getElementById('originNeighborhood').value,
+                originStreet: document.getElementById('originStreet').value,
+                familyMartyrCount: parseInt(document.getElementById('familyMartyrCount').value, 10) || 0,
+                headIsMartyr: document.getElementById('headIsMartyr').value,
+                originHousingType: document.getElementById('originHousingType').value,
+                originOwnershipType: document.getElementById('originOwnershipType').value,
+                originHousingDamage: document.getElementById('originHousingDamage').value,
                 displaceArea: document.getElementById('displaceArea').value,
+                currentHousingOwnership: document.getElementById('currentHousingOwnership').value,
                 totalCount: counts.total,
                 maleCount: counts.male,
                 femaleCount: counts.female,
@@ -4147,7 +4214,20 @@
                 document.getElementById('pSocial').value = familyData.pSocial || 'متزوج';
                 document.getElementById('pDelegate').value = familyData.pDelegate || '';
                 document.getElementById('originArea').value = familyData.originArea || '';
+                document.getElementById('originCluster').value = familyData.originCluster || '';
+                document.getElementById('originNeighborhood').value = familyData.originNeighborhood || '';
+                document.getElementById('originStreet').value = familyData.originStreet || '';
+                const martyrCount = familyData.familyMartyrCount;
+                const deceasedFlag = familyData.familyHasDeceased;
+                document.getElementById('familyMartyrCount').value = typeof martyrCount !== 'undefined' && martyrCount !== null
+                    ? martyrCount
+                    : (deceasedFlag === 'نعم' ? 1 : deceasedFlag === 'لا' ? 0 : '');
+                document.getElementById('headIsMartyr').value = familyData.headIsMartyr || '';
+                document.getElementById('originHousingType').value = familyData.originHousingType || '';
+                document.getElementById('originOwnershipType').value = familyData.originOwnershipType || '';
+                document.getElementById('originHousingDamage').value = familyData.originHousingDamage || '';
                 document.getElementById('displaceArea').value = familyData.displaceArea || '';
+                document.getElementById('currentHousingOwnership').value = familyData.currentHousingOwnership || '';
                 document.getElementById('shelterType').value = familyData.shelterType || '';
                 document.getElementById('displacementPeriod').value = familyData.displacementPeriod || '';
                 document.getElementById('citizenStatus').value = familyData.citizenStatus || '';
