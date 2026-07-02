@@ -70,40 +70,8 @@
         </script>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, where, getDocs, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-
-        // ===========================================
-        //       نظام الحماية (Security Layer)
-        // ===========================================
-        const allowedDomains = ["algreb51-cloud.github.io", "mosadata-18521.firebaseapp.com", "mosadata-18521.web.app", "localhost", "127.0.0.1"];
-        if (!allowedDomains.includes(window.location.hostname)) {
-            document.documentElement.innerHTML = "<div style='height:100vh;background:#000;color:red;display:flex;justify-content:center;align-items:center;font-family:sans-serif;font-weight:bold;font-size:24px;direction:rtl;'>غير مصرح بتشغيل النظام خارج النطاق الرسمي<br><span style='font-size:16px;color:#ccc;margin-top:10px;'>Unauthorized Domain Access</span></div>";
-            // إيقاف التنفيذ فوراً
-            throw new Error("Security Alert: Unauthorized Domain Access");
-        }
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCxI5hPvlddgn9aZUrewesDbg8YSD7bEnk",
-            authDomain: "mosadata-18521.firebaseapp.com",
-            projectId: "mosadata-18521",
-            storageBucket: "mosadata-18521.firebasestorage.app",
-            messagingSenderId: "517965913092",
-            appId: "1:517965913092:web:39db81b21739cef58e6951",
-            measurementId: "G-C00LHCKEG7"
-        };
-
-        Object.freeze(firebaseConfig); // حماية الإعدادات من التعديل
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const appId = "mosadata-18521";
-
-        window.db = db;
-        window.fs = { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, where, getDocs, setDoc, getDoc };
-        window.appId = appId;
-        window.auth = auth;
+        import { db, auth, appId, fs, signInWithEmailAndPassword, signOut, onAuthStateChanged } from './db.js';
+        const { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, where, getDocs, setDoc, getDoc } = fs;
 
         window.currentUserData = null;
 
@@ -1776,7 +1744,11 @@
             { id: 'females_18_59', label: 'إناث (18-59 سنة)', group: 'إحصائيات العمر والنوع' },
             { id: 'males_18_59', label: 'ذكور (18-59 سنة)', group: 'إحصائيات العمر والنوع' },
             { id: 'females_60_plus', label: 'إناث (60+ سنة)', group: 'إحصائيات العمر والنوع' },
-            { id: 'males_60_plus', label: 'ذكور (60+ سنة)', group: 'إحصائيات العمر والنوع' }
+            { id: 'males_60_plus', label: 'ذكور (60+ سنة)', group: 'إحصائيات العمر والنوع' },
+            { id: 'individuals_0_3', label: 'عدد الأفراد (0-3 سنوات)', group: 'إحصائيات العمر والنوع' },
+            { id: 'individuals_4_8', label: 'عدد الأفراد (4-8 سنوات)', group: 'إحصائيات العمر والنوع' },
+            { id: 'individuals_9_12', label: 'عدد الأفراد (9-12 سنة)', group: 'إحصائيات العمر والنوع' },
+            { id: 'individuals_13_18', label: 'عدد الأفراد (13-18 سنة)', group: 'إحصائيات العمر والنوع' }
         ];
 
         // تعريف المجموعات (Macros) للقائمة المنسدلة
@@ -2162,6 +2134,43 @@
                     let gender = m.gender || (['اخ', 'ابن', 'اب', 'جد', 'عم', 'خال'].includes(m.relation) ? 'ذكر' : 'أنثى');
                     if (gender === 'ذكر' && m.dob && getAge(m.dob).y >= 60) {
                         countedPeople.add(m.idNum || m.name);
+                    }
+                });
+            }
+            countedPeople.delete(undefined);
+            countedPeople.delete(null);
+            countedPeople.delete('');
+            return countedPeople.size;
+        }
+
+        function countIndividualsByAgeRange(family, minAge, maxAge) {
+            if (!family) return 0;
+            const countedPeople = new Set();
+            
+            // Head of household
+            if (family.pDob) {
+                const age = getAge(family.pDob).y;
+                if (age >= minAge && age <= maxAge) {
+                    countedPeople.add(family.pId || family.pName);
+                }
+            }
+            
+            // Wife
+            if (family.pSocial !== 'ارمله' && family.wifeName && family.wifeDob) {
+                const age = getAge(family.wifeDob).y;
+                if (age >= minAge && age <= maxAge) {
+                    countedPeople.add(family.wifeId || family.wifeName);
+                }
+            }
+            
+            // Members
+            if (family.members) {
+                family.members.forEach(m => {
+                    if (m.dob) {
+                        const age = getAge(m.dob).y;
+                        if (age >= minAge && age <= maxAge) {
+                            countedPeople.add(m.idNum || m.name);
+                        }
                     }
                 });
             }
@@ -3291,6 +3300,10 @@
                 case 'males_18_59': return countMales18_59(row);
                 case 'females_60_plus': return countFemales60Plus(row);
                 case 'males_60_plus': return countMales60Plus(row);
+                case 'individuals_0_3': return countIndividualsByAgeRange(row, 0, 3);
+                case 'individuals_4_8': return countIndividualsByAgeRange(row, 4, 8);
+                case 'individuals_9_12': return countIndividualsByAgeRange(row, 9, 12);
+                case 'individuals_13_18': return countIndividualsByAgeRange(row, 13, 18);
                 default: return row[colId] || '';
             }
         }
@@ -3443,6 +3456,10 @@
                 case 'males_18_59': return countMales18_59(row);
                 case 'females_60_plus': return countFemales60Plus(row);
                 case 'males_60_plus': return countMales60Plus(row);
+                case 'individuals_0_3': return countIndividualsByAgeRange(row, 0, 3);
+                case 'individuals_4_8': return countIndividualsByAgeRange(row, 4, 8);
+                case 'individuals_9_12': return countIndividualsByAgeRange(row, 9, 12);
+                case 'individuals_13_18': return countIndividualsByAgeRange(row, 13, 18);
                 default: return row[colId] || '-';
             }
         }
