@@ -1748,7 +1748,13 @@
             { id: 'individuals_0_3', label: 'عدد الأفراد (0-3 سنوات)', group: 'إحصائيات العمر والنوع' },
             { id: 'individuals_4_8', label: 'عدد الأفراد (4-8 سنوات)', group: 'إحصائيات العمر والنوع' },
             { id: 'individuals_9_12', label: 'عدد الأفراد (9-12 سنة)', group: 'إحصائيات العمر والنوع' },
-            { id: 'individuals_13_18', label: 'عدد الأفراد (13-18 سنة)', group: 'إحصائيات العمر والنوع' }
+            { id: 'individuals_13_18', label: 'عدد الأفراد (13-18 سنة)', group: 'إحصائيات العمر والنوع' },
+            { id: 'males_0_2', label: 'عدد الأفراد (0-2 ذكور)', group: 'إحصائيات العمر والنوع' },
+            { id: 'females_0_2', label: 'عدد الأفراد (0-2 إناث)', group: 'إحصائيات العمر والنوع' },
+            { id: 'males_3_5', label: 'عدد الأفراد (3-5 ذكور)', group: 'إحصائيات العمر والنوع' },
+            { id: 'females_3_5', label: 'عدد الأفراد (3-5 إناث)', group: 'إحصائيات العمر والنوع' },
+            { id: 'males_6_18', label: 'عدد الأفراد (6-18 ذكور)', group: 'إحصائيات العمر والنوع' },
+            { id: 'females_6_18', label: 'عدد الأفراد (6-18 إناث)', group: 'إحصائيات العمر والنوع' }
         ];
 
         // تعريف المجموعات (Macros) للقائمة المنسدلة
@@ -2170,6 +2176,53 @@
                         const age = getAge(m.dob).y;
                         if (age >= minAge && age <= maxAge) {
                             countedPeople.add(m.idNum || m.name);
+                        }
+                    }
+                });
+            }
+            countedPeople.delete(undefined);
+            countedPeople.delete(null);
+            countedPeople.delete('');
+            return countedPeople.size;
+        }
+
+        function countGenderAgeRange(family, targetGender, minAge, maxAge) {
+            if (!family) return 0;
+            const countedPeople = new Set();
+            
+            // Head of household
+            const pGender = family.pGender || (['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(family.pSocial) ? 'أنثى' : 'ذكر');
+            if (pGender === targetGender && family.pDob) {
+                const age = getAge(family.pDob).y;
+                if (age >= minAge && age <= maxAge) {
+                    countedPeople.add(family.pId || family.pName || 'head');
+                }
+            }
+            
+            // Wife
+            if (family.pSocial !== 'ارمله' && family.wifeName && family.wifeDob) {
+                const wifeGender = family.wifeGender || 'أنثى';
+                if (wifeGender === targetGender) {
+                    const age = getAge(family.wifeDob).y;
+                    if (age >= minAge && age <= maxAge) {
+                        countedPeople.add(family.wifeId || family.wifeName || 'wife');
+                    }
+                }
+            }
+            
+            // Members
+            if (family.members && Array.isArray(family.members)) {
+                family.members.forEach((m, idx) => {
+                    let gender = m.gender;
+                    if (!gender) {
+                        if (['اخ', 'ابن', 'اب', 'جد', 'عم', 'خال'].includes(m.relation)) gender = 'ذكر';
+                        else if (['اخت', 'زوجة', 'ابنه', 'ام', 'خاله', 'عمه', 'جده', 'محتضنه'].includes(m.relation)) gender = 'أنثى';
+                        else gender = 'أنثى';
+                    }
+                    if (gender === targetGender && m.dob) {
+                        const age = getAge(m.dob).y;
+                        if (age >= minAge && age <= maxAge) {
+                            countedPeople.add(m.idNum || m.name || (`member_${idx}`));
                         }
                     }
                 });
@@ -3304,6 +3357,12 @@
                 case 'individuals_4_8': return countIndividualsByAgeRange(row, 4, 8);
                 case 'individuals_9_12': return countIndividualsByAgeRange(row, 9, 12);
                 case 'individuals_13_18': return countIndividualsByAgeRange(row, 13, 18);
+                case 'males_0_2': return countGenderAgeRange(row, 'ذكر', 0, 2);
+                case 'females_0_2': return countGenderAgeRange(row, 'أنثى', 0, 2);
+                case 'males_3_5': return countGenderAgeRange(row, 'ذكر', 3, 5);
+                case 'females_3_5': return countGenderAgeRange(row, 'أنثى', 3, 5);
+                case 'males_6_18': return countGenderAgeRange(row, 'ذكر', 6, 18);
+                case 'females_6_18': return countGenderAgeRange(row, 'أنثى', 6, 18);
                 default: return row[colId] || '';
             }
         }
@@ -3460,6 +3519,12 @@
                 case 'individuals_4_8': return countIndividualsByAgeRange(row, 4, 8);
                 case 'individuals_9_12': return countIndividualsByAgeRange(row, 9, 12);
                 case 'individuals_13_18': return countIndividualsByAgeRange(row, 13, 18);
+                case 'males_0_2': return countGenderAgeRange(row, 'ذكر', 0, 2);
+                case 'females_0_2': return countGenderAgeRange(row, 'أنثى', 0, 2);
+                case 'males_3_5': return countGenderAgeRange(row, 'ذكر', 3, 5);
+                case 'females_3_5': return countGenderAgeRange(row, 'أنثى', 3, 5);
+                case 'males_6_18': return countGenderAgeRange(row, 'ذكر', 6, 18);
+                case 'females_6_18': return countGenderAgeRange(row, 'أنثى', 6, 18);
                 default: return row[colId] || '-';
             }
         }
