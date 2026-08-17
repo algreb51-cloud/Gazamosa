@@ -2596,6 +2596,7 @@
             { id: 'children_0_6', label: 'أطفال (0-6 سنوات)', group: 'إحصائيات الأطفال' },
             { id: 'children_6_12', label: 'أطفال (6-12 سنة)', group: 'إحصائيات الأطفال' },
             { id: 'children_12_18', label: 'أطفال (12-18 سنة)', group: 'إحصائيات الأطفال' },
+            { id: 'children_19_59', label: 'أطفال (19-59 سنة)', group: 'إحصائيات الأطفال' },
             { id: 'children_0_2_male', label: 'أطفال (0-2 سنة ذكر)', group: 'إحصائيات الأطفال' },
             { id: 'children_0_2_female', label: 'أطفال (0-2 سنة أنثى)', group: 'إحصائيات الأطفال' },
             { id: 'children_3_5_male', label: 'أطفال (3-5 سنوات ذكر)', group: 'إحصائيات الأطفال' },
@@ -2623,7 +2624,8 @@
             { id: 'individuals_0_3', label: 'عدد الأفراد (0-3 سنوات)', group: 'إحصائيات العمر والنوع' },
             { id: 'individuals_4_8', label: 'عدد الأفراد (4-8 سنوات)', group: 'إحصائيات العمر والنوع' },
             { id: 'individuals_9_12', label: 'عدد الأفراد (9-12 سنة)', group: 'إحصائيات العمر والنوع' },
-            { id: 'individuals_13_18', label: 'عدد الأفراد (13-18 سنة)', group: 'إحصائيات العمر والنوع' }
+            { id: 'individuals_13_18', label: 'عدد الأفراد (13-18 سنة)', group: 'إحصائيات العمر والنوع' },
+            { id: 'individuals_19_59', label: 'عدد الأفراد (19-59 سنة)', group: 'إحصائيات العمر والنوع' }
         ];
 
         // تعريف المجموعات (Macros) للقائمة المنسدلة
@@ -2720,7 +2722,9 @@
             pFamilyStatus: "حالة العائلة",
             children_0_6: "أطفال (0-6 سنوات)",
             children_6_12: "أطفال (6-12 سنة)",
-            children_12_18: "أطفال (12-18 سنة)"
+            children_12_18: "أطفال (12-18 سنة)",
+            children_19_59: "أطفال (19-59 سنة)",
+            individuals_19_59: "عدد الأفراد (19-59 سنة)"
         };
 
         function only9Numbers(input) { input.value = input.value.replace(/\D/g, '').substring(0, 9); }
@@ -4212,6 +4216,7 @@
                 case 'children_0_6': return countChildrenByAge(row.members, age => age.y >= 0 && age.y <= 6);
                 case 'children_6_12': return countChildrenByAge(row.members, age => age.y >= 6 && age.y <= 12);
                 case 'children_12_18': return countChildrenByAge(row.members, age => age.y >= 12 && age.y <= 18);
+                case 'children_19_59': return countChildrenByAge(row.members, age => age.y >= 19 && age.y <= 59);
                 case 'children_0_2_male': return countChildrenByAge(row.members, age => age.y <= 2, 'ذكر');
                 case 'children_0_2_female': return countChildrenByAge(row.members, age => age.y <= 2, 'أنثى');
                 case 'children_3_5_male': return countChildrenByAge(row.members, age => age.y >= 3 && age.y <= 5, 'ذكر');
@@ -4240,6 +4245,7 @@
                 case 'individuals_4_8': return countIndividualsByAgeRange(row, 4, 8);
                 case 'individuals_9_12': return countIndividualsByAgeRange(row, 9, 12);
                 case 'individuals_13_18': return countIndividualsByAgeRange(row, 13, 18);
+                case 'individuals_19_59': return countIndividualsByAgeRange(row, 19, 59);
                 default: return row[colId] || '';
             }
         }
@@ -4379,6 +4385,7 @@
                 case 'children_0_6': return countChildrenByAge(row.members, age => age.y >= 0 && age.y <= 6);
                 case 'children_6_12': return countChildrenByAge(row.members, age => age.y >= 6 && age.y <= 12);
                 case 'children_12_18': return countChildrenByAge(row.members, age => age.y >= 12 && age.y <= 18);
+                case 'children_19_59': return countChildrenByAge(row.members, age => age.y >= 19 && age.y <= 59);
                 case 'children_0_2_male': return countChildrenByAge(row.members, age => age.y <= 2, 'ذكر');
                 case 'children_0_2_female': return countChildrenByAge(row.members, age => age.y <= 2, 'أنثى');
                 case 'children_3_5_male': return countChildrenByAge(row.members, age => age.y >= 3 && age.y <= 5, 'ذكر');
@@ -4407,6 +4414,7 @@
                 case 'individuals_4_8': return countIndividualsByAgeRange(row, 4, 8);
                 case 'individuals_9_12': return countIndividualsByAgeRange(row, 9, 12);
                 case 'individuals_13_18': return countIndividualsByAgeRange(row, 13, 18);
+                case 'individuals_19_59': return countIndividualsByAgeRange(row, 19, 59);
                 default: return row[colId] || '-';
             }
         }
