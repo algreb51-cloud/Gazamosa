@@ -3834,28 +3834,51 @@
                             if (hasGenderFilterHealth && !genderFilters.includes(effectiveGender)) return;
 
                             // تطبيق فلتر العمر داخل وضع health إذا كان محدداً
-                            if (hasAgeFilterHealth && h.dob) {
-                                const age = patientAge;
+                            if (hasAgeFilterHealth) {
+                                // محاولة إيجاد تاريخ ميلاد المريض: h.dob أولاً، ثم من بيانات الأعضاء
+                                let effectiveDob = h.dob;
+                                if (!effectiveDob && h.name) {
+                                    const pName = h.name.trim();
+                                    if (f.pName && pName === f.pName.trim()) effectiveDob = f.pDob;
+                                    else if (f.wifeName && pName === f.wifeName.trim()) effectiveDob = f.wifeDob;
+                                    else if (f.members) {
+                                        const mem = f.members.find(m => m.name && m.name.trim() === pName);
+                                        if (mem) effectiveDob = mem.dob;
+                                    }
+                                }
+                                if (!effectiveDob) return; // لا يوجد تاريخ ميلاد → استبعاد
+                                const ageH = getAge(effectiveDob);
                                 let ageMatch = false;
                                 ageFilters.forEach(ageF => {
-                                    if (ageF === '0-1' && age.y === 0) ageMatch = true;
-                                    if (ageF === '1-2' && age.y === 1) ageMatch = true;
-                                    if (ageF === '2-5' && age.y >= 2 && age.y <= 5) ageMatch = true;
-                                    if (ageF === '5-10' && age.y > 5 && age.y <= 10) ageMatch = true;
-                                    if (ageF === '10-17' && age.y > 10 && age.y <= 17) ageMatch = true;
-                                    if (ageF === '18-25' && age.y > 17 && age.y <= 25) ageMatch = true;
-                                    if (ageF === '26-40' && age.y > 25 && age.y <= 40) ageMatch = true;
-                                    if (ageF === '41-60' && age.y > 40 && age.y <= 60) ageMatch = true;
-                                    if (ageF === '61-80' && age.y > 60 && age.y <= 80) ageMatch = true;
-                                    if (ageF === '81-100' && age.y > 80 && age.y <= 100) ageMatch = true;
+                                    if (ageF === '0-1' && ageH.y === 0) ageMatch = true;
+                                    if (ageF === '1-2' && ageH.y === 1) ageMatch = true;
+                                    if (ageF === '2-5' && ageH.y >= 2 && ageH.y <= 5) ageMatch = true;
+                                    if (ageF === '5-10' && ageH.y > 5 && ageH.y <= 10) ageMatch = true;
+                                    if (ageF === '10-17' && ageH.y > 10 && ageH.y <= 17) ageMatch = true;
+                                    if (ageF === '18-25' && ageH.y > 17 && ageH.y <= 25) ageMatch = true;
+                                    if (ageF === '26-40' && ageH.y > 25 && ageH.y <= 40) ageMatch = true;
+                                    if (ageF === '41-60' && ageH.y > 40 && ageH.y <= 60) ageMatch = true;
+                                    if (ageF === '61-80' && ageH.y > 60 && ageH.y <= 80) ageMatch = true;
+                                    if (ageF === '81-100' && ageH.y > 80 && ageH.y <= 100) ageMatch = true;
                                 });
                                 if (!ageMatch) return;
                             }
 
                             // تطبيق فلتر التاريخ داخل وضع health إذا كان محدداً
-                            if (hasDateFilterHealth && h.dob) {
-                                if (dobStart && h.dob < dobStart) return;
-                                if (dobEnd && h.dob > dobEnd) return;
+                            if (hasDateFilterHealth) {
+                                let effectiveDob = h.dob;
+                                if (!effectiveDob && h.name) {
+                                    const pName = h.name.trim();
+                                    if (f.pName && pName === f.pName.trim()) effectiveDob = f.pDob;
+                                    else if (f.wifeName && pName === f.wifeName.trim()) effectiveDob = f.wifeDob;
+                                    else if (f.members) {
+                                        const mem = f.members.find(m => m.name && m.name.trim() === pName);
+                                        if (mem) effectiveDob = mem.dob;
+                                    }
+                                }
+                                if (!effectiveDob) return;
+                                if (dobStart && effectiveDob < dobStart) return;
+                                if (dobEnd && effectiveDob > dobEnd) return;
                             }
 
                             resultData.push({
