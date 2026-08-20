@@ -3637,10 +3637,12 @@
             let resultData = [];
 
             // Determine View Mode based on Filters OR Active Tab
+            // المرض له أولوية على الجنس: إذا كان فلتر المرض محدداً، نبقى في وضع health
+            const hasActiveDiseaseFilter = diseaseFilters.length > 0 && !diseaseFilters.includes('all');
             if ((ageFilters.length > 0 && !ageFilters.includes('all')) || dobStart || dobEnd) currentViewMode = 'individual';
-            else if (genderFilters.length > 0 && !genderFilters.includes('all')) currentViewMode = 'individual';
             else if (wifeStatusFilters.length > 0 && !wifeStatusFilters.includes('all')) currentViewMode = 'individual';
-            else if (diseaseFilters.length > 0 && !diseaseFilters.includes('all')) currentViewMode = 'health';
+            else if (hasActiveDiseaseFilter) currentViewMode = 'health';
+            else if (genderFilters.length > 0 && !genderFilters.includes('all')) currentViewMode = 'individual';
             else currentViewMode = activeViewTab;
 
             const matchesSearch = (f) => (f.pName || "").toLowerCase().includes(search) ||
@@ -3791,6 +3793,7 @@
                     if (!matchesSearch(f) || !matchesFamilyFilters(f)) return;
 
                     const hasDiseaseFilter = diseaseFilters.length > 0 && !diseaseFilters.includes('all');
+                    const hasGenderFilterHealth = genderFilters.length > 0 && !genderFilters.includes('all');
                     const showAll = !hasDiseaseFilter;
 
                     (f.health || []).forEach(h => {
@@ -3825,12 +3828,14 @@
                             }
                             // --- End gender logic ---
 
+                            // تطبيق فلتر الجنس داخل وضع health إذا كان محدداً
+                            if (hasGenderFilterHealth && !genderFilters.includes(effectiveGender)) return;
+
                             resultData.push({
                                 ...f,
                                 type: 'health',
                                 familyId: f.id,
                                 patientName: h.name,
-                                patientGender: h.gender,
                                 patientGender: effectiveGender,
                                 patientId: h.idNum,
                                 patientDob: h.dob,
