@@ -3637,11 +3637,11 @@
             let resultData = [];
 
             // Determine View Mode based on Filters OR Active Tab
-            // المرض له أولوية على الجنس: إذا كان فلتر المرض محدداً، نبقى في وضع health
+            // المرض له الأولوية الأعلى: إذا كان محدداً نبقى في وضع health بغض النظر عن باقي الفلاتر
             const hasActiveDiseaseFilter = diseaseFilters.length > 0 && !diseaseFilters.includes('all');
-            if ((ageFilters.length > 0 && !ageFilters.includes('all')) || dobStart || dobEnd) currentViewMode = 'individual';
+            if (hasActiveDiseaseFilter) currentViewMode = 'health';
+            else if ((ageFilters.length > 0 && !ageFilters.includes('all')) || dobStart || dobEnd) currentViewMode = 'individual';
             else if (wifeStatusFilters.length > 0 && !wifeStatusFilters.includes('all')) currentViewMode = 'individual';
-            else if (hasActiveDiseaseFilter) currentViewMode = 'health';
             else if (genderFilters.length > 0 && !genderFilters.includes('all')) currentViewMode = 'individual';
             else currentViewMode = activeViewTab;
 
@@ -3794,6 +3794,8 @@
 
                     const hasDiseaseFilter = diseaseFilters.length > 0 && !diseaseFilters.includes('all');
                     const hasGenderFilterHealth = genderFilters.length > 0 && !genderFilters.includes('all');
+                    const hasAgeFilterHealth = ageFilters.length > 0 && !ageFilters.includes('all');
+                    const hasDateFilterHealth = dobStart || dobEnd;
                     const showAll = !hasDiseaseFilter;
 
                     (f.health || []).forEach(h => {
@@ -3830,6 +3832,31 @@
 
                             // تطبيق فلتر الجنس داخل وضع health إذا كان محدداً
                             if (hasGenderFilterHealth && !genderFilters.includes(effectiveGender)) return;
+
+                            // تطبيق فلتر العمر داخل وضع health إذا كان محدداً
+                            if (hasAgeFilterHealth && h.dob) {
+                                const age = patientAge;
+                                let ageMatch = false;
+                                ageFilters.forEach(ageF => {
+                                    if (ageF === '0-1' && age.y === 0) ageMatch = true;
+                                    if (ageF === '1-2' && age.y === 1) ageMatch = true;
+                                    if (ageF === '2-5' && age.y >= 2 && age.y <= 5) ageMatch = true;
+                                    if (ageF === '5-10' && age.y > 5 && age.y <= 10) ageMatch = true;
+                                    if (ageF === '10-17' && age.y > 10 && age.y <= 17) ageMatch = true;
+                                    if (ageF === '18-25' && age.y > 17 && age.y <= 25) ageMatch = true;
+                                    if (ageF === '26-40' && age.y > 25 && age.y <= 40) ageMatch = true;
+                                    if (ageF === '41-60' && age.y > 40 && age.y <= 60) ageMatch = true;
+                                    if (ageF === '61-80' && age.y > 60 && age.y <= 80) ageMatch = true;
+                                    if (ageF === '81-100' && age.y > 80 && age.y <= 100) ageMatch = true;
+                                });
+                                if (!ageMatch) return;
+                            }
+
+                            // تطبيق فلتر التاريخ داخل وضع health إذا كان محدداً
+                            if (hasDateFilterHealth && h.dob) {
+                                if (dobStart && h.dob < dobStart) return;
+                                if (dobEnd && h.dob > dobEnd) return;
+                            }
 
                             resultData.push({
                                 ...f,
