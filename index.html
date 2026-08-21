@@ -2380,12 +2380,96 @@
         </div>
     </div>
 
+    <!-- نافذة إضافة عمود مخصص (العدد حسب العمر / التاريخ) -->
+    <div id="addAgeColumnModal"
+        class="fixed inset-0 bg-slate-900/80 hidden z-[3100] flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl modal-anim overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-800">إضافة عمود (العدد حسب العمر)</h3>
+                        <p class="text-xs text-slate-400 font-medium">حساب عدد الأفراد بناءً على نطاق تاريخ الميلاد</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('addAgeColumnModal')"
+                    class="p-2 bg-white border border-slate-200 rounded-xl hover:bg-red-50 hover:text-red-500 transition-all">✕</button>
+            </div>
+
+            <form id="addAgeColumnForm" onsubmit="handleAddCustomAgeColumn(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2">اسم أو عنوان العمود (اختياري)</label>
+                    <input type="text" id="customAgeColTitle" placeholder="مثال: أطفال (2018 - 2023)"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all text-slate-700 font-bold">
+                    <span class="text-[11px] text-slate-400 mt-1 block">إذا تُرك فارغاً سيتم تعيين الاسم تلقائياً حسب التواريخ المدخلة</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-2">من تاريخ ميلاد <span class="text-red-500">*</span></label>
+                        <input type="date" id="customAgeColDateFrom" required
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all text-slate-700 font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-2">إلى تاريخ ميلاد <span class="text-red-500">*</span></label>
+                        <input type="date" id="customAgeColDateTo" required
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all text-slate-700 font-mono">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2">تصفية الجنس (اختياري)</label>
+                    <select id="customAgeColGender"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all text-slate-700 font-bold">
+                        <option value="all">الكل (ذكور وإناث)</option>
+                        <option value="ذكر">ذكور فقط</option>
+                        <option value="أنثى">إناث فقط</option>
+                    </select>
+                </div>
+
+                <div class="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-2xl text-xs text-indigo-800 leading-relaxed">
+                    💡 <b>كيف يعمل العمود؟</b><br>
+                    سيقوم النظام باحتساب جميع أفراد العائلة (رب الأسرة، الزوجة، الأبناء وأفراد الأسرة) الذين تقع تواريخ ميلادهم ضمن هذا النطاق وإظهار العدد في عمود بالجدول الرئيسي.
+                </div>
+
+                <div class="flex items-center gap-3 pt-2">
+                    <button type="submit"
+                        class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-black shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>إضافة العمود إلى الجدول</span>
+                    </button>
+                    <button type="button" onclick="closeModal('addAgeColumnModal')"
+                        class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-bold transition-all">
+                        إلغاء
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="columnSelectionMenu"
-        class="hidden absolute bg-white border border-slate-100 shadow-2xl rounded-2xl z-[3000] w-80 max-h-[600px] overflow-hidden flex flex-col text-right transition-all duration-200 origin-top-right">
-        <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-            <h4 class="font-bold text-slate-800 text-sm">تخصيص الأعمدة</h4>
+        class="hidden absolute bg-white border border-slate-100 shadow-2xl rounded-2xl z-[3000] w-88 max-h-[600px] overflow-hidden flex flex-col text-right transition-all duration-200 origin-top-right">
+        <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <h4 class="font-bold text-slate-800 text-sm">تخصيص الأعمدة</h4>
+                <button onclick="openAddAgeColumnModal()"
+                    class="flex items-center gap-1 px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-indigo-100"
+                    title="إضافة عمود حسب العمر / التاريخ">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>+ العدد حسب العمر</span>
+                </button>
+            </div>
             <button onclick="document.getElementById('columnSelectionMenu').classList.add('hidden')"
-                class="text-slate-400 hover:text-red-500 transition-colors"><svg class="w-5 h-5" fill="none"
+                class="text-slate-400 hover:text-red-500 transition-colors p-1"><svg class="w-5 h-5" fill="none"
                     stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg></button>
@@ -2674,6 +2758,41 @@
             macroDefinitions[8].targets.push(`h${i}Id`);
         }
 
+        // ===========================================
+        //       Custom Age/Date Columns System
+        // ===========================================
+        try {
+            const savedCustomCols = localStorage.getItem('gazamosa_custom_age_cols');
+            window.customAgeColumns = savedCustomCols ? JSON.parse(savedCustomCols) : [];
+        } catch (e) {
+            window.customAgeColumns = [];
+        }
+
+        function syncCustomAgeColumnsWithDefinitions() {
+            // Remove old custom columns from columnDefinitions
+            for (let i = columnDefinitions.length - 1; i >= 0; i--) {
+                if (columnDefinitions[i].isCustom || (columnDefinitions[i].id && columnDefinitions[i].id.startsWith('custom_age_'))) {
+                    columnDefinitions.splice(i, 1);
+                }
+            }
+            // Add current custom columns to columnDefinitions
+            (window.customAgeColumns || []).forEach(col => {
+                columnDefinitions.push({
+                    id: col.id,
+                    label: col.label,
+                    group: col.group || 'أعمدة مخصصة (العدد حسب التاريخ/العمر)',
+                    isCustom: true,
+                    dateFrom: col.dateFrom,
+                    dateTo: col.dateTo,
+                    gender: col.gender
+                });
+                if (!visibleColumnsMap.family.includes(col.id)) {
+                    visibleColumnsMap.family.push(col.id);
+                }
+            });
+        }
+        syncCustomAgeColumnsWithDefinitions();
+
         window.setViewMode = function (mode) {
             activeViewTab = mode;
 
@@ -2744,6 +2863,58 @@
             let m = now.getMonth() - birth.getMonth();
             if (m < 0) { y--; m += 12; }
             return { y, m };
+        }
+
+        function matchesDateRange(dob, dateFrom, dateTo) {
+            if (!dob) return false;
+            const cleanDob = String(dob).trim();
+            if (!cleanDob) return false;
+            if (dateFrom && cleanDob < dateFrom) return false;
+            if (dateTo && cleanDob > dateTo) return false;
+            return true;
+        }
+
+        function countIndividualsByCustomRange(family, colDef) {
+            if (!family || !colDef) return 0;
+            const { dateFrom, dateTo, gender } = colDef;
+            const countedPeople = new Set();
+
+            // 1. Head of household
+            if (matchesDateRange(family.pDob, dateFrom, dateTo)) {
+                const pGen = family.pGender || (['ارمله', 'مطلقة', 'مهجورة', 'اعزب', 'أيتام'].includes(family.pSocial) ? 'أنثى' : 'ذكر');
+                if (!gender || gender === 'all' || pGen === gender) {
+                    countedPeople.add(family.pId || family.pName || 'head');
+                }
+            }
+
+            // 2. Wife (if present and not widow)
+            if (family.pSocial !== 'ارمله' && family.wifeName && family.wifeDob && matchesDateRange(family.wifeDob, dateFrom, dateTo)) {
+                const wGen = family.wifeGender || 'أنثى';
+                if (!gender || gender === 'all' || wGen === gender) {
+                    countedPeople.add(family.wifeId || family.wifeName || 'wife');
+                }
+            }
+
+            // 3. Family members
+            if (family.members && Array.isArray(family.members)) {
+                family.members.forEach((m, idx) => {
+                    if (m.dob && matchesDateRange(m.dob, dateFrom, dateTo)) {
+                        let mGen = m.gender;
+                        if (!mGen) {
+                            if (['اخ', 'ابن', 'اب', 'جد', 'عم', 'خال'].includes(m.relation)) mGen = 'ذكر';
+                            else if (['اخت', 'زوجة', 'ابنه', 'ام', 'خاله', 'عمه', 'جده', 'محتضنه'].includes(m.relation)) mGen = 'أنثى';
+                        }
+                        if (!gender || gender === 'all' || mGen === gender) {
+                            countedPeople.add(m.idNum || m.name || `member_${idx}`);
+                        }
+                    }
+                });
+            }
+
+            countedPeople.delete(undefined);
+            countedPeople.delete(null);
+            countedPeople.delete('');
+            return countedPeople.size;
         }
 
         function countChildrenByAge(members, ageCondition, genderCondition = null) {
@@ -3141,6 +3312,115 @@
             }
         };
 
+        window.openAddAgeColumnModal = function () {
+            const form = document.getElementById('addAgeColumnForm');
+            if (form) form.reset();
+            document.getElementById('customAgeColTitle').value = '';
+            document.getElementById('customAgeColDateFrom').value = '';
+            document.getElementById('customAgeColDateTo').value = '';
+            document.getElementById('customAgeColGender').value = 'all';
+
+            const menu = document.getElementById('columnSelectionMenu');
+            if (menu) menu.classList.add('hidden');
+
+            document.getElementById('addAgeColumnModal').classList.remove('hidden');
+        };
+
+        window.handleAddCustomAgeColumn = function (event) {
+            if (event) event.preventDefault();
+
+            let dateFrom = document.getElementById('customAgeColDateFrom').value;
+            let dateTo = document.getElementById('customAgeColDateTo').value;
+            const gender = document.getElementById('customAgeColGender').value || 'all';
+            let title = document.getElementById('customAgeColTitle').value.trim();
+
+            if (!dateFrom && !dateTo) {
+                alert("يرجى إدخال تاريخ ميلاد (من أو إلى) على الأقل.");
+                return;
+            }
+
+            if (dateFrom && dateTo && dateFrom > dateTo) {
+                const temp = dateFrom;
+                dateFrom = dateTo;
+                dateTo = temp;
+            }
+
+            if (!title) {
+                let genderSuffix = '';
+                if (gender === 'ذكر') genderSuffix = ' (ذكور)';
+                else if (gender === 'أنثى') genderSuffix = ' (إناث)';
+
+                if (dateFrom && dateTo) {
+                    title = `أفراد (${dateFrom} إلى ${dateTo})${genderSuffix}`;
+                } else if (dateFrom) {
+                    title = `أفراد (منذ ${dateFrom})${genderSuffix}`;
+                } else {
+                    title = `أفراد (حتى ${dateTo})${genderSuffix}`;
+                }
+            }
+
+            const newCol = {
+                id: `custom_age_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+                label: title,
+                dateFrom: dateFrom,
+                dateTo: dateTo,
+                gender: gender,
+                group: 'أعمدة مخصصة (العدد حسب التاريخ/العمر)',
+                isCustom: true,
+                createdAt: new Date().toISOString()
+            };
+
+            if (!window.customAgeColumns) window.customAgeColumns = [];
+            window.customAgeColumns.push(newCol);
+
+            try {
+                localStorage.setItem('gazamosa_custom_age_cols', JSON.stringify(window.customAgeColumns));
+            } catch (e) {
+                console.error("Failed to save custom columns to localStorage", e);
+            }
+
+            syncCustomAgeColumnsWithDefinitions();
+
+            if (!visibleColumnsMap[currentViewMode].includes(newCol.id)) {
+                visibleColumnsMap[currentViewMode].push(newCol.id);
+            }
+
+            renderColumnOptions();
+            runFilters();
+            closeModal('addAgeColumnModal');
+
+            if (typeof showSystemNotification === 'function') {
+                showSystemNotification("تم إضافة العمود بنجاح", `تمت إضافة عمود "${title}" إلى الجدول.`);
+            }
+        };
+
+        window.deleteCustomAgeColumn = function (colId, event) {
+            if (event) event.stopPropagation();
+
+            const col = (window.customAgeColumns || []).find(c => c.id === colId);
+            const colName = col ? col.label : 'العمود';
+
+            if (!confirm(`هل أنت متأكد من حذف العمود المخصص "${colName}"؟`)) {
+                return;
+            }
+
+            window.customAgeColumns = (window.customAgeColumns || []).filter(c => c.id !== colId);
+
+            try {
+                localStorage.setItem('gazamosa_custom_age_cols', JSON.stringify(window.customAgeColumns));
+            } catch (e) {
+                console.error("Failed to save custom columns to localStorage", e);
+            }
+
+            Object.keys(visibleColumnsMap).forEach(mode => {
+                visibleColumnsMap[mode] = (visibleColumnsMap[mode] || []).filter(id => id !== colId);
+            });
+
+            syncCustomAgeColumnsWithDefinitions();
+            renderColumnOptions();
+            runFilters();
+        };
+
         function renderColumnOptions() {
             const container = document.getElementById('columnOptionsList');
             container.innerHTML = '';
@@ -3165,11 +3445,27 @@
                         isChecked = currentCols.includes(col.id) ? 'checked' : '';
                     }
 
+                    let deleteBtn = '';
+                    if (col.isCustom || (col.id && col.id.startsWith('custom_age_'))) {
+                        deleteBtn = `
+                            <button type="button" onclick="deleteCustomAgeColumn('${col.id}', event)"
+                                class="p-1 text-slate-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors mr-auto"
+                                title="حذف هذا العمود المخصص">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        `;
+                    }
+
                     groupHTML += `
-                        <label class="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors border border-transparent hover:border-slate-100">
-                            <div class="relative flex items-center"><input type="checkbox" value="${col.id}" ${isChecked} onchange="toggleColumn('${col.id}')" class="peer w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"></div>
-                            <span class="text-xs font-bold text-slate-700 select-none">${col.label}</span>
-                        </label>`;
+                        <div class="flex items-center justify-between hover:bg-slate-50 p-2 rounded-lg transition-colors border border-transparent hover:border-slate-100">
+                            <label class="flex items-center gap-3 cursor-pointer flex-1 min-w-0">
+                                <div class="relative flex items-center"><input type="checkbox" value="${col.id}" ${isChecked} onchange="toggleColumn('${col.id}')" class="peer w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"></div>
+                                <span class="text-xs font-bold text-slate-700 select-none truncate" title="${col.label}">${col.label}</span>
+                            </label>
+                            ${deleteBtn}
+                        </div>`;
                 });
                 groupHTML += `</div></div>`;
                 container.innerHTML += groupHTML;
@@ -4301,7 +4597,16 @@
                 case 'individuals_9_12': return countIndividualsByAgeRange(row, 9, 12);
                 case 'individuals_13_18': return countIndividualsByAgeRange(row, 13, 18);
                 case 'individuals_19_59': return countIndividualsByAgeRange(row, 19, 59);
-                default: return row[colId] || '';
+                default: {
+                    if (colId && colId.startsWith('custom_age_')) {
+                        const customDef = (window.customAgeColumns || []).find(c => c.id === colId) || columnDefinitions.find(c => c.id === colId);
+                        if (customDef) {
+                            const count = countIndividualsByCustomRange(row, customDef);
+                            return `<span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-bold text-xs">${count}</span>`;
+                        }
+                    }
+                    return row[colId] || '';
+                }
             }
         }
 
@@ -4470,7 +4775,15 @@
                 case 'individuals_9_12': return countIndividualsByAgeRange(row, 9, 12);
                 case 'individuals_13_18': return countIndividualsByAgeRange(row, 13, 18);
                 case 'individuals_19_59': return countIndividualsByAgeRange(row, 19, 59);
-                default: return row[colId] || '-';
+                default: {
+                    if (colId && colId.startsWith('custom_age_')) {
+                        const customDef = (window.customAgeColumns || []).find(c => c.id === colId) || columnDefinitions.find(c => c.id === colId);
+                        if (customDef) {
+                            return countIndividualsByCustomRange(row, customDef);
+                        }
+                    }
+                    return row[colId] || '-';
+                }
             }
         }
 
@@ -4521,7 +4834,7 @@
             });
 
             const headersHTML = `
-                <th class="px-4 py-4 w-10 flex items-center gap-1"><input type="checkbox" onchange="toggleMainSelectAll(this)" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"><button onclick="toggleColumnMenu(event)" class="p-1 hover:bg-slate-200 rounded-full transition-all" title="تخصيص الأعمدة"><svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></th>
+                <th class="px-4 py-4 w-12 flex items-center gap-1"><input type="checkbox" onchange="toggleMainSelectAll(this)" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"><button onclick="toggleColumnMenu(event)" class="p-1 hover:bg-slate-200 rounded-full transition-all" title="تخصيص الأعمدة"><svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button><button onclick="openAddAgeColumnModal()" class="p-1 hover:bg-indigo-50 text-indigo-600 rounded-full transition-all" title="إضافة عمود (العدد حسب العمر)"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button></th>
                 ${dynamicHeaders}
                 <th class="px-4 py-4 text-center">الإجراءات</th>
             `;
@@ -6304,6 +6617,9 @@
         window.closeModal = closeModal;
         window.runFilters = runFilters;
         window.exitSelectedView = exitSelectedView;
+        window.openAddAgeColumnModal = openAddAgeColumnModal;
+        window.handleAddCustomAgeColumn = handleAddCustomAgeColumn;
+        window.deleteCustomAgeColumn = deleteCustomAgeColumn;
 
         // إظهار أيقونة النسخة المحلية للمديرين والمشرفين فقط
         function showOfflineIcon() {
