@@ -600,6 +600,7 @@
                     window.families = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     updateDelegateFilterOptions();
                     updateSocialFilterOptions();
+                    updateFamilyNeedFilterOptions();
                     runFilters();
                 }, (err) => console.error("Firebase Snapshot Error", err));
             }
@@ -1935,19 +1936,26 @@
                             class="w-full bg-white border border-indigo-200 rounded-2xl p-4 text-sm font-bold hidden transition-all">
                     </div>
                     <div class="space-y-2" id="familyNeedDiv">
-                        <select id="familyNeed" onchange="toggleFamilyNeedOther()"
-                            class="w-full bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold text-slate-600">
-                            <option value="">احتياج العائلة</option>
-                            <option value="شادر">شادر</option>
-                            <option value="خيمة">خيمة</option>
-                            <option value="خشب">خشب</option>
-                            <option value="فراش">فراش</option>
-                            <option value="ملابس">ملابس</option>
-                            <option value="حصائر">حصائر</option>
-                            <option value="ادوات مطبخ">ادوات مطبخ</option>
-                            <option value="بامبرز كبار سن">بامبرز كبار سن</option>
-                            <option value="أخرى">أخرى</option>
-                        </select>
+                        <div class="multiselect-container relative" id="formFamilyNeed-container">
+                            <button type="button" onclick="toggleMultiSelect('formFamilyNeed')"
+                                class="multiselect-btn w-full bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold text-slate-600 flex justify-between items-center cursor-pointer">
+                                <span id="formFamilyNeed-label">احتياج العائلة (متعدد)</span>
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div id="formFamilyNeed-options" class="multiselect-options custom-scroll">
+                                <label class="multiselect-option"><input type="checkbox" onchange="updateFormFamilyNeed()" value="شادر"> شادر</label>
+                                <label class="multiselect-option"><input type="checkbox" onchange="updateFormFamilyNeed()" value="خيمة"> خيمة</label>
+                                <label class="multiselect-option"><input type="checkbox" onchange="updateFormFamilyNeed()" value="خشب"> خشب</label>
+                                <label class="multiselect-option"><input type="checkbox" onchange="updateFormFamilyNeed()" value="فراش"> فراش</label>
+                                <label class="multiselect-option"><input type="checkbox" onchange="updateFormFamilyNeed()" value="ملابس"> ملابس</label>
+                                <label class="multiselect-option"><input type="checkbox" onchange="updateFormFamilyNeed()" value="حصائر"> حصائر</label>
+                                <label class="multiselect-option"><input type="checkbox" onchange="updateFormFamilyNeed()" value="ادوات مطبخ"> ادوات مطبخ</label>
+                                <label class="multiselect-option"><input type="checkbox" onchange="updateFormFamilyNeed()" value="بامبرز كبار سن"> بامبرز كبار سن</label>
+                                <label class="multiselect-option"><input type="checkbox" onchange="updateFormFamilyNeed()" value="أخرى"> أخرى</label>
+                            </div>
+                        </div>
                         <input type="text" id="familyNeedOther" placeholder="حدد احتياج العائلة الآخر..."
                             class="w-full bg-white border border-indigo-200 rounded-2xl p-4 text-sm font-bold hidden transition-all">
                     </div>
@@ -2942,13 +2950,98 @@
             return type || '-';
         }
 
+        const STANDARD_NEEDS = ['شادر', 'خيمة', 'خشب', 'فراش', 'ملابس', 'حصائر', 'ادوات مطبخ', 'بامبرز كبار سن'];
+
+        function getFamilyNeedList(f) {
+            if (!f || !f.familyNeed) return [];
+            if (Array.isArray(f.familyNeed)) return f.familyNeed.filter(Boolean);
+            if (typeof f.familyNeed === 'string') {
+                return f.familyNeed.split(/[،,]/).map(s => s.trim()).filter(Boolean);
+            }
+            return [];
+        }
+
         function getFamilyNeedDisplay(row) {
             if (!row) return '-';
-            const need = row.familyNeed || '';
-            if (need === 'أخرى') {
-                return row.familyNeedOther ? `أخرى (${row.familyNeedOther})` : 'أخرى';
+            const list = getFamilyNeedList(row);
+            if (list.length === 0) {
+                if (row.familyNeedOther) return `أخرى (${row.familyNeedOther})`;
+                return '-';
             }
-            return need || '-';
+            const formatted = list.map(item => {
+                if (item === 'أخرى') {
+                    return row.familyNeedOther ? `أخرى (${row.familyNeedOther})` : 'أخرى';
+                }
+                return item;
+            });
+            return formatted.join('، ');
+        }
+
+        window.updateFormFamilyNeed = function () {
+            const checked = getCheckedValues('formFamilyNeed');
+            const label = document.getElementById('formFamilyNeed-label');
+            const otherInput = document.getElementById('familyNeedOther');
+            if (label) {
+                if (checked.length === 0) {
+                    label.innerText = 'احتياج العائلة (متعدد)';
+                } else if (checked.length <= 2) {
+                    label.innerText = checked.join('، ');
+                } else {
+                    label.innerText = `تم اختيار ${checked.length} احتياجات`;
+                }
+            }
+            if (otherInput) {
+                if (checked.includes('أخرى')) {
+                    otherInput.classList.remove('hidden');
+                } else {
+                    otherInput.classList.add('hidden');
+                    otherInput.value = '';
+                }
+            }
+        };
+
+        function updateFamilyNeedFilterOptions() {
+            const container = document.getElementById('filterFamilyNeed-options');
+            if (!container) return;
+
+            const currentChecked = getCheckedValues('filterFamilyNeed');
+
+            // تجميع كل الإدخالات النصية التي تم إدخالها في خيار "أخرى" عبر جميع العائلات
+            const otherEntries = new Set();
+            if (window.families && Array.isArray(window.families)) {
+                window.families.forEach(f => {
+                    if (f.familyNeedOther && f.familyNeedOther.trim()) {
+                        otherEntries.add(f.familyNeedOther.trim());
+                    }
+                    const list = getFamilyNeedList(f);
+                    list.forEach(item => {
+                        if (item && item !== 'أخرى' && !STANDARD_NEEDS.includes(item)) {
+                            otherEntries.add(item.trim());
+                        }
+                    });
+                });
+            }
+
+            let html = '';
+            STANDARD_NEEDS.forEach(need => {
+                const isChecked = currentChecked.includes(need) ? 'checked' : '';
+                html += `<label class="multiselect-option"><input type="checkbox" onchange="runFilters()" value="${need}" ${isChecked}> ${need}</label>`;
+            });
+
+            // خيار عام لكل ما تم إدخاله في "أخرى"
+            const isOtherChecked = currentChecked.includes('أخرى') ? 'checked' : '';
+            html += `<label class="multiselect-option font-bold text-indigo-600 border-t border-slate-100 pt-2 mt-1"><input type="checkbox" onchange="runFilters()" value="أخرى" ${isOtherChecked}> أخرى (جميع الإدخالات)</label>`;
+
+            // إظهار كل إدخال محدد تم كتابته في خيار "أخرى"
+            if (otherEntries.size > 0) {
+                otherEntries.forEach(customEntry => {
+                    const filterVal = `أخرى: ${customEntry}`;
+                    const isChecked = currentChecked.includes(filterVal) ? 'checked' : '';
+                    html += `<label class="multiselect-option pr-6 text-xs text-slate-700 bg-indigo-50/40 hover:bg-indigo-100/60"><input type="checkbox" onchange="runFilters()" value="${filterVal}" ${isChecked}> ${customEntry}</label>`;
+                });
+            }
+
+            container.innerHTML = html;
         }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
@@ -4062,9 +4155,19 @@
                     (shelterTypeFilters.includes('خيمة قبة') && f.shelterType === 'خيمة') ||
                     (shelterTypeFilters.includes('أخرى') && (f.shelterType === 'أخرى' || (f.shelterType && !['عريشة', 'خيمة قبة', 'خيمة قطري', 'منزل', 'زينقو', 'خيمة'].includes(f.shelterType.trim()))));
 
-                const mFamilyNeed = familyNeedFilters.length === 0 || familyNeedFilters.includes('all') || 
-                    familyNeedFilters.includes((f.familyNeed || "").trim()) ||
-                    (familyNeedFilters.includes('أخرى') && (f.familyNeed === 'أخرى' || (f.familyNeed && !['شادر', 'خيمة', 'خشب', 'فراش', 'ملابس', 'حصائر', 'ادوات مطبخ', 'بامبرز كبار سن'].includes(f.familyNeed.trim()))));
+                const mFamilyNeed = familyNeedFilters.length === 0 || familyNeedFilters.includes('all') || familyNeedFilters.some(filterVal => {
+                    const fNeeds = getFamilyNeedList(f);
+                    const fOther = (f.familyNeedOther || "").trim();
+                    if (filterVal === 'أخرى') {
+                        // يطابق كل من اختار أخرى أو كتب إدخال مخصص
+                        return fNeeds.includes('أخرى') || fOther !== '' || fNeeds.some(item => !STANDARD_NEEDS.includes(item));
+                    }
+                    if (filterVal.startsWith('أخرى: ')) {
+                        const specificVal = filterVal.replace('أخرى: ', '').trim();
+                        return fOther === specificVal || fNeeds.includes(specificVal);
+                    }
+                    return fNeeds.includes(filterVal);
+                });
 
                 const mWidowStatus = widowStatusFilters.length === 0 || widowStatusFilters.includes('all') || widowStatusFilters.includes((f.widowStatus || "").trim());
 
@@ -5052,7 +5155,8 @@
 
             document.getElementById('formModal').classList.remove('hidden');
             toggleShelterTypeOther();
-            toggleFamilyNeedOther();
+            document.querySelectorAll('#formFamilyNeed-container input[type="checkbox"]').forEach(cb => cb.checked = false);
+            updateFormFamilyNeed();
             updateParentGender();
             updateWifeSectionUI();
         }
@@ -5363,9 +5467,10 @@
                 if (!sOther) return alert("يرجى كتابة طبيعة المأوى عند اختيار 'أخرى'.");
             }
             if (window.currentUserData.role !== 'beneficiary') {
-                if (document.getElementById('familyNeed').value === 'أخرى') {
+                const chosenNeeds = getCheckedValues('formFamilyNeed');
+                if (chosenNeeds.includes('أخرى')) {
                     const nOther = document.getElementById('familyNeedOther')?.value.trim();
-                    if (!nOther) return alert("يرجى كتابة احتياج العائلة عند اختيار 'أخرى'.");
+                    if (!nOther) return alert("يرجى كتابة تفاصيل احتياج العائلة عند اختيار 'أخرى'.");
                 }
             }
 
@@ -5422,8 +5527,8 @@
                 walletPhone: document.getElementById('walletPhone').value,
                 shelterType: document.getElementById('shelterType').value,
                 shelterTypeOther: document.getElementById('shelterType').value === 'أخرى' ? (document.getElementById('shelterTypeOther')?.value.trim() || '') : '',
-                familyNeed: document.getElementById('familyNeed')?.value || '',
-                familyNeedOther: document.getElementById('familyNeed')?.value === 'أخرى' ? (document.getElementById('familyNeedOther')?.value.trim() || '') : '',
+                familyNeed: getCheckedValues('formFamilyNeed'),
+                familyNeedOther: getCheckedValues('formFamilyNeed').includes('أخرى') ? (document.getElementById('familyNeedOther')?.value.trim() || '') : '',
                 displacementPeriod: document.getElementById('displacementPeriod').value,
                 citizenStatus: document.getElementById('citizenStatus').value,
                 pFamilyStatus: document.getElementById('pFamilyStatus').value,
@@ -5508,15 +5613,17 @@
                 toggleShelterTypeOther();
             }
 
-            toggleFamilyNeedOther();
-            if (f.familyNeed && !['شادر', 'خيمة', 'خشب', 'فراش', 'ملابس', 'حصائر', 'ادوات مطبخ', 'بامبرز كبار سن', 'أخرى', ''].includes(f.familyNeed)) {
-                document.getElementById('familyNeed').value = 'أخرى';
-                document.getElementById('familyNeedOther').value = f.familyNeedOther || f.familyNeed;
-                toggleFamilyNeedOther();
-            } else if (f.familyNeed === 'أخرى' && f.familyNeedOther) {
-                document.getElementById('familyNeedOther').value = f.familyNeedOther;
-                toggleFamilyNeedOther();
+            const fNeedsList = getFamilyNeedList(f);
+            document.querySelectorAll('#formFamilyNeed-container input[type="checkbox"]').forEach(cb => {
+                cb.checked = fNeedsList.includes(cb.value);
+            });
+            if (f.familyNeedOther || fNeedsList.includes('أخرى') || fNeedsList.some(item => !STANDARD_NEEDS.includes(item))) {
+                const otherCb = document.querySelector('#formFamilyNeed-container input[type="checkbox"][value="أخرى"]');
+                if (otherCb) otherCb.checked = true;
+                const otherVal = f.familyNeedOther || fNeedsList.find(item => !STANDARD_NEEDS.includes(item)) || '';
+                document.getElementById('familyNeedOther').value = otherVal;
             }
+            updateFormFamilyNeed();
 
             updateWifeSectionUI();
             if (f.members) f.members.forEach(m => addMemberRow(m));
@@ -5748,9 +5855,17 @@
                 document.getElementById('shelterTypeOther').value = familyData.shelterTypeOther || '';
                 toggleShelterTypeOther();
 
-                document.getElementById('familyNeed').value = familyData.familyNeed || '';
-                document.getElementById('familyNeedOther').value = familyData.familyNeedOther || '';
-                toggleFamilyNeedOther();
+                const archNeedsList = getFamilyNeedList(familyData);
+                document.querySelectorAll('#formFamilyNeed-container input[type="checkbox"]').forEach(cb => {
+                    cb.checked = archNeedsList.includes(cb.value);
+                });
+                if (familyData.familyNeedOther || archNeedsList.includes('أخرى') || archNeedsList.some(item => !STANDARD_NEEDS.includes(item))) {
+                    const otherCb = document.querySelector('#formFamilyNeed-container input[type="checkbox"][value="أخرى"]');
+                    if (otherCb) otherCb.checked = true;
+                    const otherVal = familyData.familyNeedOther || archNeedsList.find(item => !STANDARD_NEEDS.includes(item)) || '';
+                    document.getElementById('familyNeedOther').value = otherVal;
+                }
+                updateFormFamilyNeed();
                 document.getElementById('displacementPeriod').value = familyData.displacementPeriod || '';
                 document.getElementById('citizenStatus').value = familyData.citizenStatus || '';
                 document.getElementById('pFamilyStatus').value = familyData.pFamilyStatus || '';
