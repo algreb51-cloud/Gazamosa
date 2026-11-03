@@ -1245,13 +1245,48 @@
                                 </button>
                                 <div id="filterShelterType-options" class="multiselect-options custom-scroll">
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
-                                            value="خيمة"> خيمة</label>
-                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
                                             value="عريشة"> عريشة</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
+                                            value="خيمة قبة"> خيمة قبة</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
+                                            value="خيمة قطري"> خيمة قطري</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
                                             value="منزل"> منزل</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
                                             value="زينقو"> زينقو</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
+                                            value="أخرى"> أخرى</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-2 mr-2">احتياج العائلة (تصنيف)</label>
+                            <div class="multiselect-container" id="filterFamilyNeed-container">
+                                <button onclick="toggleMultiSelect('filterFamilyNeed')"
+                                    class="multiselect-btn w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-600 appearance-none cursor-pointer">
+                                    <span id="filterFamilyNeed-label">كل الاحتياجات</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+                                <div id="filterFamilyNeed-options" class="multiselect-options custom-scroll">
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
+                                            value="شادر"> شادر</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
+                                            value="خيمة"> خيمة</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
+                                            value="خشب"> خشب</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
+                                            value="فراش"> فراش</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
+                                            value="ملابس"> ملابس</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
+                                            value="حصائر"> حصائر</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
+                                            value="ادوات مطبخ"> ادوات مطبخ</label>
+                                    <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
+                                            value="بامبرز كبار سن"> بامبرز كبار سن</label>
                                     <label class="multiselect-option"><input type="checkbox" onchange="runFilters()"
                                             value="أخرى"> أخرى</label>
                                 </div>
@@ -1885,15 +1920,37 @@
                         class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
                     <input type="number" id="femaleCount" placeholder="عدد الإناث"
                         class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold">
-                    <select id="shelterType"
-                        class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold text-slate-600">
-                        <option value="">طبيعة المأوى</option>
-                        <option value="خيمة">خيمة</option>
-                        <option value="عريشة">عريشة</option>
-                        <option value="منزل">منزل</option>
-                        <option value="زينقو">زينقو</option>
-                        <option value="أخرى">أخرى</option>
-                    </select>
+                    <div class="space-y-2">
+                        <select id="shelterType" onchange="toggleShelterTypeOther()"
+                            class="w-full bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold text-slate-600">
+                            <option value="">طبيعة المأوى</option>
+                            <option value="عريشة">عريشة</option>
+                            <option value="خيمة قبة">خيمة قبة</option>
+                            <option value="خيمة قطري">خيمة قطري</option>
+                            <option value="منزل">منزل</option>
+                            <option value="زينقو">زينقو</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                        <input type="text" id="shelterTypeOther" placeholder="حدد طبيعة المأوى الأخرى..."
+                            class="w-full bg-white border border-indigo-200 rounded-2xl p-4 text-sm font-bold hidden transition-all">
+                    </div>
+                    <div class="space-y-2" id="familyNeedDiv">
+                        <select id="familyNeed" onchange="toggleFamilyNeedOther()"
+                            class="w-full bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold text-slate-600">
+                            <option value="">احتياج العائلة</option>
+                            <option value="شادر">شادر</option>
+                            <option value="خيمة">خيمة</option>
+                            <option value="خشب">خشب</option>
+                            <option value="فراش">فراش</option>
+                            <option value="ملابس">ملابس</option>
+                            <option value="حصائر">حصائر</option>
+                            <option value="ادوات مطبخ">ادوات مطبخ</option>
+                            <option value="بامبرز كبار سن">بامبرز كبار سن</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                        <input type="text" id="familyNeedOther" placeholder="حدد احتياج العائلة الآخر..."
+                            class="w-full bg-white border border-indigo-200 rounded-2xl p-4 text-sm font-bold hidden transition-all">
+                    </div>
                     <select id="displacementPeriod"
                         class="bg-slate-50 border-none rounded-2xl p-5 text-sm font-bold text-slate-600">
                         <option value="">فترة النزوح</option>
@@ -2672,6 +2729,7 @@
             { id: 'familyMartyrCount', label: 'عدد شهداء العائلة', group: 'بيانات السكن الأصلي' },
             { id: 'currentHousingOwnership', label: 'حيازة السكن الحالي', group: 'بيانات السكن' },
             { id: 'shelterType', label: 'طبيعة المأوى', group: 'بيانات السكن' },
+            { id: 'familyNeed', label: 'احتياج العائلة', group: 'بيانات السكن' },
             { id: 'displacementPeriod', label: 'فترة النزوح', group: 'بيانات السكن' },
             { id: 'citizenStatus', label: 'طبيعة المواطن', group: 'بيانات السكن' },
             { id: 'pFamilyStatus', label: 'حالة العائلة', group: 'بيانات السكن' },
@@ -2836,6 +2894,7 @@
             walletId: "هوية المحفظة",
             walletPhone: "جوال المحفظة",
             shelterType: "طبيعة المأوى",
+            familyNeed: "احتياج العائلة",
             displacementPeriod: "فترة النزوح",
             citizenStatus: "طبيعة المواطن",
             pFamilyStatus: "حالة العائلة",
@@ -2847,6 +2906,50 @@
         };
 
         function only9Numbers(input) { input.value = input.value.replace(/\D/g, '').substring(0, 9); }
+
+        window.toggleShelterTypeOther = function () {
+            const el = document.getElementById('shelterType');
+            const other = document.getElementById('shelterTypeOther');
+            if (!el || !other) return;
+            if (el.value === 'أخرى') {
+                other.classList.remove('hidden');
+                other.focus();
+            } else {
+                other.classList.add('hidden');
+                other.value = '';
+            }
+        };
+
+        window.toggleFamilyNeedOther = function () {
+            const el = document.getElementById('familyNeed');
+            const other = document.getElementById('familyNeedOther');
+            if (!el || !other) return;
+            if (el.value === 'أخرى') {
+                other.classList.remove('hidden');
+                other.focus();
+            } else {
+                other.classList.add('hidden');
+                other.value = '';
+            }
+        };
+
+        function getShelterTypeDisplay(row) {
+            if (!row) return '-';
+            const type = row.shelterType || '';
+            if (type === 'أخرى') {
+                return row.shelterTypeOther ? `أخرى (${row.shelterTypeOther})` : 'أخرى';
+            }
+            return type || '-';
+        }
+
+        function getFamilyNeedDisplay(row) {
+            if (!row) return '-';
+            const need = row.familyNeed || '';
+            if (need === 'أخرى') {
+                return row.familyNeedOther ? `أخرى (${row.familyNeedOther})` : 'أخرى';
+            }
+            return need || '-';
+        }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
         function isQuadrupleName(name) {
@@ -3905,6 +4008,7 @@
             const genderFilters = getCheckedValues('filterGender');
             const familyStatusFilters = getCheckedValues('filterFamilyStatus');
             const shelterTypeFilters = getCheckedValues('filterShelterType');
+            const familyNeedFilters = getCheckedValues('filterFamilyNeed');
             const widowStatusFilters = getCheckedValues('filterWidowStatus');
 
             // Update Labels (Optional UX improvement)
@@ -3919,6 +4023,9 @@
             document.getElementById('filterGender-label').innerText = genderFilters.length > 0 ? `تم اختيار ${genderFilters.length}` : 'اختيار الجنس...';
             document.getElementById('filterFamilyStatus-label').innerText = familyStatusFilters.length > 0 ? `تم اختيار ${familyStatusFilters.length}` : 'كل الحالات';
             document.getElementById('filterShelterType-label').innerText = shelterTypeFilters.length > 0 ? `تم اختيار ${shelterTypeFilters.length}` : 'كل الحالات';
+            if (document.getElementById('filterFamilyNeed-label')) {
+                document.getElementById('filterFamilyNeed-label').innerText = familyNeedFilters.length > 0 ? `تم اختيار ${familyNeedFilters.length}` : 'كل الاحتياجات';
+            }
             document.getElementById('filterWidowStatus-label').innerText = widowStatusFilters.length > 0 ? `تم اختيار ${widowStatusFilters.length}` : 'الكل (شهيد/متوفى)';
 
             // إذا كنا في وضع عرض المستفيدين المختارين، لا نطبق الفلاتر العادية، فقط نعرض القائمة
@@ -3950,7 +4057,15 @@
                 const mDelegate = delegateFilters.length === 0 || delegateFilters.includes('all') || delegateFilters.includes((f.pDelegate || "").trim());
                 const mSocial = socialFilters.length === 0 || socialFilters.includes('all') || socialFilters.includes((f.pSocial || "").trim());
                 const mFamilyStatus = familyStatusFilters.length === 0 || familyStatusFilters.includes('all') || familyStatusFilters.includes((f.pFamilyStatus || "").trim());
-                const mShelterType = shelterTypeFilters.length === 0 || shelterTypeFilters.includes('all') || shelterTypeFilters.includes((f.shelterType || "").trim());
+                const mShelterType = shelterTypeFilters.length === 0 || shelterTypeFilters.includes('all') || 
+                    shelterTypeFilters.includes((f.shelterType || "").trim()) ||
+                    (shelterTypeFilters.includes('خيمة قبة') && f.shelterType === 'خيمة') ||
+                    (shelterTypeFilters.includes('أخرى') && (f.shelterType === 'أخرى' || (f.shelterType && !['عريشة', 'خيمة قبة', 'خيمة قطري', 'منزل', 'زينقو', 'خيمة'].includes(f.shelterType.trim()))));
+
+                const mFamilyNeed = familyNeedFilters.length === 0 || familyNeedFilters.includes('all') || 
+                    familyNeedFilters.includes((f.familyNeed || "").trim()) ||
+                    (familyNeedFilters.includes('أخرى') && (f.familyNeed === 'أخرى' || (f.familyNeed && !['شادر', 'خيمة', 'خشب', 'فراش', 'ملابس', 'حصائر', 'ادوات مطبخ', 'بامبرز كبار سن'].includes(f.familyNeed.trim()))));
+
                 const mWidowStatus = widowStatusFilters.length === 0 || widowStatusFilters.includes('all') || widowStatusFilters.includes((f.widowStatus || "").trim());
 
                 let calculatedCount = 1;
@@ -3958,7 +4073,7 @@
                 if (f.members && Array.isArray(f.members)) calculatedCount += f.members.length;
 
                 const mCount = countFilters.length === 0 || countFilters.includes('all') || countFilters.includes(calculatedCount.toString());
-                return mDelegate && mSocial && mCount && mFamilyStatus && mShelterType && mWidowStatus;
+                return mDelegate && mSocial && mCount && mFamilyStatus && mShelterType && mFamilyNeed && mWidowStatus;
             };
 
             const isRestricted = window.currentUserData?.role === 'viewer' && !hasPerm('view_all');
@@ -4558,7 +4673,8 @@
                 case 'walletOwner': return row.walletOwner || '-';
                 case 'walletId': return `<span class="font-mono">${mask(row.walletId)}</span>`;
                 case 'walletPhone': return `<span class="font-mono">${mask(row.walletPhone)}</span>`;
-                case 'shelterType': return row.shelterType || '-';
+                case 'shelterType': return getShelterTypeDisplay(row);
+                case 'familyNeed': return getFamilyNeedDisplay(row);
                 case 'displacementPeriod': return row.displacementPeriod || '-';
                 case 'citizenStatus': return row.citizenStatus || '-';
                 case 'pFamilyStatus': return row.pFamilyStatus || '-';
@@ -4736,7 +4852,8 @@
                 case 'walletOwner': return row.walletOwner || '-';
                 case 'walletId': return row.walletId || '-';
                 case 'walletPhone': return row.walletPhone || '-';
-                case 'shelterType': return row.shelterType || '-';
+                case 'shelterType': return getShelterTypeDisplay(row);
+                case 'familyNeed': return getFamilyNeedDisplay(row);
                 case 'displacementPeriod': return row.displacementPeriod || '-';
                 case 'citizenStatus': return row.citizenStatus || '-';
                 case 'pFamilyStatus': return row.pFamilyStatus || '-';
@@ -4848,7 +4965,11 @@
                 if (currentViewMode === 'family' && row.shelterType) {
                     switch (row.shelterType.trim()) {
                         case 'خيمة':
+                        case 'خيمة قبة':
                             shelterClass = 'bg-yellow-50/50 border-l-4 border-l-yellow-300 hover:bg-yellow-100/50';
+                            break;
+                        case 'خيمة قطري':
+                            shelterClass = 'bg-amber-50/50 border-l-4 border-l-amber-400 hover:bg-amber-100/50';
                             break;
                         case 'عريشة':
                             shelterClass = 'bg-orange-50/50 border-l-4 border-l-orange-300 hover:bg-orange-100/50';
@@ -4918,15 +5039,20 @@
             delInput.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
             delInput.classList.add('bg-slate-50');
 
-            // التحكم في ظهور حالة العائلة
+            // التحكم في ظهور حالة العائلة واحتياج العائلة
             const statusEl = document.getElementById('pFamilyStatus');
+            const needDiv = document.getElementById('familyNeedDiv');
             if (window.currentUserData.role === 'beneficiary') {
                 statusEl.classList.add('hidden');
+                if (needDiv) needDiv.classList.add('hidden');
             } else {
                 statusEl.classList.remove('hidden');
+                if (needDiv) needDiv.classList.remove('hidden');
             }
 
             document.getElementById('formModal').classList.remove('hidden');
+            toggleShelterTypeOther();
+            toggleFamilyNeedOther();
             updateParentGender();
             updateWifeSectionUI();
         }
@@ -5232,6 +5358,17 @@
                 }
             }
 
+            if (document.getElementById('shelterType').value === 'أخرى') {
+                const sOther = document.getElementById('shelterTypeOther')?.value.trim();
+                if (!sOther) return alert("يرجى كتابة طبيعة المأوى عند اختيار 'أخرى'.");
+            }
+            if (window.currentUserData.role !== 'beneficiary') {
+                if (document.getElementById('familyNeed').value === 'أخرى') {
+                    const nOther = document.getElementById('familyNeedOther')?.value.trim();
+                    if (!nOther) return alert("يرجى كتابة احتياج العائلة عند اختيار 'أخرى'.");
+                }
+            }
+
             // التحقق من عدم تكرار هوية رب الأسرة أو الزوجة في الأفراد
             const pIdVal = document.getElementById('pId').value.trim();
             const wifeIdVal = document.getElementById('wifeId').value.trim();
@@ -5284,6 +5421,9 @@
                 walletId: document.getElementById('walletId').value,
                 walletPhone: document.getElementById('walletPhone').value,
                 shelterType: document.getElementById('shelterType').value,
+                shelterTypeOther: document.getElementById('shelterType').value === 'أخرى' ? (document.getElementById('shelterTypeOther')?.value.trim() || '') : '',
+                familyNeed: document.getElementById('familyNeed')?.value || '',
+                familyNeedOther: document.getElementById('familyNeed')?.value === 'أخرى' ? (document.getElementById('familyNeedOther')?.value.trim() || '') : '',
                 displacementPeriod: document.getElementById('displacementPeriod').value,
                 citizenStatus: document.getElementById('citizenStatus').value,
                 pFamilyStatus: document.getElementById('pFamilyStatus').value,
@@ -5306,10 +5446,15 @@
                 updatedAt: new Date().toISOString()
             };
 
-            // حماية إضافية: منع المستفيد من تغيير المندوب حتى لو تلاعب بالحقل
+            // حماية إضافية: منع المستفيد من تغيير المندوب أو احتياج العائلة
             if (window.currentUserData.role === 'beneficiary') {
                 const original = window.families.find(f => f.id === editId);
-                if (original) payload.pDelegate = original.pDelegate;
+                if (original) {
+                    payload.pDelegate = original.pDelegate;
+                    if (original.pFamilyStatus) payload.pFamilyStatus = original.pFamilyStatus;
+                    payload.familyNeed = original.familyNeed || '';
+                    payload.familyNeedOther = original.familyNeedOther || '';
+                }
             }
 
             try {
@@ -5348,18 +5493,48 @@
 
             if (!f.wifeGender) document.getElementById('wifeGender').value = 'أنثى';
 
+            // معالجة طبيعة المأوى واحتياج العائلة
+            toggleShelterTypeOther();
+            if (f.shelterType && !['عريشة', 'خيمة قبة', 'خيمة قطري', 'منزل', 'زينقو', 'أخرى', ''].includes(f.shelterType)) {
+                if (f.shelterType === 'خيمة') {
+                    document.getElementById('shelterType').value = 'خيمة قبة';
+                } else {
+                    document.getElementById('shelterType').value = 'أخرى';
+                    document.getElementById('shelterTypeOther').value = f.shelterTypeOther || f.shelterType;
+                    toggleShelterTypeOther();
+                }
+            } else if (f.shelterType === 'أخرى' && f.shelterTypeOther) {
+                document.getElementById('shelterTypeOther').value = f.shelterTypeOther;
+                toggleShelterTypeOther();
+            }
+
+            toggleFamilyNeedOther();
+            if (f.familyNeed && !['شادر', 'خيمة', 'خشب', 'فراش', 'ملابس', 'حصائر', 'ادوات مطبخ', 'بامبرز كبار سن', 'أخرى', ''].includes(f.familyNeed)) {
+                document.getElementById('familyNeed').value = 'أخرى';
+                document.getElementById('familyNeedOther').value = f.familyNeedOther || f.familyNeed;
+                toggleFamilyNeedOther();
+            } else if (f.familyNeed === 'أخرى' && f.familyNeedOther) {
+                document.getElementById('familyNeedOther').value = f.familyNeedOther;
+                toggleFamilyNeedOther();
+            }
+
             updateWifeSectionUI();
             if (f.members) f.members.forEach(m => addMemberRow(m));
             if (f.health) f.health.forEach(h => addHealthRow(h));
 
             calculateFamilyCounts();
 
-            // تعطيل حقل المندوب للمستفيدين فقط
+            // تعطيل حقل المندوب وإخفاء احتياج العائلة للمستفيدين فقط
             if (window.currentUserData.role === 'beneficiary') {
                 const delInput = document.getElementById('pDelegate');
                 delInput.disabled = true;
                 delInput.classList.remove('bg-slate-50');
                 delInput.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+
+                const needDiv = document.getElementById('familyNeedDiv');
+                if (needDiv) needDiv.classList.add('hidden');
+                const needOther = document.getElementById('familyNeedOther');
+                if (needOther) needOther.classList.add('hidden');
             }
 
             document.getElementById('formModal').classList.remove('hidden');
@@ -5570,6 +5745,12 @@
                 document.getElementById('displaceArea').value = familyData.displaceArea || '';
                 document.getElementById('currentHousingOwnership').value = familyData.currentHousingOwnership || '';
                 document.getElementById('shelterType').value = familyData.shelterType || '';
+                document.getElementById('shelterTypeOther').value = familyData.shelterTypeOther || '';
+                toggleShelterTypeOther();
+
+                document.getElementById('familyNeed').value = familyData.familyNeed || '';
+                document.getElementById('familyNeedOther').value = familyData.familyNeedOther || '';
+                toggleFamilyNeedOther();
                 document.getElementById('displacementPeriod').value = familyData.displacementPeriod || '';
                 document.getElementById('citizenStatus').value = familyData.citizenStatus || '';
                 document.getElementById('pFamilyStatus').value = familyData.pFamilyStatus || '';
@@ -5642,7 +5823,8 @@
                                 <span class="text-slate-400">الحالة الاجتماعية:</span> <span class="font-bold">${f.pSocial || "-"}</span>
                                 <span class="text-slate-400">السكن الأصلي:</span> <span class="font-bold">${f.originArea || "-"}</span>
                                 <span class="text-slate-400">منطقة النزوح:</span> <span class="font-bold">${f.displaceArea || "-"}</span>
-                                <span class="text-slate-400">طبيعة المأوى:</span> <span class="font-bold">${f.shelterType || "-"}</span>
+                                <span class="text-slate-400">طبيعة المأوى:</span> <span class="font-bold">${getShelterTypeDisplay(f)}</span>
+                                ${showFamilyStatus ? `<span class="text-slate-400">احتياج العائلة:</span> <span class="font-bold text-indigo-600">${getFamilyNeedDisplay(f)}</span>` : ''}
                                 <span class="text-slate-400">فترة النزوح:</span> <span class="font-bold">${f.displacementPeriod || "-"}</span>
                                 <span class="text-slate-400">طبيعة المواطن:</span> <span class="font-bold">${f.citizenStatus || "-"}</span>
                                 <span class="text-slate-400">الأفراد داخل البلاد:</span> <span class="font-bold">${f.abroadCount || "0"}</span>
@@ -5789,7 +5971,7 @@
         function downloadTemplate() {
             const headers = ["اسم رب الأسرة", "تاريخ ميلاد رب الأسرة", "هوية رب الأسرة", "اصدار الهوية", "رقم الجوال", "اسم الزوجة", "هوية الزوجة", "تاريخ ميلاد الزوجة", "حالة الزوجة", "الحالة الاجتماعية", "عدد الأفراد الكلي", "عدد الذكور", "عدد الإناث"];
             for (let i = 1; i <= 12; i++) headers.push(`اسم الفرد ${i}`, `صلة القرابة ${i}`, `تاريخ الميلاد الفرد ${i}`, `رقم الهوية الفرد ${i}`);
-            headers.push("منطقة السكن الأصلية", "منطقة النزوح", "طبيعة المأوى", "فترة النزوح", "طبيعة المواطن", "المندوب", "جوال بديل");
+            headers.push("منطقة السكن الأصلية", "منطقة النزوح", "طبيعة المأوى", "احتياج العائلة", "فترة النزوح", "طبيعة المواطن", "المندوب", "جوال بديل");
             for (let i = 1; i <= 5; i++) headers.push(`الاسم الحالة ${i}`, `رقم الهوية الحالة ${i}`, `رقم الجوال الحالة ${i}`, `نوع المرض ${i}`);
             headers.push("اسم المالك المحفظة", "رقم الهوية المحفظة", "رقم الجوال المحفظة");
             const ws = XLSX.utils.aoa_to_sheet([headers]);
@@ -5854,6 +6036,7 @@
                         originArea: row["منطقة السكن الأصلية"] || "",
                         displaceArea: row["منطقة النزوح"] || "",
                         shelterType: row["طبيعة المأوى"] || "",
+                        familyNeed: row["احتياج العائلة"] || "",
                         displacementPeriod: row["فترة النزوح"] || "",
                         citizenStatus: row["طبيعة المواطن"] || "",
                         pDelegate: row["المندوب"] || "",
@@ -5924,7 +6107,7 @@
             data.push(["اسم الزوجة", f.wifeName || "", "هوية الزوجة", f.wifeId || "", "حالة الزوجة", f.wifeStatus || ""]);
             data.push(["تاريخ ميلاد الزوجة", f.wifeDob || "", "جوال بديل", f.pAltPhone || ""]);
             data.push(["السكن الأصلي", f.originArea || "", "منطقة النزوح", f.displaceArea || ""]);
-            data.push(["طبيعة المأوى", f.shelterType || "", "فترة النزوح", f.displacementPeriod || "", "طبيعة المواطن", f.citizenStatus || ""]);
+            data.push(["طبيعة المأوى", getShelterTypeDisplay(f), "احتياج العائلة", getFamilyNeedDisplay(f), "فترة النزوح", f.displacementPeriod || "", "طبيعة المواطن", f.citizenStatus || ""]);
             data.push(["إجمالي الأفراد", f.totalCount || 0, "عدد الذكور", f.maleCount || 0, "عدد الإناث", f.femaleCount || 0]);
             data.push([]);
             data.push(["أفراد العائلة المضافين"]);
@@ -5957,7 +6140,7 @@
                         <table class="print-table"><tr><th>رب الأسرة</th><td>${f.pName || '-'}</td></tr><tr><th>رقم الهوية</th><td>${f.pId || '-'}</td></tr><tr><th>اصدار الهوية</th><td>${f.pIdIssue || '-'}</td></tr><tr><th>رقم الجوال</th><td>${f.pPhone || '-'}</td></tr><tr><th>تاريخ الميلاد</th><td>${f.pDob || '-'} (${pAge.y} سنة)</td></tr></table>
                         <table class="print-table"><tr><th>الزوجة</th><td>${f.wifeName || '-'}</td></tr><tr><th>هوية الزوجة</th><td>${f.wifeId || '-'}</td></tr><tr><th>حالة الزوجة</th><td>${f.wifeStatus || '-'}</td></tr><tr><th>السكن الأصلي</th><td>${f.originArea || '-'}</td></tr><tr><th>منطقة النزوح</th><td>${f.displaceArea || '-'}</td></tr></table>
                     </div>
-                    <table class="print-table" style="margin-top: 10px;"><tr><th>طبيعة المأوى</th><td>${f.shelterType || '-'}</td><th>فترة النزوح</th><td>${f.displacementPeriod || '-'}</td><th>طبيعة المواطن</th><td>${f.citizenStatus || '-'}</td></tr></table>
+                    <table class="print-table" style="margin-top: 10px;"><tr><th>طبيعة المأوى</th><td>${getShelterTypeDisplay(f)}</td><th>احتياج العائلة</th><td>${getFamilyNeedDisplay(f)}</td><th>فترة النزوح</th><td>${f.displacementPeriod || '-'}</td><th>طبيعة المواطن</th><td>${f.citizenStatus || '-'}</td></tr></table>
                     <table class="print-table" style="margin-top: 10px;"><tr><th>المندوب</th><td>${f.pDelegate || '-'}</td><th>الحالة الاجتماعية</th><td>${f.pSocial || '-'}</td><th>عدد الأفراد</th><td>${f.totalCount || '0'}</td></tr></table>
                     <div class="section-title">2. أفراد العائلة (${f.members ? f.members.length : 0})</div>
                     <table class="print-table"><thead><tr><th style="width: 30%">الاسم</th><th style="width: 15%">الصلة</th><th style="width: 15%">تاريخ الميلاد</th><th style="width: 15%">العمر</th><th style="width: 25%">رقم الهوية</th></tr></thead><tbody>
